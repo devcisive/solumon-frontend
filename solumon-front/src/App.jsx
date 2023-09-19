@@ -1,10 +1,9 @@
-import { Reset } from "styled-reset";
+import { Reset } from 'styled-reset';
 
 function App() {
   return (
     <>
       <Reset />
-      테스트코드
     </>
   );
 }
