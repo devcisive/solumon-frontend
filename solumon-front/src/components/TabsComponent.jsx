@@ -3,7 +3,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import PropTypes from 'prop-types';
-
+//컴포넌트 이름 수정 Tabs->TabsComponent
 function TabsComponent({ tabLabels, defaultTab = 0 }) {
   const [value, setValue] = React.useState(defaultTab);
 
