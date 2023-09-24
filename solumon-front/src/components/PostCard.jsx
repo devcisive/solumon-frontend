@@ -6,38 +6,54 @@ import { BsChatDots } from 'react-icons/bs';
 import { VscGraph } from 'react-icons/vsc';
 
 function PostCard() {
-  // const [postData, setPostData] = useState(null);
+  const [postData, setPostData] = useState(null);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = () => {
+    fetch('https://jsonplaceholder.typicode.com/posts')
+      .then((response) => {
+        return response.json();
+      })
+      .then((json) => {
+        setPostData(json);
+      })
+      .catch((error) => {
+        console.log(`Something Wrong: ${error}`);
+      });
+  };
 
   return (
     <ThemeProvider theme={theme}>
       <Container>
-        <Wrapper>
-          <StyledThumbnail src="https://via.placeholder.com/240x130.jpg"></StyledThumbnail>
-          <PostPreview>
-            <Title>
-              Lorem ipsum dolor sit amet consectetur adipisicing elit
-            </Title>
-            <Content>
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Sit
-              veniam ab reprehenderit earum dignissimos. Delectus molestias nam
-              incidunt necessitatibus sequi assumenda, ea perspiciatis unde,
-              dolorem, iure quaerat corporis tempore praesentium?
-            </Content>
-            <PostInfo>
-              <Date>2023-09-25</Date>
-              <ChatCount>
-                <BsChatDots />
-                13명 참여
-              </ChatCount>
-              <VoteCount>
-                <VscGraph />
-                20명 참여
-              </VoteCount>
-            </PostInfo>
-            <Line></Line>
-            <Writer>by. chae</Writer>
-          </PostPreview>
-        </Wrapper>
+        {postData &&
+          postData.map((post) => (
+            <Wrapper key={post.post_id}>
+              <StyledThumbnail
+                src={
+                  post.image_url || 'https://via.placeholder.com/240x130.jpg'
+                }></StyledThumbnail>
+              <PostPreview>
+                <Title>{post.title}</Title>
+                <Content>{post.preview}</Content>
+                <PostInfo>
+                  <Date>{post.created_at}</Date>
+                  <ChatCount>
+                    <BsChatDots />
+                    {post.chat_count}명 참여
+                  </ChatCount>
+                  <VoteCount>
+                    <VscGraph />
+                    {post.vote_count}명 참여
+                  </VoteCount>
+                </PostInfo>
+                <Line></Line>
+                <Writer>by. {post.writer}</Writer>
+              </PostPreview>
+            </Wrapper>
+          ))}
       </Container>
     </ThemeProvider>
   );
@@ -60,6 +76,8 @@ const Wrapper = styled.div`
 `;
 
 const StyledThumbnail = styled.img`
+  width: 240px;
+  height: 130px;
   border-radius: 10px 10px 0 0;
 `;
 
