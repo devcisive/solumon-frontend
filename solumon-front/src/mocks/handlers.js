@@ -1,4 +1,20 @@
+// src/mocks/handlers.js
 import { rest } from 'msw';
+
+// 사용자 데이터를 저장할 상태 변수
+let users = [
+  {
+    member_id: 1,
+    nickname: 'user1',
+    email: 'user1@example.com',
+  },
+  {
+    member_id: 2,
+    nickname: 'user2',
+    email: 'user2@example.com',
+  },
+  // 추가 사용자 데이터를 필요한 만큼 추가하세요.
+];
 
 export const handlers = [
   rest.get(
@@ -63,8 +79,54 @@ export const handlers = [
             preview:
               'repudiandae veniam quaerat sunt sed\nalias aut fugiat sit autem sed est\nvoluptatem omnis possimus esse voluptatibus quis\nest aut tenetur dolor neque',
           },
-        ])
+        ]),
       );
-    }
+    },
   ),
+
+  // POST 요청 핸들러
+  rest.post('https://jsonplaceholder.typicode.com/users', (req, res, ctx) => {
+    // 새 사용자 데이터를 POST 요청으로 추가
+    const newUser = {
+      member_id: req.body.member_id,
+      nickname: req.body.nickname,
+      email: req.body.email,
+    };
+    users.push(newUser);
+
+    return res(ctx.status(201), ctx.json(newUser));
+  }),
+
+  // GET 요청 핸들러
+  rest.get('https://jsonplaceholder.typicode.com/users', (req, res, ctx) => {
+    // GET 요청을 가로채고 현재 사용자 데이터를 반환
+    return res(ctx.status(200), ctx.json(users));
+  }),
 ];
+// rest.get(
+//   'https://jsonplaceholder.typicode.com/users',
+//   async (req, res, ctx) => {
+//     return res(
+//       ctx.status(200),
+//       ctx.json([
+//         {
+//           member_id: req.body.member_id,
+//           nickname: req.body.nickname,
+//           email: req.body.email,
+//         },
+//       ]),
+//     );
+//   },
+// ),
+// rest.post('https://jsonplaceholder.typicode.com/users', (req, res, ctx) => {
+//   // POST 요청을 가로채고 원하는 응답을 제공
+//   return res(
+//     ctx.status(201), // 응답 상태 코드 (예: 201 Created)
+//     ctx.json({
+//       member_id: req.body.member_id,
+//       nickname: req.body.nickname,
+//       email: req.body.email,
+//     }),
+//   );
+// }),
+// ];
