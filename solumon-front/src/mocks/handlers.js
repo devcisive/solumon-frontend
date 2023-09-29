@@ -1,5 +1,4 @@
 import { rest } from 'msw';
-
 export const handlers = [
   rest.get(
     'https://jsonplaceholder.typicode.com/posts',
@@ -63,8 +62,40 @@ export const handlers = [
             preview:
               'repudiandae veniam quaerat sunt sed\nalias aut fugiat sit autem sed est\nvoluptatem omnis possimus esse voluptatibus quis\nest aut tenetur dolor neque',
           },
-        ])
+        ]),
       );
-    }
+    },
+  ),
+  rest.post(
+    'https://jsonplaceholder.typicode.com/users',
+    async (req, res, ctx) => {
+      //가상의 데이터
+      let users = [
+        { email: 'nick@example.com', passWord: '1234', id: 1 },
+        { email: 'alice@example.com', passWord: '5678', id: 2 },
+        { email: 'bob@example.com', passWord: 'abcd', id: 3 },
+      ];
+      // 클라이언트에서 전송된 정보에서 이메일과 비밀번호 추출
+      const { email, passWord } = req.body;
+
+      // 가상데이터에서 이메일과 비밀번호가 일치하는 사용자 찾기
+      const matchedUser = users.find(
+        (user) => user.email === email && user.passWord === passWord,
+      );
+
+      if (matchedUser) {
+        return res(
+          ctx.status(200),
+          ctx.json({
+            member_id: 1,
+            is_firstLogin: true, //첫번째 로그인 유무
+            access_token: 'ACCESS_TOKEN',
+            refresh_token: 'REFRECH_TOKEN',
+          }),
+        );
+      } else {
+        return res(ctx.status(401), ctx.json({ error: 'Invalid credentials' }));
+      }
+    },
   ),
 ];

@@ -4,6 +4,7 @@ import theme from '../style/theme';
 import styled from 'styled-components';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+// import axios from 'axios';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -11,9 +12,27 @@ const Login = () => {
   const LoginSubmit = () => {
     alert('카카오로그인완료');
   };
-  const LoginSubmit2 = () => {
-    alert('이메일로그인완료');
+  // const LoginSubmit2 = () => {
+  //   alert('이메일로그인완료');
+  // };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const response = await fetch('https://jsonplaceholder.typicode.com/users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json', //// JSON 형식의 데이터를 전송한다는 헤더 설정
+      },
+      body: JSON.stringify({ email, passWord }), // JSON 형식으로 사용자 이메일과 비밀번호를 전송
+    });
+
+    if (response.ok) {
+      console.log('로그인 성공');
+    } else {
+      console.error('로그인 실패');
+    }
   };
+
   return (
     <ThemeProvider theme={theme}>
       <Container>
@@ -29,26 +48,34 @@ const Login = () => {
         />
 
         <StyledSpan>또는 이메일로 로그인</StyledSpan>
-        <StyledInput
-          type="text"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="이메일주소를 입력해주세요"
-        ></StyledInput>
-        <StyledInput
-          type="text"
-          value={passWord}
-          onChange={(e) => setPassWord(e.target.value)}
-          placeholder="비밀번호를 입력해주세요"
-        ></StyledInput>
-        <Button
-          name="로그인"
-          onClick={LoginSubmit2}
-          bgColor={theme.medium_purple}
-          fontSize="20px"
-          fontWeight={500}
-          padding="10px 170px"
-        />
+        <StyledForm>
+          <StyledInput
+            type="text"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="이메일주소를 입력해주세요"
+            autoComplete="username"
+          ></StyledInput>
+          <StyledInput
+            type="password"
+            value={passWord}
+            id="passWord"
+            onChange={(e) => setPassWord(e.target.value)}
+            placeholder="비밀번호를 입력해주세요"
+            autoComplete="current-password"
+          ></StyledInput>
+          <Button
+            name="로그인"
+            type="button"
+            onClick={handleLogin}
+            bgColor={theme.medium_purple}
+            color={theme.linen}
+            fontSize="20px"
+            fontWeight={500}
+            padding="10px 105px"
+          />
+        </StyledForm>
         <StyledLink to="/">
           <PinSearch>비밀번호찾기</PinSearch>
         </StyledLink>
@@ -68,6 +95,10 @@ const Login = () => {
 const StyledLink = styled(Link)`
   text-decoration: none;
   color: #000;
+`;
+const StyledForm = styled.form`
+  display: flex;
+  flex-direction: column;
 `;
 const PinSearch = styled.div`
   width: auto;
