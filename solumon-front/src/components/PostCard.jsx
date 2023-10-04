@@ -1,74 +1,97 @@
 import { useState, useEffect } from 'react';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
+import PropTypes from 'prop-types';
 
 import { BsChatDots } from 'react-icons/bs';
 import { VscGraph } from 'react-icons/vsc';
 
-function PostCard() {
-  const [postData, setPostData] = useState(null);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = () => {
-    fetch('https://jsonplaceholder.typicode.com/posts')
-      .then((response) => {
-        return response.json();
-      })
-      .then((json) => {
-        setPostData(json);
-      })
-      .catch((error) => {
-        console.log(`Something Wrong: ${error}`);
-      });
-  };
-
+function PostCard({ postData, postCount }) {
   return (
     <ThemeProvider theme={theme}>
-      <Container>
-        {postData &&
-          postData.map((post) => (
-            <Wrapper key={post.post_id}>
-              <StyledThumbnail
-                src={
-                  post.image_url || 'https://via.placeholder.com/240x130.jpg'
-                }></StyledThumbnail>
-              <PostPreview>
-                <Title>{post.title}</Title>
-                <Content>{post.preview}</Content>
-                <PostInfo>
-                  <Date>{post.created_at}</Date>
-                  <ChatCount>
-                    <BsChatDots />
-                    {post.chat_count}명 참여
-                  </ChatCount>
-                  <VoteCount>
-                    <VscGraph />
-                    {post.vote_count}명 참여
-                  </VoteCount>
-                </PostInfo>
-                <Line></Line>
-                <Writer>by. {post.writer}</Writer>
-              </PostPreview>
-            </Wrapper>
-          ))}
-      </Container>
+      <Wrapper>
+        <Container>
+          {postData && postCount
+            ? postData.slice(0, postCount).map((post) => (
+                <CardWrapper key={post.post_id}>
+                  <StyledThumbnail
+                    src={
+                      post.image_url ||
+                      'https://via.placeholder.com/240x130.jpg'
+                    }
+                  ></StyledThumbnail>
+                  <PostPreview>
+                    <Title>{post.title}</Title>
+                    <Content>{post.preview}</Content>
+                    <PostInfo>
+                      <Date>{post.created_at}</Date>
+                      <ChatCount>
+                        <BsChatDots />
+                        {post.chat_count}명 참여
+                      </ChatCount>
+                      <VoteCount>
+                        <VscGraph />
+                        {post.vote_count}명 참여
+                      </VoteCount>
+                    </PostInfo>
+                    <Line></Line>
+                    <Writer>by. {post.writer}</Writer>
+                  </PostPreview>
+                </CardWrapper>
+              ))
+            : postData &&
+              postData.map((post) => (
+                <CardWrapper key={post.post_id}>
+                  <StyledThumbnail
+                    src={
+                      post.image_url ||
+                      'https://via.placeholder.com/240x130.jpg'
+                    }
+                  ></StyledThumbnail>
+                  <PostPreview>
+                    <Title>{post.title}</Title>
+                    <Content>{post.preview}</Content>
+                    <PostInfo>
+                      <Date>{post.created_at}</Date>
+                      <ChatCount>
+                        <BsChatDots />
+                        {post.chat_count}명 참여
+                      </ChatCount>
+                      <VoteCount>
+                        <VscGraph />
+                        {post.vote_count}명 참여
+                      </VoteCount>
+                    </PostInfo>
+                    <Line></Line>
+                    <Writer>by. {post.writer}</Writer>
+                  </PostPreview>
+                </CardWrapper>
+              ))}
+        </Container>
+      </Wrapper>
     </ThemeProvider>
   );
 }
 
+PostCard.propTypes = {
+  postData: PropTypes.array.isRequired,
+  postCount: PropTypes.number,
+};
+
 export default PostCard;
 
-const Container = styled.div`
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  margin-top: 50px;
+const Wrapper = styled.div`
+  width: 1280px;
 `;
 
-const Wrapper = styled.div`
+const Container = styled.div`
+  float: left;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+`;
+
+const CardWrapper = styled.div`
   width: 240px;
   height: 310px;
   border-radius: 10px;
