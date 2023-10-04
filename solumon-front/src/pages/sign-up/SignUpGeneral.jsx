@@ -1,14 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../../style/theme';
 import Button from '../../components/Button';
 
 function SignUpGeneral() {
-  const [userData, setUserData] = useState('name');
+  const [userData, setUserData] = useState(null);
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [checkPassword, setCheckPassword] = useState('');
+  const [id, setId] = useState(3);
+
+  // useEffect(() => {
+  //   fetchData();
+  // }, []);
+
+  const fetchData = async () => {
+    const response = await axios({
+      url: 'https://jsonplaceholder.typicode.com/users',
+      method: 'get',
+    });
+    setUserData(response.body);
+    console.log(userData);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        'https://jsonplaceholder.typicode.com/users',
+        {
+          member_id: id,
+          nickname: nickname,
+          email: email,
+        },
+      );
+
+      fetchData();
+      // 응답 데이터를 userData 상태에 저장
+      // setUserData(response.data);
+      // console.log(userData);
+
+      // ID 증가
+      setId(id + 1);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleCertificationButton = () => {};
 
@@ -21,7 +60,11 @@ function SignUpGeneral() {
       <Wrapper>
         <PageTitle>이메일 회원가입</PageTitle>
         <Line></Line>
-        <SignInForm name="sign-in-general" method="post">
+        <SignInForm
+          name="sign-in-general"
+          method="post"
+          onSubmit={handleSubmit}
+        >
           <StyledInput
             type="text"
             placeholder="닉네임"
@@ -84,6 +127,7 @@ function SignUpGeneral() {
 
           <Button
             type="submit"
+            value="sign-up"
             name={'회원가입'}
             onClick={handleSignUpButton}
             fontSize={'14px'}
