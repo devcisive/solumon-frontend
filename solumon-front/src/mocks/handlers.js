@@ -1,21 +1,6 @@
 // src/mocks/handlers.js
 import { rest } from 'msw';
 
-// 사용자 데이터를 저장할 상태 변수
-let users = [
-  {
-    member_id: 1,
-    nickname: 'user1',
-    email: 'user1@example.com',
-  },
-  {
-    member_id: 2,
-    nickname: 'user2',
-    email: 'user2@example.com',
-  },
-  // 추가 사용자 데이터를 필요한 만큼 추가하세요.
-];
-
 export const handlers = [
   rest.get(
     'https://jsonplaceholder.typicode.com/posts',
@@ -83,7 +68,7 @@ export const handlers = [
       );
     },
   ),
-
+ 
   // POST 요청 핸들러
   rest.post('https://jsonplaceholder.typicode.com/users', (req, res, ctx) => {
     // 새 사용자 데이터를 POST 요청으로 추가
