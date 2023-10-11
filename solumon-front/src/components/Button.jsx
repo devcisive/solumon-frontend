@@ -23,7 +23,7 @@ function Button({
         padding={padding}
         borderRadius={borderRadius}
       >
-        <StyledSpan>{name}</StyledSpan>
+        {name}
       </StyledButton>
     </ThemeProvider>
   );
@@ -37,6 +37,8 @@ Button.propTypes = {
   fontWeight: PropTypes.number,
   padding: PropTypes.string,
   borderRadius: PropTypes.string,
+  width: PropTypes.string,
+  height: PropTypes.string,
 };
 export default Button;
 
@@ -48,15 +50,5 @@ const StyledButton = styled.button`
   padding: ${(props) => props.padding};
   border-radius: ${(props) => props.borderRadius || '0'};
   border: none;
-  width: 150px;
-  height: 100px;
-  border-radius: 10px;
   cursor: pointer;
-`;
-
-const StyledSpan = styled.span`
-  color: ${({ theme }) => theme.linen};
-  text-align: center;
-  font-size: 26px;
-  font-weight: 500px;
 `;
