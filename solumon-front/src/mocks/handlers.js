@@ -1,4 +1,6 @@
+// src/mocks/handlers.js
 import { rest } from 'msw';
+
 export const handlers = [
   rest.get(
     'https://jsonplaceholder.typicode.com/posts',
@@ -66,36 +68,50 @@ export const handlers = [
       );
     },
   ),
-  rest.post(
-    'https://jsonplaceholder.typicode.com/users',
-    async (req, res, ctx) => {
-      //가상의 데이터
-      let users = [
-        { email: 'nick@example.com', passWord: '1234', id: 1 },
-        { email: 'alice@example.com', passWord: '5678', id: 2 },
-        { email: 'bob@example.com', passWord: 'abcd', id: 3 },
-      ];
-      // 클라이언트에서 전송된 정보에서 이메일과 비밀번호 추출
-      const { email, passWord } = req.body;
+ 
+  // POST 요청 핸들러
+  rest.post('https://jsonplaceholder.typicode.com/users', (req, res, ctx) => {
+    // 새 사용자 데이터를 POST 요청으로 추가
+    const newUser = {
+      member_id: req.body.member_id,
+      nickname: req.body.nickname,
+      email: req.body.email,
+    };
+    users.push(newUser);
 
-      // 가상데이터에서 이메일과 비밀번호가 일치하는 사용자 찾기
-      const matchedUser = users.find(
-        (user) => user.email === email && user.passWord === passWord,
-      );
+    return res(ctx.status(201), ctx.json(newUser));
+  }),
 
-      if (matchedUser) {
-        return res(
-          ctx.status(200),
-          ctx.json({
-            member_id: 1,
-            is_firstLogin: true, //첫번째 로그인 유무
-            access_token: 'ACCESS_TOKEN',
-            refresh_token: 'REFRECH_TOKEN',
-          }),
-        );
-      } else {
-        return res(ctx.status(401), ctx.json({ error: 'Invalid credentials' }));
-      }
-    },
-  ),
+  // GET 요청 핸들러
+  rest.get('https://jsonplaceholder.typicode.com/users', (req, res, ctx) => {
+    // GET 요청을 가로채고 현재 사용자 데이터를 반환
+    return res(ctx.status(200), ctx.json(users));
+  }),
 ];
+// rest.get(
+//   'https://jsonplaceholder.typicode.com/users',
+//   async (req, res, ctx) => {
+//     return res(
+//       ctx.status(200),
+//       ctx.json([
+//         {
+//           member_id: req.body.member_id,
+//           nickname: req.body.nickname,
+//           email: req.body.email,
+//         },
+//       ]),
+//     );
+//   },
+// ),
+// rest.post('https://jsonplaceholder.typicode.com/users', (req, res, ctx) => {
+//   // POST 요청을 가로채고 원하는 응답을 제공
+//   return res(
+//     ctx.status(201), // 응답 상태 코드 (예: 201 Created)
+//     ctx.json({
+//       member_id: req.body.member_id,
+//       nickname: req.body.nickname,
+//       email: req.body.email,
+//     }),
+//   );
+// }),
+// ];
