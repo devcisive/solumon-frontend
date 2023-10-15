@@ -1,4 +1,5 @@
 import { rest } from 'msw';
+let fakePosts = [];
 export const handlers = [
   rest.get(
     'https://jsonplaceholder.typicode.com/posts',
@@ -98,4 +99,46 @@ export const handlers = [
       }
     },
   ),
+
+  //게시물작성 post
+  rest.post('https://jsonplaceholder.typicode.com/posts', (req, res, ctx) => {
+    const requestData = req.body;
+    const newPostId = fakePosts.length + 1;
+    const response = {
+      post_id: newPostId,
+      title: requestData.title,
+      contents: requestData.contents,
+      tags: requestData.tags,
+      images: requestData.images.map((image, index) => ({
+        ...image,
+        index: index + 1,
+        // representative: image.index === requestData.representative,
+      })),
+      vote: {
+        choices: requestData.vote.choices.map((choice) => ({
+          choice_num: choice.choice_num,
+          choice_text: choice.choice_text,
+        })),
+        end_at: requestData.vote.end_at,
+      },
+    };
+    fakePosts.push(requestData);
+    return res(ctx.status(200), ctx.json(response));
+  }),
+  //post한 내용 get으로 가져오기 (..동작이 왜때문에...안될까?)
+  // rest.get(
+  //   'https://jsonplaceholder.typicode.com/posts/:postId',
+  //   (req, res, ctx) => {
+  //     const postId = Number(req.params.postId);
+  //     const post = fakePosts.find((p) => p.post_id === postId);
+  //     if (post) {
+  //       return res(ctx.status(200), ctx.json(post));
+  //     } else {
+  //       return res(
+  //         ctx.status(404),
+  //         ctx.json({ message: '게시물을 찾을 수 없습니다.' }),
+  //       );
+  //     }
+  //   },
+  // ),
 ];
