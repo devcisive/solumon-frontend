@@ -8,7 +8,6 @@ import PostDetail from './pages/PostDetail';
 import Ban from './pages/Ban';
 import UserInfo from './pages/UserInfo';
 import ChoiceInterest from './pages/ChoiceInterest';
-import Login from './pages/Login';
 import SignUpGeneral from './pages/sign-up/SignUpGeneral';
 import SignUpKakao from './pages/sign-up/SignUpKakao';
 import FindPassword from './pages/FindPassword';
@@ -16,8 +15,6 @@ import WithDraw from './pages/WithDraw';
 import PostList from './pages/PostList';
 import PostCategory from './pages/PostCategory';
 import { RecoilRoot } from 'recoil';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-b;
 
 function App() {
   return (
