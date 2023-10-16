@@ -5,8 +5,10 @@ import { IoIosRemoveCircle } from 'react-icons/io';
 import { AiFillMinusCircle, AiFillPlusCircle } from 'react-icons/ai';
 import { BsPlusSquare } from 'react-icons/bs';
 import Button from '../components/Button';
+import { useNavigate } from 'react-router-dom';
 
 const Posts = () => {
+  const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -15,14 +17,28 @@ const Posts = () => {
   const [hashtags, setHashtags] = useState([]);
   const [currentHashtag, setCurrentHashtag] = useState('');
   const [representative, setRepresentative] = useState(null);
+  const [filePreviews, setFilePreviews] = useState([]);
 
   const handleFileChange = (event) => {
     //사진 업로드
     const files = event.target.files;
+    const fileNames = Array.from(files).map((file) => file.name); // 파일명 추출
+    const fileObjects = Array.from(files).map((file) =>
+      URL.createObjectURL(file),
+    );
+
     setSelectedFile((prevSelectedFile) => [
       ...(prevSelectedFile || []),
-      ...Array.from(files),
+      ...fileNames,
     ]);
+    setFilePreviews((prevFilePreviews) => [
+      ...(prevFilePreviews || []),
+      ...fileObjects,
+    ]);
+    if (representative === null && fileObjects.length > 0) {
+      //대표이미지를 선택하지 않았을때, 임의로 첫번째로 대표이미지 설정
+      setRepresentative(0);
+    }
   };
 
   // 사진 삭제
@@ -104,12 +120,49 @@ const Posts = () => {
   };
   // 게시글 데이터 생성
   const RegisterSubmit = () => {
+    //유효성(validation)
+    if (!title || !content) {
+      alert('제목과 내용을 작성해주세요.');
+      return;
+    }
+    // if (selectedFile.length === 0) {
+    //   const defaultImageUrl = '/image/기본썸네일.jpg'; // 실제 기본 이미지 파일 경로로 수정
+    //   setSelectedFile((prevSelectedFile) => {
+    //     return [...prevSelectedFile, defaultImageUrl];
+    //   });
+    //   setRepresentative(1); // 기본 이미지의 index를 0으로 설정
+    // }
+    if (options.length < 2) {
+      alert('최소 2개의 투표 항목을 입력해주세요.');
+      return;
+    }
+    const hasEmptyOption = options.some((option) => option.trim() === '');
+    if (hasEmptyOption) {
+      alert('투표 항목을 모두 입력해주세요.');
+      return;
+    }
+    const currentTime = new Date().toISOString().slice(0, 16); // 현재 날짜와 시간
+    if (endDate <= currentTime) {
+      alert('유효한 투표 종료일을 선택해주세요.');
+      return;
+    }
+    //데이터 등록 완료후 입력값초기화
+    setTitle('');
+    setContent('');
+    setEndDate('');
+    setOptions(['', '', '', '', '']);
+    setHashtags([]);
+    setCurrentHashtag('');
+    setRepresentative(null);
+    setSelectedFile([]);
+    setFilePreviews([]);
+
     const postData = {
       title,
       contents: content,
       tags: hashtags.map((tag) => ({ tag })),
-      images: selectedFile.map((file, index) => ({
-        image: URL.createObjectURL(file),
+      images: selectedFile.map((image, index) => ({
+        image,
         index: index + 1,
         representative: index === representative,
       })),
@@ -130,7 +183,7 @@ const Posts = () => {
     console.log('등록 데이터:', requestData);
 
     //   msw POST 요청 코드 //
-    const Url = 'https://jsonplaceholder.typicode.com/posts/{postId}/vote';
+    const Url = 'https://jsonplaceholder.typicode.com/posts';
     fetch(Url, {
       method: 'POST',
       headers: {
@@ -146,6 +199,8 @@ const Posts = () => {
       })
       .then((data) => {
         console.log('응답 데이터:', data);
+        const postId = data.post_id;
+        navigate(`/posts/${postId}`);
       })
       .catch((error) => {
         console.error('요청 오류:', error);
@@ -195,7 +250,7 @@ const Posts = () => {
             {selectedFile.map((file, index) => (
               <ImageContainer key={index}>
                 <StyledFileImg
-                  src={URL.createObjectURL(file)}
+                  src={filePreviews[index]}
                   alt={`미리보기 ${index + 1}`}
                   onClick={() => handleImageClick(index)}
                 />
@@ -219,15 +274,11 @@ const Posts = () => {
           ></FileInput>
           <FileNameInput
             placeholder="첨부 파일"
-            value={
-              selectedFile.length > 0
-                ? selectedFile.map((file) => file.name).join(', ')
-                : ''
-            }
+            value={selectedFile.length > 0 ? selectedFile.join(', ') : ''}
             readOnly
           ></FileNameInput>
           {/* 업로드 버튼 */}
-          <Button
+          {/* <Button
             name="업로드"
             type="button"
             onClick={RegisterSubmit}
@@ -237,7 +288,7 @@ const Posts = () => {
             fontWeight={500}
             padding="10px 40px"
             borderRadius="5px"
-          />
+          /> */}
         </FileContainer>
 
         {/* 투표 작성 부분 */}
@@ -325,7 +376,7 @@ const TitleSpan = styled.span`
 const HeadContainer = styled.div`
   display: flex;
   flex-direction: row;
-  width: 80%;
+  width: 70%;
   justify-content: space-evenly;
   margin-bottom: 10px;
 `;
@@ -360,7 +411,7 @@ const ContentTextArea = styled.textarea`
   }
 `;
 const FileContainer = styled.div`
-  width: 61%;
+  width: 70%;
   display: flex;
   justify-content: center;
   align-items: center;
