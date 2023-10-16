@@ -19,7 +19,7 @@ const Start = () => {
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    navigate('/login');
+    navigate('/user/sign-in/general');
   };
   let options = {
     anchors: [
