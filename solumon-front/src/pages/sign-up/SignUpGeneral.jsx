@@ -8,105 +8,152 @@ function SignUpGeneral() {
   const [userData, setUserData] = useState(null);
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
+  const [sendEmailAuthMsg, setSendEmailAuthMsg] = useState(false);
+  const [emailAuthNumber, setEmailAuthNumber] = useState(0);
+  const [canUseEmail, setCanUseEmail] = useState('');
   const [password, setPassword] = useState('');
   const [checkPassword, setCheckPassword] = useState('');
+  const [canSignUp, setCanSignUp] = useState([
+    {
+      emailAuth_button_click: false,
+      emailAuth_confirm_button_click: false,
+    },
+  ]);
   const [id, setId] = useState(3);
 
-  // useEffect(() => {
-  //   fetchData();
-  // }, []);
-
   const fetchData = async () => {
-    const response = await axios({
-      url: 'https://jsonplaceholder.typicode.com/users',
-      method: 'get',
-    });
-    setUserData(response.body);
-    console.log(userData);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
     try {
-      const response = await axios.post(
+      const response = await axios.get(
         'https://jsonplaceholder.typicode.com/users',
-        {
-          member_id: id,
-          nickname: nickname,
-          email: email,
-        },
       );
-
-      fetchData();
-      // 응답 데이터를 userData 상태에 저장
-      // setUserData(response.data);
-      // console.log(userData);
-
-      // ID 증가
-      setId(id + 1);
+      setUserData(response.data);
     } catch (error) {
       console.error(error);
     }
   };
 
-  const handleCertificationButton = () => {};
+  const handleEmailAuthButton = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        'https://jsonplaceholder.typicode.com/user/send-emailAuth',
+        {
+          email: email,
+        },
+      );
+      setSendEmailAuthMsg(true);
+      setCanSignUp({
+        ...canSignUp,
+        emailAuth_button_click: true,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-  const handleConfirmButton = () => {};
+  const handleEmailAuthConfirmButton = (e) => {
+    e.preventDefault();
+    Number(emailAuthNumber) === 231011
+      ? setCanUseEmail('사용 가능한 이메일 입니다.')
+      : setCanUseEmail('인증번호가 일치하지 않습니다.');
 
-  const handleSignUpButton = () => {};
+    setCanSignUp({
+      ...canSignUp,
+      emailAuth_confirm_button_click: true,
+    });
+  };
+
+  const handleSignUpButton = async (e) => {
+    e.preventDefault();
+    if (
+      canSignUp.emailAuth_button_click &&
+      canSignUp.emailAuth_confirm_button_click
+    ) {
+      try {
+        const response = await axios.post(
+          'https://jsonplaceholder.typicode.com/users',
+          {
+            member_id: id,
+            nickname: nickname,
+            email: email,
+            password: password,
+          },
+        );
+
+        fetchData();
+
+        // ID 증가
+        setId(id + 1);
+      } catch (error) {
+        console.error(error);
+      }
+    } else {
+      alert('이메일 인증 후에 회원가입이 가능합니다.');
+    }
+  };
+
+  // useEffect(() => {
+  //   fetchData();
+  // }, []);
 
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
         <PageTitle>이메일 회원가입</PageTitle>
         <Line></Line>
-        <SignInForm
-          name="sign-in-general"
-          method="post"
-          onSubmit={handleSubmit}
-        >
+        <SignInForm name="sign-up-general">
           <StyledInput
             type="text"
             placeholder="닉네임"
             onChange={(e) => setNickname(e.target.value)}
+            required
           ></StyledInput>
-          <CertificationWrapper>
-            <CertificationInput
+          <EmailAuthWrapper>
+            <EmailAuthInput
               type="email"
               placeholder="이메일 주소"
               onChange={(e) => setEmail(e.target.value)}
-            ></CertificationInput>
+              required
+            ></EmailAuthInput>
             <Button
               type="submit"
               name={'인증'}
-              onClick={handleCertificationButton}
+              onClick={handleEmailAuthButton}
               fontSize={'14px'}
               padding={'8px 17px'}
             />
-          </CertificationWrapper>
-          <CertificationWrapper>
-            <CertificationInput
+          </EmailAuthWrapper>
+          {sendEmailAuthMsg && (
+            <CheckMessage>이메일로 인증번호가 전송되었습니다.</CheckMessage>
+          )}
+          <EmailAuthWrapper>
+            <EmailAuthInput
               type="number"
               placeholder="인증번호"
-            ></CertificationInput>
+              onChange={(e) => setEmailAuthNumber(e.target.value)}
+              required
+            ></EmailAuthInput>
             <Button
               type="submit"
               name={'확인'}
-              onClick={handleConfirmButton}
+              onClick={handleEmailAuthConfirmButton}
               fontSize={'14px'}
               padding={'8px 17px'}
             />
-          </CertificationWrapper>
+          </EmailAuthWrapper>
+          {canUseEmail && <CheckMessage>{canUseEmail}</CheckMessage>}
           <StyledInput
             type="password"
             placeholder="비밀번호"
             onChange={(e) => setPassword(e.target.value)}
+            required
           ></StyledInput>
           <StyledInput
             style={{ marginBottom: '10px' }}
             type="password"
             placeholder="비밀번호 확인"
             onChange={(e) => setCheckPassword(e.target.value)}
+            required
           ></StyledInput>
 
           {userData === nickname ? (
@@ -127,14 +174,20 @@ function SignUpGeneral() {
 
           <Button
             type="submit"
-            value="sign-up"
+            value="sign-up-general"
             name={'회원가입'}
             onClick={handleSignUpButton}
-            fontSize={'14px'}
-            padding={'13px'}
+            fontSize={'16px'}
+            padding={'10px 13px'}
           />
         </SignInForm>
         <Line></Line>
+        {userData &&
+          userData.map((user) => (
+            <div key={user.member_id}>
+              <div>{user.nickname}</div>
+            </div>
+          ))}
       </Wrapper>
     </ThemeProvider>
   );
@@ -179,11 +232,11 @@ const StyledInput = styled.input`
   outline: none;
 `;
 
-const CertificationWrapper = styled.div`
+const EmailAuthWrapper = styled.div`
   display: flex;
 `;
 
-const CertificationInput = styled.input`
+const EmailAuthInput = styled.input`
   width: 250px;
   color: ${({ theme }) => theme.dark_purple};
   background-color: ${({ theme }) => theme.light_purple};
