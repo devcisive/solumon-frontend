@@ -4,6 +4,6 @@ export const UserInterestTopic = atom({
   key: 'UserInterestTopic',
   default: {
     member_id: 1,
-    interests: [],
+    interests: ['연애', '드라마/영화', '다이어트'],
   },
 });

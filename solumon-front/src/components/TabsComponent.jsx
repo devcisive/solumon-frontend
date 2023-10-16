@@ -4,17 +4,14 @@ import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import PropTypes from 'prop-types';
 //컴포넌트 이름 수정 Tabs->TabsComponent
-function TabsComponent({ tabLabels, defaultTab = 0 }) {
+function TabsComponent({ tabLabels, defaultTab, onClick }) {
   const [value, setValue] = React.useState(defaultTab);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
+    onClick(tabLabels[newValue]); // 새로운 탭을 클릭할 때 콜백 함수 호출
   };
 
-  TabsComponent.propTypes = {
-    tabLabels: PropTypes.arrayOf(PropTypes.string).isRequired,
-    defaultTab: PropTypes.number.isRequired,
-  };
   return (
     <Box sx={{ width: '40%' }}>
       <Tabs
@@ -29,4 +26,11 @@ function TabsComponent({ tabLabels, defaultTab = 0 }) {
     </Box>
   );
 }
+
+TabsComponent.propTypes = {
+  tabLabels: PropTypes.arrayOf(PropTypes.string).isRequired,
+  defaultTab: PropTypes.number.isRequired,
+  onClick: PropTypes.func.isRequired,
+};
+
 export default TabsComponent;
