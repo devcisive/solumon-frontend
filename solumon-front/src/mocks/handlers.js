@@ -125,7 +125,7 @@ export const handlers = [
     fakePosts.push(requestData);
     return res(ctx.status(200), ctx.json(response));
   }),
-  //post한 내용 get으로 가져오기 (..동작이 왜때문에...안될까?)
+
   // rest.get(
   //   'https://jsonplaceholder.typicode.com/posts/:postId',
   //   (req, res, ctx) => {
@@ -141,4 +141,142 @@ export const handlers = [
   //     }
   //   },
   // ),
+  //게시물상세페이지에서 투표항목 선택 post핸들러
+
+  rest.get(
+    'https://jsonplaceholder.typicode.com/posts/:postId',
+    (req, res, ctx) => {
+      const PostData = {
+        post_id: 2,
+        title: '쉬는날 뭘 하는게 좋을까?',
+        nickname: 'devcisiver',
+        contents:
+          '오랜만에 쉬는날인데 뭐하면 좋을까? 정말 뿌듯한 쉬는날을 만들고싶어!! 다들 추천해주라~~~~~~~~~',
+        tags: [{ tag: '가족' }, { tag: '여행' }],
+        images: [{ image: 'url1' }, { image: 'url2' }],
+        created_at: '2023-09-15',
+        vote: {
+          result_access_status: true,
+          choices: [
+            {
+              choice_num: 1,
+              choice_text: '집에서 낮잠자기',
+              choice_percent: '50%',
+              choice_count: 23,
+            },
+            {
+              choice_num: 2,
+              choice_text: '취미생활하기',
+              choice_percent: '30%',
+              choice_count: 23,
+            },
+            {
+              choice_num: 3,
+              choice_text: '생활하기',
+              choice_percent: '10%',
+              choice_count: 23,
+            },
+          ],
+
+          // "chat": [ {
+          //   ”nickname”: “해피”
+          //   ”contents”: “채팅 내용”
+          //   ”created_at”: 2023-09-19 13:43
+          //   },
+          //   {
+          //   ”nickname”: “뽀삐”
+          //   ”contents”: “채팅 내용”
+          //   ”created_at”: 2023-09-19 20:37
+          //   } ],
+          // ”vote_count”: 3,
+          // ”chat_count”: 5
+          // }
+          end_at: '2023-09-15 16:00',
+        },
+      };
+      // 요청 파라미터에서 postId 추출
+      const { postId } = req.params;
+      console.log(postId);
+      return res(ctx.status(200), ctx.json({ post: PostData }));
+    },
+  ),
+  // rest.post(
+  //   'https://jsonplaceholder.typicode.com/post/:postId/vote',
+  //   (req, res, ctx) => {
+  //     return res(
+  //       ctx.status(200),
+  //       ctx.json({
+  //         message: 'Successfully submitted choice',
+  //       }),
+  //     );
+  //   },
+  // ),
+  rest.post(
+    'https://jsonplaceholder.typicode.com/posts/:postId/vote',
+    (req, res, ctx) => {
+      const { selected_number } = req.body;
+      const response = {
+        choices: [
+          {
+            choice_num: 1,
+            choice_text: '집에서 낮잠자기',
+            choice_percent: 30,
+            choice_count: 23,
+          },
+          {
+            choice_num: 2,
+            choice_text: '취미생활하기',
+            choice_percent: 70,
+            choice_count: 23,
+          },
+        ],
+      };
+      return res(ctx.status(200), ctx.json({ response }));
+    },
+  ),
+  //신고post 핸들러
+  rest.post(
+    'https://jsonplaceholder.typicode.com/user/:nickName/report',
+    (req, res, ctx) => {
+      const { reportType, reportContent } = req.body;
+
+      return res(ctx.status(200), ctx.json({ reportType, reportContent }));
+    },
+  ),
+  //게시물상세페이지 수정put 핸들러
+  rest.put(
+    'https://jsonplaceholder.typicode.com/posts/:postId',
+    (req, res, ctx) => {
+      const requestData = req.body;
+
+      const updatedData = {
+        title: requestData.title,
+        contents: requestData.contents,
+        tags: requestData.tags,
+        images: requestData.images,
+      };
+
+      return res(ctx.status(200), ctx.json({ post: updatedData }));
+    },
+  ),
+  //게시물 삭제 delete
+  rest.delete(
+    'https://jsonplaceholder.typicode.com/posts/:postId',
+    (req, res, ctx) => {
+      const { postId } = req.params;
+
+      return res(
+        ctx.status(200),
+        ctx.json({
+          message: `게시물 ${postId}이(가) 성공적으로 삭제되었습니다.`,
+        }),
+      );
+
+      // 게시물 삭제가 실패했을 경우
+      // return res(
+      //   ctx.status(500),
+      //   ctx.json({ error: '게시물 삭제 실패' })
+      // );
+    },
+  ),
 ];
