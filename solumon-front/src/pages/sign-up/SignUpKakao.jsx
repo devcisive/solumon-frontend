@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import axios from 'axios';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../../style/theme';
 import Button from '../../components/Button';
@@ -8,7 +9,23 @@ function SignUpKakao() {
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('test@kakao.com');
 
-  const handleSignUpButton = () => {};
+  const handleSignUpButton = async (e) => {
+    e.preventDefault();
+    if (nickname.length > 0) {
+      try {
+        const response = await axios.post(
+          'https://jsonplaceholder.typicode.com/users',
+          {
+            nickname: nickname,
+          },
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    } else {
+      alert('닉네임을 입력해 주세요.');
+    }
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -20,6 +37,7 @@ function SignUpKakao() {
             type="text"
             placeholder="닉네임"
             onChange={(e) => setNickname(e.target.value)}
+            required
           ></StyledInput>
           <StyledInput
             style={{ marginBottom: '10px' }}
