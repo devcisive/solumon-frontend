@@ -1,8 +1,11 @@
 import { Reset } from 'styled-reset';
-import { RecoilRoot } from 'recoil';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
+import Login from './pages/Login';
 import NavigationBar from './components/NavigationBar';
+import Start from './pages/Start';
+import Posts from './pages/Posts';
+import PostDetail from './pages/PostDetail';
+import Ban from './pages/Ban';
 import UserInfo from './pages/UserInfo';
 import ChoiceInterest from './pages/ChoiceInterest';
 import Login from './pages/Login';
@@ -12,6 +15,9 @@ import FindPassword from './pages/FindPassword';
 import WithDraw from './pages/WithDraw';
 import PostList from './pages/PostList';
 import PostCategory from './pages/PostCategory';
+import { RecoilRoot } from 'recoil';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+b;
 
 function App() {
   return (
@@ -21,6 +27,11 @@ function App() {
         <NavigationBar />
         <Routes>
           <Route path="/user" element={<UserInfo />} />
+          <Route path="/" element={<Start />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/posts" element={<Posts />} />
+          <Route path="/posts/:post_id" element={<PostDetail />} />
+          <Route path="/user/:nickname/report" element={<Ban />} />
           <Route path="/user/interests" element={<ChoiceInterest />} />
           <Route path="/user/sign-in/general" element={<Login />} />
           <Route path="/user/sign-up/general" element={<SignUpGeneral />} />
