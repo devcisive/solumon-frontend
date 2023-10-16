@@ -54,6 +54,7 @@ const Login = () => {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="이메일주소를 입력해주세요"
             autoComplete="username"
+            required
           ></StyledInput>
           <StyledInput
             type="password"
@@ -62,6 +63,7 @@ const Login = () => {
             onChange={(e) => setPassWord(e.target.value)}
             placeholder="비밀번호를 입력해주세요"
             autoComplete="current-password"
+            required
           ></StyledInput>
           <Button
             name="로그인"
