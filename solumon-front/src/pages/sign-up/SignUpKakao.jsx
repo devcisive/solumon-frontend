@@ -95,7 +95,7 @@ const SignInForm = styled.form`
 `;
 
 const StyledInput = styled.input`
-  width: 300px;
+  width: 330px;
   color: ${({ theme }) => theme.dark_purple};
   background-color: ${({ theme }) => theme.light_purple};
   padding: 10px;
