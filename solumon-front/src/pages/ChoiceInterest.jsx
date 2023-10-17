@@ -34,7 +34,7 @@ function ChoiceInterest() {
         },
       );
       // fetchUserInterestData();
-      navigate('/posts/post-list');
+      // navigate('/posts/post-list');
     } catch (error) {
       console.error(error);
     }
