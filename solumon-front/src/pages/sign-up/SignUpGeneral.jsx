@@ -71,7 +71,7 @@ function SignUpGeneral() {
     ) {
       try {
         const response = await axios.post(
-          'https://jsonplaceholder.typicode.com/users',
+          'http://solumon.site:8080/user/sign-up/general',
           {
             member_id: id,
             nickname: nickname,
