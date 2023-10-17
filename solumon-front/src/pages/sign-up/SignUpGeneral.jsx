@@ -36,7 +36,7 @@ function SignUpGeneral() {
     e.preventDefault();
     try {
       const response = await axios.post(
-        'https://jsonplaceholder.typicode.com/user/send-emailAuth',
+        'http://solumon.site:8080/user/send-emailAuth',
         {
           email: email,
         },
