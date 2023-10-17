@@ -16,7 +16,7 @@ function Button({
     <ThemeProvider theme={theme}>
       <StyledButton
         onClick={onClick}
-        bgColor={bgColor}
+        $bgColor={bgColor}
         color={color}
         fontSize={fontSize}
         fontWeight={fontWeight}
@@ -45,7 +45,11 @@ const StyledButton = styled.button`
   color: ${(props) => props.color || props.theme.linen};
   font-size: ${(props) => props.fontSize};
   font-weight: ${(props) => props.fontWeight || 400};
+<<<<<<< HEAD
+  padding: ${(props) => props.$padding};
+=======
   padding: ${(props) => props.padding || 0};
+>>>>>>> 538c3896796f7f15aa7846c40fd5bccd92d6883f
   border-radius: ${(props) => props.borderRadius || '0'};
   border: none;
   cursor: pointer;
