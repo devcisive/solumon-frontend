@@ -21,13 +21,16 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const response = await fetch('https://jsonplaceholder.typicode.com/users', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json', // JSON 형식의 데이터를 전송한다는 헤더 설정
+    const response = await fetch(
+      'http://solumon.site:8080/user/sign-in/general',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', // JSON 형식의 데이터를 전송한다는 헤더 설정
+        },
+        body: JSON.stringify({ email, passWord }), // JSON 형식으로 사용자 이메일과 비밀번호를 전송
       },
-      body: JSON.stringify({ email, passWord }), // JSON 형식으로 사용자 이메일과 비밀번호를 전송
-    });
+    );
 
     if (response.ok) {
       console.log('로그인 성공');
@@ -66,11 +69,11 @@ const Login = () => {
             required
           ></StyledInput>
           <Button
-            name="로그인"
+            name={'로그인'}
             type="button"
             onClick={handleLogin}
-            fontSize="16px"
-            padding="10px"
+            fontSize={'16px'}
+            padding={'10px'}
           />
         </StyledForm>
         <StyledLink to="/user/find-password">
@@ -89,6 +92,13 @@ const Login = () => {
 
 export default Login;
 
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 70px;
+`;
+
 const StyledLink = styled(Link)`
   text-decoration: none;
   color: #000;
@@ -100,7 +110,7 @@ const StyledForm = styled.form`
 `;
 
 const KakaoLoginImg = styled.img`
-  width: 320px;
+  width: 350px;
   cursor: pointer;
 `;
 
@@ -112,17 +122,11 @@ const PinSearch = styled.div`
   margin-top: 25px;
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
 const StyledP = styled.div`
-  font-size: 25px;
+  font-size: 24px;
   font-weight: bold;
   color: ${({ theme }) => theme.dark_purple};
-  margin: 70px;
+  margin-bottom: 60px;
 `;
 
 const StyledSpan = styled.span`
@@ -162,11 +166,11 @@ const StyledHr = styled.hr`
 
 const StyledInput = styled.input`
   padding: 10px;
-  width: 300px;
+  width: 330px;
   background-color: ${({ theme }) => theme.light_purple};
   border: none;
   &::placeholder {
-    color: ${({ theme }) => theme.medium_purple};
+    color: #3c3c3c;
   }
   &:focus {
     outline: none;

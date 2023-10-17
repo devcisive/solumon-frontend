@@ -76,7 +76,7 @@ const Wrapper = styled.div`
 
 const PageTitle = styled.h1`
   font-size: 24px;
-  font-weight: 500;
+  font-weight: 600;
   color: ${({ theme }) => theme.dark_purple};
   margin-bottom: 40px;
 `;
@@ -101,6 +101,10 @@ const StyledInput = styled.input`
   padding: 10px;
   border: none;
   outline: none;
+
+  &::placeholder {
+    color: #3c3c3c;
+  }
 `;
 
 const CheckMessage = styled.p`
