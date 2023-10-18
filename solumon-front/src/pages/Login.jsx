@@ -1,14 +1,18 @@
-import { ThemeProvider } from 'styled-components';
-import Button from '../components/Button';
-import theme from '../style/theme';
-import styled from 'styled-components';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-// import axios from 'axios';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { useRecoilState } from 'recoil';
+import { GeneralUserInfo } from '../recoil/AllAtom';
+import axios from 'axios';
+import styled, { ThemeProvider } from 'styled-components';
+import theme from '../style/theme';
+
+import Button from '../components/Button';
 
 const Login = () => {
   const [email, setEmail] = useState('');
-  const [passWord, setPassWord] = useState('');
+  const [password, setPassword] = useState('');
+  const [generalUserInfo, setGeneralUserInfo] = useRecoilState(GeneralUserInfo);
+  const navigate = useNavigate();
 
   const REST_API_KEY = '478ce5c02a05e42ebd74f42edf66e003'; //REST API KEY
   const REDIRECT_URI = 'http://localhost:5173/user/start/kakao'; //Redirect URI
@@ -21,21 +25,35 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const response = await fetch(
-      'http://solumon.site:8080/user/sign-in/general',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json', // JSON 형식의 데이터를 전송한다는 헤더 설정
+    try {
+      const response = await axios.post(
+        'http://solumon.site:8080/user/sign-in/general',
+        { email: email, password: password },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
         },
-        body: JSON.stringify({ email, passWord }), // JSON 형식으로 사용자 이메일과 비밀번호를 전송
-      },
-    );
+      );
+      if (response.status === 200) {
+        console.log(response.data);
+        console.log('로그인 성공');
 
-    if (response.ok) {
-      console.log('로그인 성공');
-    } else {
-      console.error('로그인 실패');
+        await setGeneralUserInfo({
+          accessToken: response.data.accessToken,
+          firstLogIn: response.data.firstLogIn,
+          memberId: response.data.memberId,
+        });
+
+        console.log(generalUserInfo);
+        generalUserInfo.firstLogIn
+          ? navigate('/user/interests')
+          : navigate('/post-list');
+      } else {
+        console.error('로그인 실패');
+      }
+    } catch (error) {
+      console.error('오류 발생: ' + error.message);
     }
   };
 
@@ -61,9 +79,9 @@ const Login = () => {
           ></StyledInput>
           <StyledInput
             type="password"
-            value={passWord}
+            value={password}
             id="passWord"
-            onChange={(e) => setPassWord(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="비밀번호를 입력해주세요"
             autoComplete="current-password"
             required
