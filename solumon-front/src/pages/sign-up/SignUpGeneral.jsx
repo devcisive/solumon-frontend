@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../../style/theme';
@@ -8,59 +9,56 @@ function SignUpGeneral() {
   const [userData, setUserData] = useState(null);
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
-  const [sendEmailAuthMsg, setSendEmailAuthMsg] = useState(false);
-  const [emailAuthNumber, setEmailAuthNumber] = useState(0);
+  const [sendEmailAuthMsg, setSendEmailAuthMsg] = useState(false); // 이메일 전송 됐는지 여부
+  const [emailAuthCode, setEmailAuthCode] = useState('');
+  const [emailAuthCodeConfirm, setEmailAuthCodeConfirm] = useState('');
   const [canUseEmail, setCanUseEmail] = useState('');
   const [password, setPassword] = useState('');
   const [checkPassword, setCheckPassword] = useState('');
   const [canSignUp, setCanSignUp] = useState([
     {
-      emailAuth_button_click: false,
-      emailAuth_confirm_button_click: false,
+      emailAuth_button_click: false, // 이메일 인증버튼 클릭했는지 확인
+      emailAuth_confirm_button_click: false, // 이메일 인증번호 확인했는지 확인
     },
   ]);
-  const [id, setId] = useState(3);
 
-  const fetchData = async () => {
-    // try {
-    //   const response = await axios.get(
-    //     'https://jsonplaceholder.typicode.com/users',
-    //   );
-    //   setUserData(response.data);
-    // } catch (error) {
-    //   console.error(error);
-    // }
-  };
+  const navigate = useNavigate();
 
+  // 이메일 인증 버튼 클릭
   const handleEmailAuthButton = async (e) => {
     e.preventDefault();
-    const response = await fetch(
-      'http://solumon.site:8080/user/send-email-auth',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json', // JSON 형식의 데이터를 전송한다는 헤더 설정
+    try {
+      const response = await axios.get(
+        `http://solumon.site:8080/user/send-email-auth?email=${email}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
         },
-        body: JSON.stringify({ email }), // JSON 형식으로 사용자 이메일 전송
-      },
-    );
+      );
 
-    if (response.ok) {
-      console.log(response.body);
-      setSendEmailAuthMsg(true);
-      setCanSignUp({
-        ...canSignUp,
-        emailAuth_button_click: true,
-      });
-      console.log('이메일 인증 버튼 클릭');
-    } else {
-      console.error('이메일 정보 전송 X');
+      if (response.status === 200) {
+        console.log(response.data);
+        setEmailAuthCode(response.data.code); // 이메일 인증번호 저장
+        setSendEmailAuthMsg(true); // 이메일 전송 메세지 띄움
+        setCanSignUp({
+          ...canSignUp,
+          emailAuth_button_click: true,
+        });
+      } else {
+        console.error('이메일 정보 전송 X');
+      }
+    } catch (error) {
+      console.error('오류 발생: ' + error.message);
     }
   };
 
+  // 이메일 인증번호 입력 후 확인버튼 클릭
   const handleEmailAuthConfirmButton = (e) => {
     e.preventDefault();
-    Number(emailAuthNumber) === 231011
+
+    // 인증번호 전송 후 받아온 response의 인증번호와 유저가 입력한 인증번호가 같은지 판단
+    emailAuthCode === emailAuthCodeConfirm
       ? setCanUseEmail('사용 가능한 이메일 입니다.')
       : setCanUseEmail('인증번호가 일치하지 않습니다.');
 
@@ -70,56 +68,40 @@ function SignUpGeneral() {
     });
   };
 
+  // 회원가입 버튼 클릭
   const handleSignUpButton = async (e) => {
     e.preventDefault();
     if (
+      // 이메일 인증 버튼과 인증번호 확인 버튼이 모두 클릭됐다면
       canSignUp.emailAuth_button_click &&
       canSignUp.emailAuth_confirm_button_click
     ) {
-      // try {
-      //   const response = await axios.post(
-      //     'http://solumon.site:8080/user/sign-up/general',
-      //     {
-      //       member_id: id,
-      //       nickname: nickname,
-      //       email: email,
-      //       password: password,
-      //     },
-      //   );
-
-      //   fetchData();
-
-      //   // ID 증가
-      //   setId(id + 1);
-      // } catch (error) {
-      //   console.error(error);
-      // }
-      const response = await fetch(
-        'http://solumon.site:8080/user/sign-up/general',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json', // JSON 형식의 데이터를 전송한다는 헤더 설정
+      try {
+        // 회원가입 요청 보내기
+        const response = await axios.post(
+          'http://solumon.site:8080/user/sign-up/general',
+          { nickname: nickname, email: email, password: password },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
           },
-          body: JSON.stringify({ id, nickname, email, password }), // JSON 형식으로 사용자 이메일과 비밀번호를 전송
-        },
-      );
+        );
 
-      if (response.ok) {
-        const jsonData = await response.json(); // JSON 데이터를 읽어옴
-        console.log(jsonData); // jsonData를 출력 또는 처리
-        jsonData.errorMessage && alert(jsonData.errorMessage);
-      } else {
-        console.error('로그인 실패');
+        if (response.status === 200) {
+          console.log(response.data);
+          alert('회원가입이 완료되었습니다.');
+          navigate('/login'); // 회원가입 완료 후 로그인 페이지로 이동
+        } else {
+          response.data.errorMessage && alert(response.data.errorMessage);
+        }
+      } catch (error) {
+        console.error('오류 발생: ' + error.message);
       }
     } else {
       alert('이메일 인증 후에 회원가입이 가능합니다.');
     }
   };
-
-  // useEffect(() => {
-  //   fetchData();
-  // }, []);
 
   return (
     <ThemeProvider theme={theme}>
@@ -141,7 +123,7 @@ function SignUpGeneral() {
               required
             ></EmailAuthInput>
             <Button
-              type="submit"
+              type="button"
               name={'인증'}
               onClick={handleEmailAuthButton}
               fontSize={'14px'}
@@ -155,11 +137,11 @@ function SignUpGeneral() {
             <EmailAuthInput
               type="number"
               placeholder="인증번호"
-              onChange={(e) => setEmailAuthNumber(e.target.value)}
+              onChange={(e) => setEmailAuthCodeConfirm(e.target.value)}
               required
             ></EmailAuthInput>
             <Button
-              type="submit"
+              type="button"
               name={'확인'}
               onClick={handleEmailAuthConfirmButton}
               fontSize={'14px'}
@@ -230,14 +212,14 @@ const Wrapper = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-top: 60px;
+  margin-top: 40px;
 `;
 
 const PageTitle = styled.h1`
   font-size: 24px;
   font-weight: 600;
   color: ${({ theme }) => theme.dark_purple};
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 `;
 
 const Line = styled.hr`
