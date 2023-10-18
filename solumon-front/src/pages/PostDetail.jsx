@@ -13,21 +13,44 @@ const PostDetail = () => {
   const { postId } = useParams();
   const [postData, setPostData] = useState(null); // 데이터를 저장할 상태 변수
   const [selectedChoice, setSelectedChoice] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
-  //투표항목 선택 함수
+  useEffect(() => {
+    // 사용자 인증 토큰 가져오기
+    const token = localStorage.getItem('authToken'); 
+    if (token) {
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(true);
+    }
+ //상세페이지 정보 get으로 받아오기
+    fetch(`http://solumon.site:8080/posts/${postId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        setPostData(data.post);
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+      });
+  },[postId]);
+
+  if (!postData) {
+    return <div>Loading...</div>; // 데이터가 로드되지 않았을 때 
+  }
+  //투표 함수(투표항목선택)
   const handleChoiceClick = (choiceNum) => {
-   
+    if (isLoggedIn) {
       const selectedChoiceInfo = {
         selected_number: choiceNum,
       };
-
       setSelectedChoice(selectedChoiceInfo);
       console.log('등록 데이터:', selectedChoiceInfo);
-      //투표한 정보 post
-      fetch('https://jsonplaceholder.typicode.com/posts/${postId}/vote', {
+      // 투표한 정보를 서버로 전송
+      fetch(`http://solumon.site:8080/posts/${postId}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // 'Authorization': `Bearer ${userToken}`,
         },
         body: JSON.stringify(selectedChoiceInfo),
       })
@@ -38,25 +61,12 @@ const PostDetail = () => {
         .catch((error) => {
           console.error('서버 요청 오류:', error);
         });
+    } else {
+      alert('로그인이 필요합니다.'); // 사용자에게 알림
     }
+  };
   
-  //상세페이지 정보 get으로 받아오기
-  useEffect(() => {
-    fetch(`https://jsonplaceholder.typicode.com/posts/${postId}`)
-      .then((response) => response.json())
-      .then((data) => {
-        setPostData(data.post);
-        // setEditedTitle(data.post.title); // 초기화
-        // setEditedContent(data.post.contents); // 데이터를 상태 변수에 저장
-      })
-      .catch((error) => {
-        console.error('Error fetching data:', error);
-      });
-  }, [postId]);
-
-  if (!postData) {
-    return <div>Loading...</div>; // 데이터가 로드되지 않았을 때 로딩 화면을 표시
-  }
+console.log(isLoggedIn)
 
 
   return (
@@ -64,7 +74,7 @@ const PostDetail = () => {
       <Container>
         <HeaderContent
           postData={postData}
-      
+          isLoggedIn={isLoggedIn}
         />
         <ContentDiv>
           <ImageContainer>
