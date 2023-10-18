@@ -50,8 +50,10 @@ function FindPassword() {
             required
           ></StyledInput>
           <InfoText>
-            이메일로 전송된 임시 비밀번호로 로그인하여
-            <br /> 회원정보에서 비밀번호를 수정할 수 있습니다.
+            📢 이메일로 전송된 임시 비밀번호로 로그인하여
+            <br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;회원정보에서 비밀번호를 수정할 수
+            있습니다.
           </InfoText>
           <Button
             type="submit"
@@ -103,13 +105,17 @@ const FindPasswordForm = styled.form`
 `;
 
 const StyledInput = styled.input`
-  width: 300px;
+  width: 330px;
   color: ${({ theme }) => theme.dark_purple};
   background-color: ${({ theme }) => theme.light_purple};
   font-size: 14px;
   padding: 10px;
   border: none;
   outline: none;
+
+  &::placeholder {
+    color: #3c3c3c;
+  }
 `;
 
 const InfoText = styled.p`
@@ -118,6 +124,6 @@ const InfoText = styled.p`
   font-size: 13px;
   line-height: 1.2rem;
   margin: 10px 0;
-  padding: 12px 15px;
+  padding: 12px 24px;
   border-radius: 10px;
 `;

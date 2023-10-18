@@ -134,6 +134,10 @@ const StyledInput = styled.input`
   padding: 10px;
   border: none;
   outline: none;
+
+  &::placeholder {
+    color: #3c3c3c;
+  }
 `;
 
 const ModalWrapper = styled.div`

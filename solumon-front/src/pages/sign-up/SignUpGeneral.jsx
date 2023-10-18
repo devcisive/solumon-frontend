@@ -22,32 +22,39 @@ function SignUpGeneral() {
   const [id, setId] = useState(3);
 
   const fetchData = async () => {
-    try {
-      const response = await axios.get(
-        'https://jsonplaceholder.typicode.com/users',
-      );
-      setUserData(response.data);
-    } catch (error) {
-      console.error(error);
-    }
+    // try {
+    //   const response = await axios.get(
+    //     'https://jsonplaceholder.typicode.com/users',
+    //   );
+    //   setUserData(response.data);
+    // } catch (error) {
+    //   console.error(error);
+    // }
   };
 
   const handleEmailAuthButton = async (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post(
-        'https://jsonplaceholder.typicode.com/user/send-emailAuth',
-        {
-          email: email,
+    const response = await fetch(
+      'http://solumon.site:8080/user/send-email-auth',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', // JSON 형식의 데이터를 전송한다는 헤더 설정
         },
-      );
+        body: JSON.stringify({ email }), // JSON 형식으로 사용자 이메일 전송
+      },
+    );
+
+    if (response.ok) {
+      console.log(response.body);
       setSendEmailAuthMsg(true);
       setCanSignUp({
         ...canSignUp,
         emailAuth_button_click: true,
       });
-    } catch (error) {
-      console.error(error);
+      console.log('이메일 인증 버튼 클릭');
+    } else {
+      console.error('이메일 정보 전송 X');
     }
   };
 
@@ -69,23 +76,41 @@ function SignUpGeneral() {
       canSignUp.emailAuth_button_click &&
       canSignUp.emailAuth_confirm_button_click
     ) {
-      try {
-        const response = await axios.post(
-          'https://jsonplaceholder.typicode.com/users',
-          {
-            member_id: id,
-            nickname: nickname,
-            email: email,
-            password: password,
+      // try {
+      //   const response = await axios.post(
+      //     'http://solumon.site:8080/user/sign-up/general',
+      //     {
+      //       member_id: id,
+      //       nickname: nickname,
+      //       email: email,
+      //       password: password,
+      //     },
+      //   );
+
+      //   fetchData();
+
+      //   // ID 증가
+      //   setId(id + 1);
+      // } catch (error) {
+      //   console.error(error);
+      // }
+      const response = await fetch(
+        'http://solumon.site:8080/user/sign-up/general',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json', // JSON 형식의 데이터를 전송한다는 헤더 설정
           },
-        );
+          body: JSON.stringify({ id, nickname, email, password }), // JSON 형식으로 사용자 이메일과 비밀번호를 전송
+        },
+      );
 
-        fetchData();
-
-        // ID 증가
-        setId(id + 1);
-      } catch (error) {
-        console.error(error);
+      if (response.ok) {
+        const jsonData = await response.json(); // JSON 데이터를 읽어옴
+        console.log(jsonData); // jsonData를 출력 또는 처리
+        jsonData.errorMessage && alert(jsonData.errorMessage);
+      } else {
+        console.error('로그인 실패');
       }
     } else {
       alert('이메일 인증 후에 회원가입이 가능합니다.');
@@ -144,10 +169,15 @@ function SignUpGeneral() {
           {canUseEmail && <CheckMessage>{canUseEmail}</CheckMessage>}
           <StyledInput
             type="password"
-            placeholder="비밀번호"
+            placeholder="비밀번호 (8~20자)"
             onChange={(e) => setPassword(e.target.value)}
             required
           ></StyledInput>
+          <InfoText>
+            📢 비밀번호 입력 시 영문 대문자 또는 소문자, 숫자,
+            <br />
+            &nbsp;&nbsp;&nbsp;&nbsp; 특수문자 3가지를 모두 사용해야 합니다.
+          </InfoText>
           <StyledInput
             style={{ marginBottom: '10px' }}
             type="password"
@@ -200,12 +230,12 @@ const Wrapper = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-top: 80px;
+  margin-top: 60px;
 `;
 
 const PageTitle = styled.h1`
   font-size: 24px;
-  font-weight: 500;
+  font-weight: 600;
   color: ${({ theme }) => theme.dark_purple};
   margin-bottom: 40px;
 `;
@@ -224,12 +254,26 @@ const SignInForm = styled.form`
 `;
 
 const StyledInput = styled.input`
-  width: 300px;
+  width: 330px;
   color: ${({ theme }) => theme.dark_purple};
   background-color: ${({ theme }) => theme.light_purple};
   padding: 10px;
   border: none;
   outline: none;
+
+  &::placeholder {
+    color: #3c3c3c;
+  }
+`;
+
+const InfoText = styled.p`
+  color: ${({ theme }) => theme.dark_purple};
+  background-color: ${({ theme }) => theme.linen};
+  font-size: 13px;
+  line-height: 1.2rem;
+  margin: 10px 0;
+  padding: 12px 15px;
+  border-radius: 10px;
 `;
 
 const EmailAuthWrapper = styled.div`
@@ -237,12 +281,16 @@ const EmailAuthWrapper = styled.div`
 `;
 
 const EmailAuthInput = styled.input`
-  width: 250px;
+  width: 280px;
   color: ${({ theme }) => theme.dark_purple};
   background-color: ${({ theme }) => theme.light_purple};
   padding: 7px 0 7px 7px;
   border: none;
   outline: none;
+
+  &::placeholder {
+    color: #3c3c3c;
+  }
 `;
 
 const CheckMessage = styled.p`
