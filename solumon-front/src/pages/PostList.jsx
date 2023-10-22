@@ -30,15 +30,6 @@ function PostList() {
   const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
   const USER_TOKEN = userInfo.accessToken;
 
-  useEffect(() => {
-    fetchData(); // 초기 렌더링 시 한 번 호출
-  }, []);
-
-  useEffect(() => {
-    // postInfoList 배열의 아이템이 변경될 때마다 fetchData 호출
-    fetchData();
-  }, [postInfoList]);
-
   const fetchData = () => {
     const fetchDataPromises = postInfoList.map((item) =>
       axios
@@ -79,6 +70,15 @@ function PostList() {
         console.log(`Error loading data: ${error}`);
       });
   };
+
+  useEffect(() => {
+    fetchData(); // 초기 렌더링 시 한 번 호출
+  }, []);
+
+  useEffect(() => {
+    // postInfoList 배열의 아이템이 변경될 때마다 fetchData 호출
+    fetchData();
+  }, [postInfoList]);
 
   return (
     <ThemeProvider theme={theme}>
