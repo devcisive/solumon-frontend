@@ -5,21 +5,11 @@ import { BiSolidChevronDownCircle } from 'react-icons/bi';
 
 import { useNavigate } from 'react-router-dom';
 
-const fadeIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(20px); /* 아래로 이동 */
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0); /* 이동하지 않음 */
-  }
-`;
 const Start = () => {
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    navigate('/login');
+    navigate('/user/sign-in/general');
   };
   let options = {
     anchors: [
@@ -105,6 +95,26 @@ const Start = () => {
 
 export default Start;
 
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0); 
+  }
+`;
+const fadeOut = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(0px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-100px); 
+  }
+`;
 const Column1 = styled.div`
   color: ${({ theme }) => theme.dark_purple};
   display: flex;
@@ -167,7 +177,7 @@ const CardChat = styled.div`
   display: block;
 `;
 const ChatBox1 = styled.div`
-  animation: ${fadeIn} 0.5s ease-in-out 0.5s;
+  animation: ${fadeIn} 2s ease-out;
   border: 1px solid ${({ theme }) => theme.light_purple};
   background-color: ${({ theme }) => theme.light_purple};
   border-radius: 5px;
@@ -179,7 +189,7 @@ const ChatBox2 = styled.div`
   border: 1px solid ${({ theme }) => theme.light_purple};
   background-color: ${({ theme }) => theme.light_purple};
   border-radius: 5px;
-  animation: ${fadeIn} 0.5s ease-in-out 1s;
+  animation: ${fadeIn} 2s ease-out;
   padding: 10px;
   margin: 15px;
   width: auto;
@@ -198,7 +208,7 @@ const ChatBox3 = styled.div`
   margin: 15px;
   margin-top: 0;
   width: 130px;
-  animation: ${fadeIn} 0.5s ease-in-out 1.5s;
+  animation: ${fadeOut} 2s ease-out;
 `;
 const Column3 = styled.div`
   color: ${({ theme }) => theme.medium_purple};

@@ -5,14 +5,36 @@ import { useNavigate } from 'react-router-dom';
 import { IoIosArrowBack } from 'react-icons/io';
 
 const HeaderContent = ({
-  userNickname,
+  isLoggedIn,
   postData,
-  handleEditClick,
-  handleDeleteClick,
 }) => {
   const navigate = useNavigate();
   const goBack = () => {
     navigate(-1);
+  };
+  const handleEditClick =()=>{
+    navigate('/edit')
+  }
+  const deletePost = () => {
+    fetch(`https://jsonplaceholder.typicode.com/posts/${postData.id}`, {
+      method: 'DELETE',
+    })
+      .then((response) => {
+        if (response.ok) {
+          console.log('게시물이 삭제되었습니다.');
+        } else {
+          console.error('게시물 삭제 실패');
+        }
+      })
+      .catch((error) => {
+        console.error('서버 요청 오류:', error);
+      });
+  };
+
+  const handleDeleteClick = () => {
+    if (window.confirm('정말로 이 게시물을 삭제하시겠습니까?')) {
+      deletePost();
+    }
   };
   return (
     <ThemeProvider theme={theme}>
@@ -21,18 +43,18 @@ const HeaderContent = ({
           <StyledIoIosArrowBack onClick={goBack} />
           <StyledH1>{postData.title}</StyledH1>
         </StyledContainer1>
-        {userNickname === postData.nickname ? (
-          <EditContainer>
-            <EditButton onClick={handleEditClick}>수정하기</EditButton>
-            <DeleteButton onClick={handleDeleteClick}>삭제하기</DeleteButton>
-          </EditContainer>
-        ) : (
-          <BanSpan
-            onClick={() => navigate(`/user/${postData.nickname}/report`)}
-          >
-            신고하기
-          </BanSpan>
-        )}
+        {isLoggedIn && postData ? (
+  <EditContainer>
+    <EditButton onClick={handleEditClick}>수정하기</EditButton>
+    <DeleteButton onClick={handleDeleteClick}>삭제하기</DeleteButton>
+  </EditContainer>
+) : (
+  <BanSpan
+    onClick={() => navigate(`/user/${postData.nickname}/report`)}
+  >
+    신고하기
+  </BanSpan>
+)}
       </StyledHeaderContainer>
       <StyledContainer2>
         <WriterSpan>작성자:{postData.nickname}</WriterSpan>
@@ -46,7 +68,7 @@ HeaderContent.propTypes = {
   userNickname: PropTypes.string.isRequired,
   postData: PropTypes.object.isRequired,
   handleEditClick: PropTypes.func.isRequired,
-
+  isLoggedIn: PropTypes.bool.isRequired,
   handleDeleteClick: PropTypes.func.isRequired,
 };
 export default HeaderContent;
