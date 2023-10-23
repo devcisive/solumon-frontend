@@ -40,7 +40,10 @@ function App() {
           <Route path="/post-list" element={<PostList />} />
           <Route path="/posts" element={<PostCategory />} />
           <Route path="/search" element={<Search />} />
-          <Route path="/search/results" element={<SearchResult />} />
+          <Route
+            path="/search/:searchType/results"
+            element={<SearchResult />}
+          />
         </Routes>
       </Router>
     </RecoilRoot>
