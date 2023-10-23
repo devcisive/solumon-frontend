@@ -97,9 +97,15 @@ function UserInfo() {
             <StyledInput
               name="new-password"
               type="password"
+              placeholder="8~20자리"
               onChange={(e) => setNewPassword(e.target.value)}
             ></StyledInput>
           </InputWrapper>
+          <InfoText>
+            📢 비밀번호 입력 시 영문 대문자 또는 소문자, 숫자,
+            <br />
+            &nbsp;&nbsp;&nbsp;&nbsp; 특수문자 3가지를 모두 사용해야 합니다.
+          </InfoText>
 
           <InputWrapper>
             <StyledInputLabel htmlFor="new-password-check">
@@ -159,7 +165,7 @@ function UserInfo() {
 export default UserInfo;
 
 const Wrapper = styled.div`
-  margin-top: 70px;
+  margin-top: 50px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -201,16 +207,20 @@ const StyledInputLabel = styled.label`
 `;
 
 const StyledInput = styled.input`
-  width: 300px;
+  width: 330px;
   color: ${({ theme }) => theme.dark_purple};
   background-color: ${({ theme }) => theme.light_purple};
   padding: 10px;
   border: none;
   outline: none;
+
+  &::placeholder {
+    color: #3c3c3c;
+  }
 `;
 
 const StyledLink = styled(Link)`
-  width: 300px;
+  width: 330px;
   height: 16px;
   color: ${({ theme }) => theme.dark_purple};
   background-color: ${({ theme }) => theme.light_purple};
@@ -218,6 +228,18 @@ const StyledLink = styled(Link)`
   text-decoration: none;
   font-size: 14px;
   border: none;
+`;
+
+const InfoText = styled.p`
+  width: 310px;
+  color: ${({ theme }) => theme.dark_purple};
+  background-color: ${({ theme }) => theme.linen};
+  font-size: 13px;
+  line-height: 1.2rem;
+  margin: 10px 0;
+  margin-left: 125px;
+  padding: 12px 15px;
+  border-radius: 10px;
 `;
 
 const CheckMessage = styled.p`

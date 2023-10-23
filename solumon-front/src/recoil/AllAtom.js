@@ -7,3 +7,19 @@ export const UserInterestTopic = atom({
     interests: ['연애', '드라마/영화', '다이어트'],
   },
 });
+
+// export const kakaoToken = atom({
+//   key: 'kakaoToken',
+//   default: '',
+// });
+
+export const GeneralUserInfo = atom({
+  key: 'GeneralUserInfo',
+  default: [
+    {
+      accessToken: '',
+      firstLogIn: true,
+      memberId: 0,
+    },
+  ],
+});
