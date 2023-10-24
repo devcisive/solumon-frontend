@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import PropTypes from 'prop-types';
@@ -6,14 +6,16 @@ import PropTypes from 'prop-types';
 import { BsChatDots } from 'react-icons/bs';
 import { VscGraph } from 'react-icons/vsc';
 
-function PostCard({ postData, postCount }) {
+function PostCard({ postData, postCount, postOrder }) {
+  const postInfo = postData[postOrder] || [];
+
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
         <Container>
           {postData && postCount
-            ? postData.slice(0, postCount).map((post) => (
-                <CardWrapper key={post.post_id}>
+            ? postInfo.slice(0, postCount).map((post) => (
+                <CardWrapper key={post.post_id} to={`/posts/${post.post_id}`}>
                   <StyledThumbnail
                     src={
                       post.image_url ||
@@ -22,26 +24,28 @@ function PostCard({ postData, postCount }) {
                   ></StyledThumbnail>
                   <PostPreview>
                     <Title>{post.title}</Title>
-                    <Content>{post.preview}</Content>
+                    <Content>{post.contents}</Content>
                     <PostInfo>
-                      <Date>{post.created_at}</Date>
-                      <ChatCount>
-                        <BsChatDots />
-                        {post.chat_count}명 참여
-                      </ChatCount>
-                      <VoteCount>
-                        <VscGraph />
-                        {post.vote_count}명 참여
-                      </VoteCount>
+                      <Date>{post.created_at.slice(0, 10)}</Date>
+                      <CountWrapper>
+                        <ChatCount>
+                          <BsChatDots />
+                          {post.chat_count}명 참여
+                        </ChatCount>
+                        <VoteCount>
+                          <VscGraph />
+                          {post.vote_count}명 참여
+                        </VoteCount>
+                      </CountWrapper>
                     </PostInfo>
                     <Line></Line>
-                    <Writer>by. {post.writer}</Writer>
+                    <Writer>by. {post.nickname}</Writer>
                   </PostPreview>
                 </CardWrapper>
               ))
-            : postData &&
-              postData.map((post) => (
-                <CardWrapper key={post.post_id}>
+            : postData
+            ? postData.map((post) => (
+                <CardWrapper key={post.post_id} to={`/posts/${post.post_id}`}>
                   <StyledThumbnail
                     src={
                       post.image_url ||
@@ -50,23 +54,28 @@ function PostCard({ postData, postCount }) {
                   ></StyledThumbnail>
                   <PostPreview>
                     <Title>{post.title}</Title>
-                    <Content>{post.preview}</Content>
+                    <Content>{post.contents}</Content>
                     <PostInfo>
-                      <Date>{post.created_at}</Date>
-                      <ChatCount>
-                        <BsChatDots />
-                        {post.chat_count}명 참여
-                      </ChatCount>
-                      <VoteCount>
-                        <VscGraph />
-                        {post.vote_count}명 참여
-                      </VoteCount>
+                      <Date>{post.created_at.slice(0, 10)}</Date>
+                      <CountWrapper>
+                        <ChatCount>
+                          <BsChatDots />
+                          {post.chat_count}명 참여
+                        </ChatCount>
+                        <VoteCount>
+                          <VscGraph />
+                          {post.vote_count}명 참여
+                        </VoteCount>
+                      </CountWrapper>
                     </PostInfo>
                     <Line></Line>
-                    <Writer>by. {post.writer}</Writer>
+                    <Writer>by. {post.nickname}</Writer>
                   </PostPreview>
                 </CardWrapper>
-              ))}
+              ))
+            : postInfo.length === 0 && (
+                <div>해당 데이터가 존재하지 않습니다.</div>
+              )}
         </Container>
       </Wrapper>
     </ThemeProvider>
@@ -76,12 +85,14 @@ function PostCard({ postData, postCount }) {
 PostCard.propTypes = {
   postData: PropTypes.array.isRequired,
   postCount: PropTypes.number,
+  postOrder: PropTypes.string,
 };
 
 export default PostCard;
 
 const Wrapper = styled.div`
   width: 1280px;
+  /* min-height: 640px; */
 `;
 
 const Container = styled.div`
@@ -91,11 +102,12 @@ const Container = styled.div`
   gap: 20px;
 `;
 
-const CardWrapper = styled.div`
+const CardWrapper = styled(Link)`
   width: 240px;
-  height: 310px;
+  min-height: 310px;
   border-radius: 10px;
   background-color: ${({ theme }) => theme.linen};
+  text-decoration: none;
 `;
 
 const StyledThumbnail = styled.img`
@@ -109,7 +121,7 @@ const PostPreview = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: ${({ theme }) => theme.dark_purple};
   white-space: nowrap;
@@ -119,25 +131,30 @@ const Title = styled.h1`
 `;
 
 const Content = styled.p`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.dark_purple};
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow: hidden;
-  margin-bottom: 25px;
+  margin-bottom: 30px;
 `;
 
 const PostInfo = styled.div`
   display: flex;
-  font-size: 10px;
+  flex-direction: column;
+  font-size: 12px;
   color: ${({ theme }) => theme.medium_purple};
-  align-items: center;
-  gap: 15px;
+  gap: 10px;
   margin-bottom: 10px;
 `;
 
 const Date = styled.span``;
+
+const CountWrapper = styled.div`
+  display: flex;
+  gap: 20px;
+`;
 
 const ChatCount = styled.span`
   display: flex;
@@ -159,5 +176,5 @@ const Writer = styled.p`
   font-size: 13px;
   font-weight: 500;
   color: ${({ theme }) => theme.dark_purple};
-  padding: 5px 0;
+  padding: 2px 0;
 `;
