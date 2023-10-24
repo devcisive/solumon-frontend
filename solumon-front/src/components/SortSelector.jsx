@@ -1,30 +1,38 @@
+import { useState, useEffect } from 'react';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
-import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+function SortSelector({ sortLabels, defaultSort, onClick }) {
+  const [sortValue, setSortValue] = useState(sortLabels[defaultSort]);
 
-function SortSelector() {
-  const [sortStandard, setSortStandard] = useState('최신순');
+  const handleChangeSortStandard = (e) => {
+    const newValue = e.target.value;
+    setSortValue(newValue);
+    onClick(newValue); // 새로운 탭을 클릭할 때 콜백 함수 호출
+  };
 
   useEffect(() => {
-    console.log(sortStandard);
-  }, [sortStandard]);
+    console.log(sortValue);
+  }, [sortValue]);
 
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
-        <StyledSelect
-          name="sort"
-          onChange={(e) => setSortStandard(e.target.value)}
-        >
-          <StyledOption value="latest">최신순</StyledOption>
-          <StyledOption value="chatCount">채팅 참여 순</StyledOption>
-          <StyledOption value="voteCount">투표 참여 순</StyledOption>
-          <StyledOption value="deadline">마감 임박 순</StyledOption>
+        <StyledSelect value={sortValue} onChange={handleChangeSortStandard}>
+          {sortLabels.map((label, idx) => (
+            <StyledOption key={idx}>{label}</StyledOption>
+          ))}
         </StyledSelect>
       </Wrapper>
     </ThemeProvider>
   );
 }
+
+SortSelector.propTypes = {
+  sortLabels: PropTypes.arrayOf(PropTypes.string).isRequired,
+  defaultSort: PropTypes.number.isRequired,
+  onClick: PropTypes.func.isRequired,
+};
 
 export default SortSelector;
 
