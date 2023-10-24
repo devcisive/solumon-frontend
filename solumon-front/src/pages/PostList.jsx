@@ -4,6 +4,7 @@ import axios from 'axios';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
+import { CiSearch } from 'react-icons/ci';
 import PostCard from '../components/PostCard';
 
 const postInfoList = [
@@ -26,9 +27,34 @@ const postInfoList = [
 
 function PostList() {
   const [postData, setPostData] = useState([]);
+  const [interestPostData, setInterestPostData] = useState([]);
 
   const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
   const USER_TOKEN = userInfo.accessToken;
+  const USER_INTERESTS = userInfo.interests;
+
+  const fetchInterestsData = async () => {
+    try {
+      const response = await axios.get(
+        `http://solumon.site:8080/posts?postType=INTEREST&postStatus=ONGOING&postOrder=LATEST&pageNum=1`,
+        {
+          headers: {
+            'X-AUTH-TOKEN': USER_TOKEN,
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        },
+      );
+      if (response.status === 200) {
+        const json = response.data;
+        setInterestPostData(json.content);
+      } else {
+        console.error('로딩 실패');
+      }
+    } catch (error) {
+      console.log(`Something Wrong: ${error.message}`);
+    }
+  };
 
   const fetchData = () => {
     const fetchDataPromises = postInfoList.map((item) =>
@@ -73,6 +99,10 @@ function PostList() {
 
   useEffect(() => {
     fetchData(); // 초기 렌더링 시 한 번 호출
+    if (USER_INTERESTS.length > 0) {
+      fetchInterestsData();
+    }
+    console.log(interestPostData);
   }, []);
 
   useEffect(() => {
@@ -83,6 +113,22 @@ function PostList() {
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
+        <Link to={'/search'}>
+          <SearchIcon />
+        </Link>
+
+        <PostSection>
+          <SectionTitle>관심주제와 관련된 고민들</SectionTitle>
+          <AllPostsLink
+            to={
+              '/posts?postType=INTEREST&postStatus=ONGOING&postOrder=LATEST&pageNum=1'
+            }
+          >
+            전체보기 {'>'}
+          </AllPostsLink>
+          <PostCard postData={interestPostData} postCount={5} />
+        </PostSection>
+
         {postInfoList.map((item, idx) => (
           <PostSection key={idx}>
             <SectionTitle>{item.title}</SectionTitle>
@@ -105,6 +151,15 @@ export default PostList;
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
+`;
+
+const SearchIcon = styled(CiSearch)`
+  width: 28px;
+  height: 28px;
+  color: ${({ theme }) => theme.dark_purple};
+  float: right;
+  margin-top: 20px;
+  margin-right: 115px;
 `;
 
 const PostSection = styled.div`
