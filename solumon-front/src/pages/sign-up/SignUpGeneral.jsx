@@ -159,6 +159,9 @@ function SignUpGeneral() {
             📢 비밀번호 입력 시 영문 대문자 또는 소문자, 숫자,
             <br />
             &nbsp;&nbsp;&nbsp;&nbsp; 특수문자 3가지를 모두 사용해야 합니다.
+            <br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(특수문자는 @ # $ % ^ & + = ! 만 사용
+            가능)
           </InfoText>
           <StyledInput
             style={{ marginBottom: '10px' }}
