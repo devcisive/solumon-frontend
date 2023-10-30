@@ -5,7 +5,13 @@ import { IoIosRemoveCircle } from 'react-icons/io';
 import { AiFillMinusCircle, AiFillPlusCircle } from 'react-icons/ai';
 import { BsPlusSquare } from 'react-icons/bs';
 import Button from '../components/Button';
+// import { useNavigate } from 'react-router-dom';
+import { useRecoilState } from 'recoil';
+import { GeneralUserInfo } from '../recoil/AllAtom';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+
+
 
 const Posts = () => {
   const navigate = useNavigate();
@@ -18,13 +24,18 @@ const Posts = () => {
   const [currentHashtag, setCurrentHashtag] = useState('');
   const [representative, setRepresentative] = useState(null);
   const [filePreviews, setFilePreviews] = useState([]);
-
+  const [files, setFiles] = useState([])
+  // const [generalUserInfo, setGeneralUserInfo] = useRecoilState(GeneralUserInfo);
+  const userInfo = useRecoilState(GeneralUserInfo);
+  const accessToken = userInfo[0].accessToken;
+  
+  
   const handleFileChange = (event) => {
     //사진 업로드
     const files = event.target.files;
     const fileNames = Array.from(files).map((file) => file.name); // 파일명 추출
     const fileObjects = Array.from(files).map((file) =>
-      URL.createObjectURL(file),
+    URL.createObjectURL(file),
     );
 
     setSelectedFile((prevSelectedFile) => [
@@ -35,6 +46,10 @@ const Posts = () => {
       ...(prevFilePreviews || []),
       ...fileObjects,
     ]);
+    setFiles((prevFiles)=>[
+      ...(prevFiles || []),
+      ...files
+    ])
     if (representative === null && fileObjects.length > 0) {
       //대표이미지를 선택하지 않았을때, 임의로 첫번째로 대표이미지 설정
       setRepresentative(0);
@@ -46,14 +61,21 @@ const Posts = () => {
     setSelectedFile((prevSelectedFile) => {
       const updatedFiles = [...prevSelectedFile];
       updatedFiles.splice(index, 1);
-      if (index === representative) {
-        setRepresentative(null);
-      } else if (index < representative) {
-        // 제거된 이미지가 대표 이미지 앞에 있었을 경우,대표 이미지 인덱스를 감소
-        setRepresentative(representative - 1);
-      }
       return updatedFiles;
     });
+  
+    setFilePreviews((prevFilePreviews) => {
+      const updatedPreviews = [...prevFilePreviews];
+      updatedPreviews.splice(index, 1);
+      return updatedPreviews;
+    });
+  
+    if (index === representative) {
+      setRepresentative(null);
+    } else if (index < representative) {
+      // 제거된 이미지가 대표 이미지 앞에 있었을 경우, 대표 이미지 인덱스를 감소
+      setRepresentative(representative - 1);
+    }
   };
 
   //투표항목입력할때 발생하는 onchange
@@ -73,12 +95,13 @@ const Posts = () => {
     });
   };
   //투표마감일 입력 onChange
-  const handleTimeInputChange = (e, setTimeFunction) => {
+  const handleTimeInputChange = (e, setEndDate) => {
     const inputTime = e.target.value;
-    const parsedTime = new Date(inputTime); //분,초은 날리고 시간까지 전달해줘야함(자스에서사용위해)
+    const clientTime = new Date(inputTime);
+    const parsedTime = new Date(clientTime); //분,초은 날리고 시간까지 전달해줘야함(자스에서사용위해)
     parsedTime.setMinutes(0);
     parsedTime.setSeconds(0);
-    setTimeFunction(parsedTime.toISOString().slice(0, 16));
+    setEndDate(parsedTime.toISOString().slice(0, 19));
   };
 
   //투표항목 제거하기(최소2개항목 유지)
@@ -119,19 +142,14 @@ const Posts = () => {
     setHashtags(newHashtags);
   };
   // 게시글 데이터 생성
-  const RegisterSubmit = () => {
+  const RegisterSubmit = async(e) => {
+    e.preventDefault();
+    
     //유효성(validation)
     if (!title || !content) {
       alert('제목과 내용을 작성해주세요.');
       return;
     }
-    // if (selectedFile.length === 0) {
-    //   const defaultImageUrl = '/image/기본썸네일.jpg'; // 실제 기본 이미지 파일 경로로 수정
-    //   setSelectedFile((prevSelectedFile) => {
-    //     return [...prevSelectedFile, defaultImageUrl];
-    //   });
-    //   setRepresentative(1); // 기본 이미지의 index를 0으로 설정
-    // }
     if (options.length < 2) {
       alert('최소 2개의 투표 항목을 입력해주세요.');
       return;
@@ -141,7 +159,7 @@ const Posts = () => {
       alert('투표 항목을 모두 입력해주세요.');
       return;
     }
-    const currentTime = new Date().toISOString().slice(0, 16); // 현재 날짜와 시간
+    const currentTime = new Date().toISOString().slice(0, 17); // 현재 날짜와 시간
     if (endDate <= currentTime) {
       alert('유효한 투표 종료일을 선택해주세요.');
       return;
@@ -181,42 +199,60 @@ const Posts = () => {
       vote: voteData,
     };
     console.log('등록 데이터:', requestData);
+    
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+    formData.append("images", files[i]);
+    }
+
+    const json = JSON.stringify(requestData);
+    const blob = new Blob([json], { type: "application/json" })
+    formData.append("request", blob);
+    
+    const headers = {
+      'X-AUTH-TOKEN': accessToken,
+    };
+    // console.log(headers)
 
     //   msw POST 요청 코드 //
-    const Url = 'https://jsonplaceholder.typicode.com/posts';
-    fetch(Url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestData), // 데이터를 JSON 형태로 변환
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('네트워크 오류');
-        }
-        return response.json(); // JSON 형태의 응답 데이터를 파싱
-      })
-      .then((data) => {
-        console.log('응답 데이터:', data);
-        const postId = data.post_id;
-        navigate(`/posts/${postId}`);
-      })
-      .catch((error) => {
-        console.error('요청 오류:', error);
-      });
-  };
+        try{
+            const response = await axios.post(
+              'http://solumon.site:8080/posts',
+             formData,
+              {
+                headers,
+                withCredentials: true
+                },
+            )
+            
+            console.log(response)
+            if (response.status === 200) {
+              console.log(response.data);
+              console.log('전달 성공');
+              console.log(response.data.post_id)
+              navigate(`/postsDetail/${response.data.post_id}`);
+              
+             } else {
+                console.error('전달 실패');
+              }
+            } catch (error) {
+              console.error('오류 발생: ' + error);
+          
+            }
+          }
+
 
   return (
     <ThemeProvider theme={theme}>
-      <MainContainer>
+     
         {/* 전체게시글작성폼*/}
+       <MainContainer onSubmit={RegisterSubmit} encType="multipart/form-data"> 
         <HeadContainer>
           {/* 제목과 등록버튼 */}
           <TitleSpan>게시글 작성</TitleSpan>
           <Button
             name="등록"
-            type="button"
+            type="submit"
             onClick={RegisterSubmit}
             bgColor={theme.medium_purple}
             color={theme.linen}
@@ -247,10 +283,10 @@ const Posts = () => {
         {/* 선택한 이미지 미리보기 */}
         {selectedFile && selectedFile.length > 0 && (
           <ImagesContainer>
-            {selectedFile.map((file, index) => (
+            {filePreviews.map((file, index) => (
               <ImageContainer key={index}>
                 <StyledFileImg
-                  src={filePreviews[index]}
+                  src={file}
                   alt={`미리보기 ${index + 1}`}
                   onClick={() => handleImageClick(index)}
                 />
@@ -277,18 +313,6 @@ const Posts = () => {
             value={selectedFile.length > 0 ? selectedFile.join(', ') : ''}
             readOnly
           ></FileNameInput>
-          {/* 업로드 버튼 */}
-          {/* <Button
-            name="업로드"
-            type="button"
-            onClick={RegisterSubmit}
-            bgColor={theme.medium_purple}
-            color={theme.linen}
-            fontSize="12px"
-            fontWeight={500}
-            padding="10px 40px"
-            borderRadius="5px"
-          /> */}
         </FileContainer>
 
         {/* 투표 작성 부분 */}
@@ -350,19 +374,19 @@ const Posts = () => {
             </Hashtag>
           ))}
         </HashtagContainer>
+      
       </MainContainer>
     </ThemeProvider>
   );
 };
 
 export default Posts;
-const MainContainer = styled.div`
+const MainContainer = styled.form`
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-top: 50px;
-  margin-bottom: 50px;
+  margin:50px auto;
 `;
 const TitleSpan = styled.span`
   font-size: 30px;
@@ -370,14 +394,13 @@ const TitleSpan = styled.span`
   color: ${({ theme }) => theme.dark_purple};
   margin-bottom: 10px;
   display: inline;
-  margin-right: 325px;
-  padding-bottom: 0px;
+
 `;
 const HeadContainer = styled.div`
   display: flex;
   flex-direction: row;
-  width: 70%;
-  justify-content: space-evenly;
+  width: 50%;
+  justify-content: space-between;
   margin-bottom: 10px;
 `;
 const ContentContainer = styled.div`
