@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
+import { HiOutlinePencilSquare } from 'react-icons/hi2';
 import { CiSearch } from 'react-icons/ci';
 import PostCard from '../components/PostCard';
 
@@ -32,6 +33,11 @@ function PostList() {
   const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
   const USER_TOKEN = userInfo.accessToken;
   const USER_INTERESTS = userInfo.interests;
+  const navigate = useNavigate();
+
+  const HandleButtonClick = () => {
+    navigate('/post-write');
+  };
 
   const fetchInterestsData = async () => {
     try {
@@ -99,9 +105,10 @@ function PostList() {
 
   useEffect(() => {
     fetchData(); // 초기 렌더링 시 한 번 호출
-    if (USER_INTERESTS.length > 0) {
-      fetchInterestsData();
-    }
+    // if (USER_INTERESTS) {
+    //   fetchInterestsData();
+    // }
+    fetchInterestsData();
     console.log(interestPostData);
   }, []);
 
@@ -113,6 +120,11 @@ function PostList() {
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
+        <WriteContainer>
+          <WriteButton onClick={HandleButtonClick}>
+            <StyledHiOutlinePencilSquare /> 글쓰기
+          </WriteButton>
+        </WriteContainer>
         <Link to={'/search'}>
           <SearchIcon />
         </Link>
@@ -126,7 +138,7 @@ function PostList() {
           >
             전체보기 {'>'}
           </AllPostsLink>
-          <PostCard postData={interestPostData} postCount={5} />
+          <PostCard postData={interestPostData} />
         </PostSection>
 
         {postInfoList.map((item, idx) => (
@@ -182,3 +194,30 @@ const AllPostsLink = styled(Link)`
   margin-bottom: 15px;
   align-self: flex-end;
 `;
+
+const WriteContainer = styled.div`
+  display: flex;
+  width: 1280px;
+  justify-content: flex-end;
+  margin: 20px auto;
+  margin-bottom: 0px;
+`;
+
+const WriteButton = styled.button`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: ${({ theme }) => theme.medium_purple};
+  color: white;
+  padding: 12px;
+  border-radius: 5px;
+  font-size: 15px;
+  font-weight: bold;
+  width: 200px;
+`;
+
+const StyledHiOutlinePencilSquare = styled(HiOutlinePencilSquare)`
+  font-size: 30px;
+  margin-right: 10px;
+`;
+
