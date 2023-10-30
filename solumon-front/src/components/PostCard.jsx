@@ -15,7 +15,10 @@ function PostCard({ postData, postCount, postOrder }) {
         <Container>
           {postData && postCount
             ? postInfo.slice(0, postCount).map((post) => (
-                <CardWrapper key={post.post_id} to={`/posts/${post.post_id}`}>
+                <CardWrapper
+                  key={post.post_id}
+                  to={`/postsDetail/${post.post_id}`}
+                >
                   <StyledThumbnail
                     src={
                       post.image_url ||
@@ -45,7 +48,10 @@ function PostCard({ postData, postCount, postOrder }) {
               ))
             : postData
             ? postData.map((post) => (
-                <CardWrapper key={post.post_id} to={`/posts/${post.post_id}`}>
+                <CardWrapper
+                  key={post.post_id}
+                  to={`/postsDetail/${post.post_id}`}
+                >
                   <StyledThumbnail
                     src={
                       post.image_url ||
