@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
+import { HiOutlinePencilSquare } from 'react-icons/hi2';
+import { CiSearch } from 'react-icons/ci';
 import PostCard from '../components/PostCard';
 
 const postInfoList = [
@@ -26,9 +28,39 @@ const postInfoList = [
 
 function PostList() {
   const [postData, setPostData] = useState([]);
+  const [interestPostData, setInterestPostData] = useState([]);
 
   const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
   const USER_TOKEN = userInfo.accessToken;
+  const USER_INTERESTS = userInfo.interests;
+  const navigate = useNavigate();
+
+  const HandleButtonClick = () => {
+    navigate('/post-write');
+  };
+
+  const fetchInterestsData = async () => {
+    try {
+      const response = await axios.get(
+        `http://solumon.site:8080/posts?postType=INTEREST&postStatus=ONGOING&postOrder=LATEST&pageNum=1`,
+        {
+          headers: {
+            'X-AUTH-TOKEN': USER_TOKEN,
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        },
+      );
+      if (response.status === 200) {
+        const json = response.data;
+        setInterestPostData(json.content);
+      } else {
+        console.error('로딩 실패');
+      }
+    } catch (error) {
+      console.log(`Something Wrong: ${error.message}`);
+    }
+  };
 
   const fetchData = () => {
     const fetchDataPromises = postInfoList.map((item) =>
@@ -73,6 +105,11 @@ function PostList() {
 
   useEffect(() => {
     fetchData(); // 초기 렌더링 시 한 번 호출
+    // if (USER_INTERESTS) {
+    //   fetchInterestsData();
+    // }
+    fetchInterestsData();
+    console.log(interestPostData);
   }, []);
 
   useEffect(() => {
@@ -83,6 +120,27 @@ function PostList() {
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
+        <WriteContainer>
+          <WriteButton onClick={HandleButtonClick}>
+            <StyledHiOutlinePencilSquare /> 글쓰기
+          </WriteButton>
+        </WriteContainer>
+        <Link to={'/search'}>
+          <SearchIcon />
+        </Link>
+
+        <PostSection>
+          <SectionTitle>관심주제와 관련된 고민들</SectionTitle>
+          <AllPostsLink
+            to={
+              '/posts?postType=INTEREST&postStatus=ONGOING&postOrder=LATEST&pageNum=1'
+            }
+          >
+            전체보기 {'>'}
+          </AllPostsLink>
+          <PostCard postData={interestPostData} />
+        </PostSection>
+
         {postInfoList.map((item, idx) => (
           <PostSection key={idx}>
             <SectionTitle>{item.title}</SectionTitle>
@@ -107,6 +165,15 @@ const Wrapper = styled.div`
   flex-direction: column;
 `;
 
+const SearchIcon = styled(CiSearch)`
+  width: 28px;
+  height: 28px;
+  color: ${({ theme }) => theme.dark_purple};
+  float: right;
+  margin-top: 20px;
+  margin-right: 115px;
+`;
+
 const PostSection = styled.div`
   display: flex;
   flex-direction: column;
@@ -127,3 +194,30 @@ const AllPostsLink = styled(Link)`
   margin-bottom: 15px;
   align-self: flex-end;
 `;
+
+const WriteContainer = styled.div`
+  display: flex;
+  width: 1280px;
+  justify-content: flex-end;
+  margin: 20px auto;
+  margin-bottom: 0px;
+`;
+
+const WriteButton = styled.button`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: ${({ theme }) => theme.medium_purple};
+  color: white;
+  padding: 12px;
+  border-radius: 5px;
+  font-size: 15px;
+  font-weight: bold;
+  width: 200px;
+`;
+
+const StyledHiOutlinePencilSquare = styled(HiOutlinePencilSquare)`
+  font-size: 30px;
+  margin-right: 10px;
+`;
+
