@@ -39,7 +39,7 @@ function ReDirect() {
     }
   };
 
-  // getKakaoAccessToken 함수 응답의 is_member 값이 true일 때
+  // getKakaoAccessToken 함수 응답의 is_member 값이 true일 때(이미 카카오 회원가입이 되어있을 때)
   // 발급받은 카카오 로그인 액세스 토큰으로 로그인 요청 후 사이트 액세스 토큰 발급받는 함수
   const getKakaoLoginToken = async () => {
     const KAKAO_TOKEN = window.localStorage.getItem('kakaoToken');
