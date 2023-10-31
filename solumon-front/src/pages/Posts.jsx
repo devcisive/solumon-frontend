@@ -208,7 +208,7 @@ const Posts = () => {
     const json = JSON.stringify(requestData);
     const blob = new Blob([json], { type: "application/json" })
     formData.append("request", blob);
-    
+   
     const headers = {
       'X-AUTH-TOKEN': accessToken,
     };
@@ -225,11 +225,10 @@ const Posts = () => {
                 },
             )
             
-            console.log(response)
+           
             if (response.status === 200) {
               console.log(response.data);
               console.log('전달 성공');
-              console.log(response.data.post_id)
               navigate(`/postsDetail/${response.data.post_id}`);
               
              } else {
@@ -434,7 +433,7 @@ const ContentTextArea = styled.textarea`
   }
 `;
 const FileContainer = styled.div`
-  width: 70%;
+  width: 75%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -475,9 +474,9 @@ const ImageContainer = styled.div`
 `;
 const StyledFileImg = styled.img`
   position: relative;
-  width: 50px;
+  width: 80px;
   border: 1px solid ${({ theme }) => theme.medium_purple};
-  margin-right: 5px;
+  margin-left: 5px;
   border-radius: 5px;
 `;
 const RemoveCircleIcon = styled(IoIosRemoveCircle)`
