@@ -1,5 +1,5 @@
-import { useRecoilValue } from 'recoil';
-import { UserInterestTopic } from '../recoil/AllAtom';
+import { useRecoilValue, useRecoilState } from 'recoil';
+import { GeneralUserInfo } from '../recoil/AllAtom';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styled, { ThemeProvider } from 'styled-components';
@@ -9,31 +9,40 @@ import InterestTopic from '../components/InterestTopic';
 import Button from '../components/Button';
 
 function ChoiceInterest() {
-  const userInterestTopic = useRecoilValue(UserInterestTopic);
+  const [generalUserInfo, setGeneralUserInfo] = useRecoilState(GeneralUserInfo);
   const navigate = useNavigate();
 
-  // // 테스트를 위한 임시
-  // const fetchUserInterestData = async () => {
-  //   try {
-  //     const response = await axios.get(
-  //       'https://jsonplaceholder.typicode.com/user/interests',
-  //     );
-  //     console.log(response.body);
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
+  const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
+  const USER_TOKEN = userInfo.accessToken;
 
   const handleClickSaveButton = async () => {
+    console.log(generalUserInfo.interests);
     try {
       const response = await axios.post(
-        'https://jsonplaceholder.typicode.com/user/interests',
+        'http://solumon.site:8080/user/interests',
         {
-          member_id: userInterestTopic.member_id,
-          interests: userInterestTopic.interests,
+          interests: generalUserInfo.interests,
+        },
+        {
+          headers: {
+            'X-AUTH-TOKEN': USER_TOKEN,
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
         },
       );
-      // fetchUserInterestData();
+
+      if (response.status === 200) {
+        console.log(response.data);
+        window.localStorage.setItem(
+          'userInfo',
+          JSON.stringify(generalUserInfo),
+        );
+        navigate('/post-list');
+      } else {
+        console.error('이메일 정보 전송 X');
+      }
+
       // navigate('/posts/post-list');
     } catch (error) {
       console.error(error);
@@ -41,7 +50,7 @@ function ChoiceInterest() {
   };
 
   const handleClickBackButton = () => {
-    navigate('/');
+    navigate('/post-list');
   };
 
   // 첫 로그인 시에만 이 페이지로 이동

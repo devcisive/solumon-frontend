@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useSetRecoilState } from 'recoil';
-import { UserInterestTopic } from '../recoil/AllAtom';
+import { useRecoilState } from 'recoil';
+import { GeneralUserInfo } from '../recoil/AllAtom';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
@@ -11,9 +11,10 @@ const topicList = [
   '패션',
   '공부',
   '취업',
-  '학교/학원',
-  '연예인',
-  '드라마/영화',
+  '학업',
+  '연예',
+  '드라마',
+  '영화',
   '진로',
   '결혼',
   '독서',
@@ -33,9 +34,9 @@ const topicList = [
   '전자기기',
 ];
 
-function InterestTopic(props) {
+function InterestTopic() {
   const [selectedTopic, setSelectedTopic] = useState([]);
-  const setUserInterestTopic = useSetRecoilState(UserInterestTopic);
+  const [generalUserInfo, setGeneralUserInfo] = useRecoilState(GeneralUserInfo);
 
   const handleClickTopic = (topic) => {
     if (selectedTopic.includes(topic)) {
@@ -49,8 +50,8 @@ function InterestTopic(props) {
   };
 
   useEffect(() => {
-    setUserInterestTopic({
-      member_id: 1,
+    setGeneralUserInfo({
+      ...generalUserInfo,
       interests: selectedTopic,
     });
   }, [selectedTopic]);
