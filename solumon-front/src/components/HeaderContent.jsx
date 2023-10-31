@@ -3,38 +3,66 @@ import theme from '../style/theme';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { IoIosArrowBack } from 'react-icons/io';
+import { useRecoilState } from 'recoil';
+import { GeneralUserInfo } from '../recoil/AllAtom';
+import axios from 'axios';
 
 const HeaderContent = ({
   isLoggedIn,
   postData,
 }) => {
+  const userInfo = useRecoilState(GeneralUserInfo);
+  const accessToken = userInfo[0].accessToken;
   const navigate = useNavigate();
   const goBack = () => {
-    navigate(-1);
+    navigate('/post-list');
   };
   const handleEditClick =()=>{
-    navigate('/edit')
+    console.log(postData.post_id)
+    navigate(`/edit/${postData.post_id}`)
   }
-  const deletePost = () => {
-    fetch(`https://jsonplaceholder.typicode.com/posts/${postData.id}`, {
-      method: 'DELETE',
-    })
-      .then((response) => {
-        if (response.ok) {
-          console.log('게시물이 삭제되었습니다.');
-        } else {
-          console.error('게시물 삭제 실패');
-        }
-      })
-      .catch((error) => {
-        console.error('서버 요청 오류:', error);
-      });
+
+  const headers = {
+    'X-AUTH-TOKEN': accessToken,
   };
+  // console.log(headers)
+  //  게시물 삭제 delete 요청 코드 //
+  const deletePost = async() => {
+    console.log(postData.post_id)
+      try{
+          const response = await axios.delete(
+            `http://solumon.site:8080/posts/${postData.post_id}`,
+            {
+              headers,
+              withCredentials: true
+            },
+          )
+          if (response.status === 200) {
+            console.log(response.data);
+            console.log('삭제 성공');
+            navigate('/post-list'); 
+           } else {
+              console.error('삭제 실패');
+            }
+          } catch (error) {
+            console.error('오류 발생: ' + error);
+          }
+        }
+      
 
   const handleDeleteClick = () => {
     if (window.confirm('정말로 이 게시물을 삭제하시겠습니까?')) {
       deletePost();
     }
+  };
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const options = { year: 'numeric', month: 'numeric', day: 'numeric' };
+    return date.toLocaleDateString(undefined, options);
+  };
+  HeaderContent.propTypes = {
+    postData: PropTypes.object.isRequired,
+    isLoggedIn: PropTypes.bool.isRequired,
   };
   return (
     <ThemeProvider theme={theme}>
@@ -50,27 +78,21 @@ const HeaderContent = ({
   </EditContainer>
 ) : (
   <BanSpan
-    onClick={() => navigate(`/user/${postData.nickname}/report`)}
+  onClick={() => navigate(`/ban/${postData.writer_member_id}`)}
   >
-    신고하기
+    📢신고하기
   </BanSpan>
 )}
       </StyledHeaderContainer>
       <StyledContainer2>
-        <WriterSpan>작성자:{postData.nickname}</WriterSpan>
-        <TimeSpan>{postData.created_at}</TimeSpan>
+        <WriterSpan>작성자 : {postData.nickname}</WriterSpan>
+        <TimeSpan>{formatDate(postData.created_at)}</TimeSpan>
       </StyledContainer2>
     </ThemeProvider>
   );
 };
 
-HeaderContent.propTypes = {
-  userNickname: PropTypes.string.isRequired,
-  postData: PropTypes.object.isRequired,
-  handleEditClick: PropTypes.func.isRequired,
-  isLoggedIn: PropTypes.bool.isRequired,
-  handleDeleteClick: PropTypes.func.isRequired,
-};
+
 export default HeaderContent;
 const StyledContainer1 = styled.div`
   display: flex;
@@ -89,33 +111,40 @@ const StyledH1 = styled.h1`
 const StyledHeaderContainer = styled.div`
   display: flex;
   margin: 20px;
-  width: 70%;
-  align-items: center;
+  width: 80%;
+  justify-content: center;
+ 
 `;
 const StyledContainer2 = styled.div`
   display: flex;
   justify-content: space-between;
   margin: 20px;
-  width: 60%;
+  margin-left:-20px;
+  width: 55%;
 `;
 const BanSpan = styled.span`
   color: ${({ theme }) => theme.dark_purple};
   font-weight: bold;
+  margin-right:80px;
+  border:1px solid ${({ theme }) => theme.linen};
+  border-radius:10px;
+  padding:10px;
+  background-color:${({ theme }) => theme.linen};
 `;
 const WriterSpan = styled.span`
   color: ${({ theme }) => theme.medium_purple};
   font-weight: bold;
-  font-size: 13px;
+  font-size: 18px;
 `;
 const TimeSpan = styled.span`
   color: ${({ theme }) => theme.medium_purple};
   font-weight: bold;
-  font-size: 13px;
+  font-size: 18px;
 `;
 const EditContainer = styled.div`
   display: flex;
-  width: 23%;
   justify-content: flex-end;
+  margin-right:60px;
 `;
 
 const EditButton = styled.button`
