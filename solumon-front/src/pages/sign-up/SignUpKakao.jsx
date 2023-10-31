@@ -5,22 +5,41 @@ import theme from '../../style/theme';
 import Button from '../../components/Button';
 
 function SignUpKakao() {
+  const kakaoToken = window.localStorage.getItem('kakaoToken');
+  const KAKAO_TOKEN = kakaoToken;
+
   const [userData, setUserData] = useState('name');
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('test@kakao.com');
 
+  // 사이트에 카카오 회원가입이 처음일 때 회원가입 하는 함수
+  // 이 과정이 완료된 후에는 카카오 로그인을 시도하면
+  // Redirect 페이지에서 자동으로 로그인 처리됨
   const handleSignUpButton = async (e) => {
     e.preventDefault();
     if (nickname.length > 0) {
       try {
         const response = await axios.post(
-          'https://jsonplaceholder.typicode.com/users',
+          'http://solumon.site:8080/user/sign-up/kakao',
           {
+            kakao_access_token: KAKAO_TOKEN,
             nickname: nickname,
           },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            withCredentials: true,
+          },
         );
+        if (response.status === 200) {
+          const json = response.data;
+          console.log(json);
+        } else {
+          console.error('카카오 회원가입 실패');
+        }
       } catch (error) {
-        console.error(error);
+        console.log(`Something Wrong: ${error.message}`);
       }
     } else {
       alert('닉네임을 입력해 주세요.');
