@@ -2,31 +2,44 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useRecoilState } from 'recoil';
-import { UserInterestTopic } from '../recoil/AllAtom';
+import { GeneralUserInfo } from '../recoil/AllAtom';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
 import Button from '../components/Button';
 
 function UserInfo() {
+  const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
+  const USER_TOKEN = userInfo.accessToken;
+
   const [userData, setUserData] = useState({});
   const [nickname, setNickname] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [checkPassword, setCheckPassword] = useState('');
-  const [interests, setInterests] = useRecoilState(UserInterestTopic);
+  const [generalUserInfo, setGeneralUserInfo] = useRecoilState(GeneralUserInfo);
 
-  let interestsTopic = interests.interests.join(', ');
+  const interestsTopic = userData.interests
+    ? userData.interests.join(', ')
+    : '';
 
   const fetchData = async () => {
     try {
-      const response = await axios.get(
-        'https://jsonplaceholder.typicode.com/user',
-      );
-      setUserData(response.data[0]);
+      const response = await axios.get('http://solumon.site:8080/user', {
+        headers: {
+          'X-AUTH-TOKEN': USER_TOKEN,
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true,
+      });
+      if (response.status === 200) {
+        const json = response.data;
+        setUserData(json);
+      } else {
+        console.error('로딩 실패');
+      }
     } catch (error) {
-      console.error(error);
+      console.log(`Something Wrong: ${error.message}`);
     }
   };
 
@@ -34,17 +47,29 @@ function UserInfo() {
     e.preventDefault();
     try {
       const response = await axios.put(
-        'https://jsonplaceholder.typicode.com/user',
+        'http://solumon.site:8080/user',
         {
-          nickname: nickname || userData.nickname,
+          nickname: nickname,
           password: password,
-          new_password1: newPassword,
-          new_password2: checkPassword,
-          interests: interests.interests,
+          new_password: newPassword,
+        },
+        {
+          headers: {
+            'X-AUTH-TOKEN': USER_TOKEN,
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
         },
       );
+      if (response.status === 200) {
+        const json = response.data;
+        console.log(json);
+        fetchData();
+      } else {
+        response.data.errorMessage && alert(response.data.errorMessage);
+      }
     } catch (error) {
-      console.error(error);
+      console.log(`Something Wrong: ${error.message}`);
     }
   };
 
@@ -64,7 +89,7 @@ function UserInfo() {
               name="nickname"
               type="text"
               onChange={(e) => setNickname(e.target.value)}
-              value={userData.nickname}
+              defaultValue={userData.nickname}
             ></StyledInput>
           </InputWrapper>
 
@@ -105,6 +130,9 @@ function UserInfo() {
             📢 비밀번호 입력 시 영문 대문자 또는 소문자, 숫자,
             <br />
             &nbsp;&nbsp;&nbsp;&nbsp; 특수문자 3가지를 모두 사용해야 합니다.
+            <br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(특수문자는 @ # $ % ^ & + = ! 만 사용
+            가능)
           </InfoText>
 
           <InputWrapper>
@@ -125,9 +153,9 @@ function UserInfo() {
             <StyledLink
               to={'/user/interests'}
               style={{ marginBottom: '10px' }}
-              onChange={(e) => setInterests(e.target.value)}
+              // onChange={(e) => setInterests(e.target.value)}
             >
-              {interests && interestsTopic}
+              {interestsTopic}
             </StyledLink>
           </InputWrapper>
 
@@ -136,11 +164,7 @@ function UserInfo() {
           ) : (
             ''
           )}
-          {email.includes('@')
-            ? ''
-            : email.length >= 1 && (
-                <CheckMessage>잘못된 이메일 주소입니다.</CheckMessage>
-              )}
+
           {newPassword === checkPassword ? (
             ''
           ) : (
@@ -176,7 +200,7 @@ const PageTitle = styled.h1`
   font-size: 24px;
   font-weight: 600;
   color: ${({ theme }) => theme.dark_purple};
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 `;
 
 const Line = styled.hr`
