@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
 import { GeneralUserInfo } from '../recoil/AllAtom';
@@ -33,22 +33,19 @@ const Login = () => {
           headers: {
             'Content-Type': 'application/json',
           },
+          withCredentials: true,
         },
       );
       if (response.status === 200) {
         console.log(response.data);
         console.log('로그인 성공');
 
-        await setGeneralUserInfo({
-          accessToken: response.data.accessToken,
-          firstLogIn: response.data.firstLogIn,
-          memberId: response.data.memberId,
+        setGeneralUserInfo({
+          accessToken: response.data.access_token,
+          firstLogIn: response.data.is_first_log_in,
+          memberId: response.data.member_id,
+          nickname: response.data.nickname,
         });
-
-        console.log(generalUserInfo);
-        generalUserInfo.firstLogIn
-          ? navigate('/user/interests')
-          : navigate('/post-list');
       } else {
         console.error('로그인 실패');
       }
@@ -56,6 +53,32 @@ const Login = () => {
       console.error('오류 발생: ' + error.message);
     }
   };
+
+  useEffect(() => {
+    // generalUserInfo가 업데이트될 때 호출됨
+    if (generalUserInfo.accessToken) {
+      if (generalUserInfo.first_log_in) {
+        window.localStorage.setItem(
+          'userInfo',
+          JSON.stringify(generalUserInfo),
+        );
+        navigate('/user/interests');
+      } else {
+        window.localStorage.setItem(
+          'userInfo',
+          JSON.stringify(generalUserInfo),
+        );
+        navigate('/user/interests');
+      }
+    }
+
+    // generalUserInfo의 userToken 값을 기반으로 페이지 이동
+    // if (generalUserInfo.userToken) {
+    //   navigate('/user/interests');
+    // } else {
+    //   navigate('/post-list');
+    // }
+  }, [generalUserInfo, navigate]);
 
   return (
     <ThemeProvider theme={theme}>
