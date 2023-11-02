@@ -46,7 +46,6 @@ const StyledButton = styled.button`
   font-size: ${(props) => props.fontSize};
   font-weight: ${(props) => props.fontWeight || 400};
 
-
   border-radius: ${(props) => props.borderRadius || '0'};
   border: none;
   cursor: pointer;

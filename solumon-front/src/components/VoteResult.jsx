@@ -1,21 +1,32 @@
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import PropTypes from 'prop-types';
+import { useEffect } from 'react';
 
-function VoteResult({ choices, postData, selectedChoice }) {
-  const isClosed = !postData.vote.result_access_status;
+function VoteResult({ choices, postData, selectedChoice, endAt, createdAt }) {
+  const isClosed = !postData.ongoing;
+  useEffect(() => {
+    // selectedChoice 업데이트 시 실행될 코드
+    console.log(selectedChoice);
+  }, [selectedChoice]);
+  console.log(selectedChoice)
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric',
+    minute: 'numeric' };
+    return date.toLocaleDateString(undefined, options);
+  };
   return (
     <ThemeProvider theme={theme}>
-      <VoteResultContainer isClosed={isClosed}>
+      <VoteResultContainer $isClosed={isClosed}>
         <VoteHeader>
           <TitleContainer>
             <ResultTitle>투표 결과</ResultTitle>
             {isClosed && <ClosedBadge>종료</ClosedBadge>}
           </TitleContainer>
-
           <TimeSpan>
-            {postData.created_at}~{postData.vote.end_at}
+            {formatDate(createdAt)} ~ {formatDate(endAt)}
           </TimeSpan>
         </VoteHeader>
         <HorizontalLine />
@@ -48,6 +59,8 @@ VoteResult.propTypes = {
   selectedChoice: PropTypes.shape({
     selected_number: PropTypes.number,
   }),
+  endAt: PropTypes.string.isRequired,
+  createdAt: PropTypes.string.isRequired,
 };
 
 export default VoteResult;
@@ -58,7 +71,8 @@ const TitleContainer = styled.div`
 const VoteResultContainer = styled.div`
   border: 1px solid ${({ theme }) => theme.medium_purple};
   border-radius: 5px;
-  width: 60%;
+  width: 55%;
+  margin-left:-50px;
   background-color: ${(props) => (props.isClosed ? '#ccc' : 'transparent')};
 `;
 const ClosedBadge = styled.div`
@@ -82,7 +96,7 @@ const ResultBar = styled.div`
   width: ${(props) => props.$choicePercent};
   border-radius: 5px 0 0 5px; // 왼쪽만 둥글게
   height: 100%;
-  padding: 15px;
+  padding: 20px;
   white-space: nowrap;
   font-weight: ${(props) => (props.$isSelected ? 'bold' : 'normal')};
 `;
@@ -90,21 +104,22 @@ const VoteHeader = styled.div`
   display: flex;
   justify-content: space-between;
   margin: 20px;
-
+ padding:10px;
   font-weight: bold;
   color: ${({ theme }) => theme.medium_purple};
 `;
 
 const ResultTitle = styled.div`
   color: ${({ theme }) => theme.medium_purple};
+  font-size:25px;
 `;
 const ResultItem = styled.div`
   border: 1px solid ${({ theme }) => theme.medium_purple};
   color: ${({ theme }) => theme.medium_purple};
-  margin: 10px;
+  margin: 20px;
   align-items: center;
   border-radius: 5px;
-  font-size: 13px;
+  font-size: 17px;
   font-weight: 400;
   display: flex;
   justify-content: space-between;
@@ -119,6 +134,7 @@ const TimeSpan = styled.span`
   color: ${({ theme }) => theme.medium_purple};
   font-weight: bold;
   font-size: 13px;
+  margin-right:20px;
 `;
 const ChoicePercent = styled.span`
   color: ${({ theme }) => theme.medium_purple};
