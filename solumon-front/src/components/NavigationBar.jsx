@@ -1,15 +1,59 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
+
+import Button from './Button';
 import { FaUserCircle } from 'react-icons/fa';
-import { useState, useEffect } from 'react';
+import { Container } from '@mui/material';
 
 function NavigationBar() {
-  const [userInfo, setUserInfo] = useState(null);
+  const userInfo = JSON.parse(window.localStorage.getItem('userInfo')) || 0;
+  const USER_TOKEN = userInfo.accessToken;
+  const nickname = userInfo.nickname || null;
   const [userMenuActive, setUserMenuActive] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const navigate = useNavigate();
 
   const handleProfileIconClick = () => {
     setUserMenuActive(!userMenuActive);
-    console.log(userMenuActive);
+    // console.log(userMenuActive);
+  };
+
+  const handleLogout = () => {
+    setOpenModal(true);
+  };
+
+  const handleLogoutConfirmButton = async () => {
+    try {
+      const response = await axios.get(
+        'http://solumon.site:8080/user/log-out',
+        {
+          headers: {
+            'X-AUTH-TOKEN': USER_TOKEN,
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        },
+      );
+      if (response.status === 200) {
+        const json = response.data;
+        console.log(json);
+        setOpenModal(false);
+        window.localStorage.removeItem('userInfo');
+        setUserMenuActive(false);
+        navigate('/login');
+      } else {
+        console.error('로딩 실패');
+      }
+    } catch (error) {
+      console.log(`Something Wrong: ${error.message}`);
+    }
+  };
+
+  const handleCancelButton = () => {
+    setOpenModal(false);
   };
 
   // useEffect(() => {
@@ -19,25 +63,54 @@ function NavigationBar() {
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
-        <Logo>솔루몬</Logo>
-        {userInfo && (
+        <Logo to={userInfo.accessToken ? '/post-list' : '/login'}>솔루몬</Logo>
+        {userInfo ? (
           <User>
             <UserName>
-              <StyledSpan>userInfo.name</StyledSpan>님
+              <StyledSpan>{nickname}</StyledSpan>님
             </UserName>
             <ProfileIcon onClick={handleProfileIconClick} />
           </User>
+        ) : (
+          <></>
         )}
         {userMenuActive && (
           <UserMenuWrapper>
             <MenuWrapper>
-              <Menu>알림</Menu>
-              <Menu>회원정보</Menu>
-              <Menu>내가 남긴 기록</Menu>
-              <Menu>로그아웃</Menu>
-              <Menu>회원탈퇴</Menu>
+              {/* <MenuContainer> */}
+              <Menu to={'/notification'}>알림</Menu>
+              {/* <Badge>N</Badge>
+              </MenuContainer> */}
+
+              <Menu to={'/user'}>회원정보</Menu>
+              <Menu to={'/my-history'}>내가 남긴 기록</Menu>
+              <Menu onClick={handleLogout}>로그아웃</Menu>
+              <Menu to={'/withdraw'}>회원탈퇴</Menu>
             </MenuWrapper>
           </UserMenuWrapper>
+        )}
+        {openModal && (
+          <ModalWrapper>
+            <StyledH1>솔루몬을 로그아웃 하시겠습니까?</StyledH1>
+            <ButtonWrapper>
+              <Button
+                type="button"
+                name={'로그아웃'}
+                onClick={handleLogoutConfirmButton}
+                fontSize={'16px'}
+                padding={'10px 22px'}
+                borderRadius={'10px'}
+              />
+              <Button
+                type="button"
+                name={'취소'}
+                onClick={handleCancelButton}
+                fontSize={'16px'}
+                padding={'10px 22px'}
+                borderRadius={'10px'}
+              />
+            </ButtonWrapper>
+          </ModalWrapper>
         )}
       </Wrapper>
     </ThemeProvider>
@@ -56,12 +129,13 @@ const Wrapper = styled.div`
   background-color: ${({ theme }) => theme.medium_purple};
 `;
 
-const Logo = styled.p`
+const Logo = styled(Link)`
   position: absolute;
   left: 50%;
   transform: translate(-50%, 0);
   font-weight: bold;
   color: ${({ theme }) => theme.linen};
+  text-decoration: none;
   cursor: pointer;
 `;
 
@@ -120,7 +194,54 @@ const MenuWrapper = styled.div`
   gap: 12px;
 `;
 
-const Menu = styled.div`
+const Menu = styled(Link)`
   padding-left: 12px;
   color: ${({ theme }) => theme.dark_purple};
+  text-decoration: none;
+`;
+
+const MenuContainer = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const Badge = styled.div`
+  padding: 3px 4px;
+  border-radius: 50%;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  background-color: red;
+  color: white;
+  margin-left: 5px;
+`;
+
+const ModalWrapper = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 20%);
+  z-index: 10;
+  width: 50%;
+  height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme.dark_purple};
+  background-color: ${({ theme }) => theme.light_purple};
+  border-radius: 15px;
+`;
+
+const StyledH1 = styled.h1`
+  color: ${({ theme }) => theme.dark_purple};
+  font-size: 26px;
+  font-weight: 500;
+  margin-top: 20px;
+`;
+
+const ButtonWrapper = styled.div`
+  display: flex;
+  gap: 20px;
+  margin-top: 60px;
 `;
