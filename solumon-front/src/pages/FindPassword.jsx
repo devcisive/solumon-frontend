@@ -11,25 +11,22 @@ function FindPassword() {
 
   const handleFindPasswordButton = async (e) => {
     e.preventDefault();
-
     try {
-      const response = await fetch(
-        'https://jsonplaceholder.typicode.com/user/find-password',
+      const response = await axios.get(
+        'http://solumon.site:8080/user/find-password',
+        { email: email },
         {
-          method: 'POST',
           headers: {
-            'Content-Type': 'application/json', // JSON 형식의 데이터를 전송한다는 헤더 설정
+            'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ email }), // JSON 형식으로 사용자 이메일을 전송
+          withCredentials: true,
         },
       );
-
-      if (response.ok) {
-        // 요청이 성공적으로 완료된 경우
-        const data = await response.json(); // JSON 응답을 파싱
+      if (response.status === 200) {
+        const json = response.data;
+        console.log(json);
         setSendEmail(true);
       } else {
-        // 요청이 실패한 경우
         console.error('요청이 실패했습니다.');
       }
     } catch (error) {

@@ -6,21 +6,35 @@ import theme from '../style/theme';
 import Button from '../components/Button';
 
 function WithDraw() {
+  const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
+  const USER_TOKEN = userInfo.accessToken;
+
   const [password, setPassword] = useState();
   const [openModal, setOpenModal] = useState(false);
-  const userPassword = 123456;
 
   const handleWithDrawConfirmButton = async () => {
     try {
       const response = await axios.delete(
-        'https://jsonplaceholder.typicode.com/user/withdraw',
+        'http://solumon.site:8080/user/withdraw',
+        { password: password },
         {
-          password: password,
+          headers: {
+            'X-AUTH-TOKEN': USER_TOKEN,
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
         },
       );
-      setOpenModal(false);
+      if (response.status === 200) {
+        const json = response.data;
+        setOpenModal(false);
+        alert(json.nickname, '님의 탈퇴가 완료되었습니다.');
+        alert;
+      } else {
+        console.error('로딩 실패');
+      }
     } catch (error) {
-      console.error(error);
+      console.log(`Something Wrong: ${error.message}`);
     }
   };
 
@@ -30,9 +44,7 @@ function WithDraw() {
 
   const handleWithDrawButton = (e) => {
     e.preventDefault();
-    userPassword === password
-      ? setOpenModal(true)
-      : alert('비밀번호가 일치하지 않습니다.');
+    setOpenModal(true);
   };
 
   return (
