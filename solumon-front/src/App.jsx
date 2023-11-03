@@ -18,6 +18,7 @@ import PostCategory from './pages/PostCategory';
 import Search from './pages/Search';
 import ReDirect from './pages/ReDirect';
 import SearchResult from './pages/SearchResult';
+import Edit from './pages/Edit';
 
 function App() {
   return (
@@ -28,9 +29,10 @@ function App() {
         <Routes>
           <Route path="/user" element={<UserInfo />} />
           <Route path="/" element={<Start />} />
-          {/* <Route path="/posts" element={<Posts />} /> */}
-          <Route path="/posts/:post_id" element={<PostDetail />} />
-          <Route path="/user/:nickname/report" element={<Ban />} />
+          <Route path="/posts" element={<Posts />} />
+          <Route path="/postsDetail/:postId" element={<PostDetail />} />
+          <Route path="/ban/:memberId" element={<Ban />} />
+          <Route path="/edit/:postId" element={<Edit />} />
           <Route path="/user/interests" element={<ChoiceInterest />} />
           <Route path="/login" element={<Login />} />
           <Route path="/user/sign-up/general" element={<SignUpGeneral />} />
