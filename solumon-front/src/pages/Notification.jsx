@@ -8,14 +8,72 @@ import { AiOutlineCheckCircle } from 'react-icons/ai';
 
 function Notification() {
   const [notiList, setNotiList] = useState([]);
-  const [checkNoti, setCheckNoti] = useState(0);
+  const [checkNoti, setCheckNoti] = useState([]);
   const [deleteNoti, setDeleteNoti] = useState(false);
 
-  const fetchNotiData = async () => {};
+  const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
+  const USER_TOKEN = userInfo.accessToken;
 
-  const handleCheckNoti = async () => {};
+  const fetchNotiData = async () => {
+    try {
+      const response = await axios.get(
+        `http://solumon.site:8080/user/noti?pageNum=1`,
+        {
+          headers: {
+            'X-AUTH-TOKEN': USER_TOKEN,
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        },
+      );
+      if (response.status === 200) {
+        const json = response.data;
+        console.log(json);
+        setNotiList(json.notifications);
 
-  const handleDeleteAllNoti = async () => {};
+        // // 임시로 담아둔 부분
+        // setNotiList([
+        //   {
+        //     noti_id: 1,
+        //     post_id: 1,
+        //     post_title: '게시글 제목',
+        //     is_read: true,
+        //     type: 'ADD_CHAT',
+        //     sent_at: '2023-07-24T23:00:22',
+        //   },
+        //   {
+        //     noti_id: 2,
+        //     post_id: 2,
+        //     post_title: '게시글 제목',
+        //     is_read: false,
+        //     type: 'CLOSED_POST',
+        //     sent_at: '2023-07-24T23:00:34',
+        //   },
+        //   {
+        //     noti_id: 3,
+        //     post_id: 3,
+        //     post_title: '게시글 제목2',
+        //     is_read: false,
+        //     type: 'CLOSED_POST',
+        //     sent_at: '2023-07-24T23:00:34',
+        //   },
+        // ]);
+        console.log(notiList);
+      } else {
+        console.error('로딩 실패');
+      }
+    } catch (error) {
+      console.log(`Something Wrong: ${error.message}`);
+    }
+  };
+
+  const handleCheckNoti = () => {};
+
+  const handleDeleteAllNoti = () => {};
+
+  useEffect(() => {
+    fetchNotiData();
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>
@@ -27,7 +85,7 @@ function Notification() {
             {notiList.map((notification) => (
               <NotificationBox
                 key={notification.noti_id}
-                // to={`/postsDetail/${notification.post_id}`}
+                to={`/postsDetail/${notification.post_id}`}
                 checkNoti={checkNoti}
                 deleteNoti={deleteNoti}
                 notification={notification}
@@ -103,7 +161,7 @@ const NotificationBox = styled(Link)`
   border-radius: 10px;
   background-color: ${({ theme }) => theme.linen};
   opacity: ${({ checkNoti, notification }) =>
-    checkNoti === notification.noti_id ? '60%' : '100%'};
+    checkNoti.includes(notification.noti_id) ? '60%' : '100%'};
   text-decoration: none;
 
   display: ${({ deleteNoti }) => (deleteNoti ? 'none' : 'flex')};
