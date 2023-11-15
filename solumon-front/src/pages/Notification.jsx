@@ -99,7 +99,27 @@ function Notification() {
     }
   };
 
-  const handleDeleteAllNoti = () => {};
+  const handleDeleteAllNoti = async () => {
+    try {
+      const response = await axios.delete(
+        `http://solumon.site:8080/user/noti`,
+        {
+          headers: {
+            'X-AUTH-TOKEN': USER_TOKEN,
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        },
+      );
+      if (response.status === 200) {
+        console.log(response);
+        setDeleteNoti(true);
+        setNotiList([]);
+      }
+    } catch (error) {
+      console.log(`Something Wrong: ${error.message}`);
+    }
+  };
 
   useEffect(() => {
     fetchNotiData();
