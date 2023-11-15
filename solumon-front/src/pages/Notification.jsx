@@ -67,7 +67,37 @@ function Notification() {
     }
   };
 
-  const handleCheckNoti = () => {};
+  const handleCheckNoti = async (notiId) => {
+    try {
+      const response = await axios.get(
+        `http://solumon.site:8080/user/noti/${notiId}`,
+        {
+          headers: {
+            'X-AUTH-TOKEN': USER_TOKEN,
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        },
+      );
+      if (response.status === 200) {
+        setCheckNoti((prevCheckNoti) => {
+          const updatedCheckNoti = Array.isArray(prevCheckNoti)
+            ? [...prevCheckNoti]
+            : [];
+          if (!updatedCheckNoti.includes(notiId)) {
+            updatedCheckNoti.push(notiId);
+          }
+          return updatedCheckNoti;
+        });
+
+        console.log(checkNoti);
+      } else {
+        console.error('삭제 실패');
+      }
+    } catch (error) {
+      console.log(`Something Wrong: ${error.message}`);
+    }
+  };
 
   const handleDeleteAllNoti = () => {};
 
