@@ -7,8 +7,10 @@ import theme from '../style/theme';
 import { AiOutlineCheckCircle } from 'react-icons/ai';
 
 function Notification() {
+  const checkNotiId = JSON.parse(window.localStorage.getItem('checkNotiId'));
+
   const [notiList, setNotiList] = useState([]);
-  const [checkNoti, setCheckNoti] = useState([]);
+  const [checkNoti, setCheckNoti] = useState(checkNotiId);
   const [deleteNoti, setDeleteNoti] = useState(false);
 
   const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
@@ -125,6 +127,11 @@ function Notification() {
     fetchNotiData();
   }, []);
 
+  useEffect(() => {
+    window.localStorage.setItem('checkNotiId', checkNoti);
+    console.log('notiId :', checkNotiId);
+  }, [checkNoti]);
+
   return (
     <ThemeProvider theme={theme}>
       {notiList.length > 0 ? (
@@ -137,6 +144,7 @@ function Notification() {
                 key={notification.noti_id}
                 to={`/postsDetail/${notification.post_id}`}
                 checkNoti={checkNoti}
+                checkNotiId={checkNotiId}
                 deleteNoti={deleteNoti}
                 notification={notification}
                 onClick={() => handleCheckNoti(notification.noti_id)}
