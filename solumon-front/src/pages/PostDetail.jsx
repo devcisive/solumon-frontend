@@ -20,53 +20,51 @@ const PostDetail = () => {
   const userInfo = useRecoilState(GeneralUserInfo);
   const accessToken = userInfo[0].accessToken;
   const memberId = userInfo[0].memberId;
-  
-  
+
   useEffect(() => {
     const fetchData = async () => {
-      try{
+      try {
         const headers = {
           'X-AUTH-TOKEN': accessToken,
-          'withCredentials': true
+          withCredentials: true,
         };
         const response = await axios.get(
           `http://solumon.site:8080/posts/${postId}`,
           {
             headers,
+          },
+        );
+
+        console.log(response);
+        if (response.status === 200) {
+          console.log(response.data);
+          console.log('전달 성공');
+          setPostData(response.data);
+          if (memberId === response.data.writer_member_id) {
+            setIsLoggedIn(true);
+          } else {
+            setIsLoggedIn(false);
           }
-          )
-          
-          console.log(response)
-          if (response.status === 200) {
-            console.log(response.data);
-            console.log('전달 성공');
-            setPostData(response.data)
-            if (memberId===response.data.writer_member_id) {
-              setIsLoggedIn(true);
-            } else {
-              setIsLoggedIn(false);
-            }
-       } else {
+        } else {
           console.error('전달 실패');
         }
       } catch (error) {
         console.error('오류 발생: ' + error);
-        
       }
-    }
+    };
     fetchData();
-    },[memberId, postId, accessToken,selectedChoice])
-    
-    if (!postData) {
-      return <div>Loading...</div>; // 데이터가 로드되지 않았을 때 
-    }
+  }, [memberId, postId, accessToken, selectedChoice]);
+
+  if (!postData) {
+    return <div>Loading...</div>; // 데이터가 로드되지 않았을 때
+  }
   //투표 함수(투표항목선택)
   const handleChoiceClick = (choiceNum) => {
     if (isLoggedIn) {
       if (memberId === postData.writer_member_id) {
         alert('자신의 게시물에는 투표할 수 없습니다.');
       }
-     }else {
+    } else {
       const selectedChoiceInfo = {
         selected_num: choiceNum,
       };
@@ -74,75 +72,81 @@ const PostDetail = () => {
       console.log('등록 데이터:', selectedChoiceInfo);
       const headers = {
         'X-AUTH-TOKEN': accessToken,
-        'withCredentials': true
+        withCredentials: true,
       };
       //투표한 항목 서버전달코드 //
-      try{
-              const response = axios.post(
-                `http://solumon.site:8080/posts/${postId}/vote`,
-                selectedChoiceInfo,
-                {
-                  headers,
-                  withCredentials: true
-                },
-                )
-                
-                if (response.status === 200) {
-                  console.log(response.data);
-                  console.log('투표 완료');
-                alert('투표가 완료되었습니다.');  
-               } else {
-                  console.error('투표 실패');
-                }
-              }
-              catch (error) {
-                console.error('오류 발생: ' + error);
-              }
-            } 
-          };
-          
+      try {
+        const response = axios.post(
+          `http://solumon.site:8080/posts/${postId}/vote`,
+          selectedChoiceInfo,
+          {
+            headers,
+            withCredentials: true,
+          },
+        );
+
+        if (response.status === 200) {
+          console.log(response.data);
+          console.log('투표 완료');
+          alert('투표가 완료되었습니다.');
+        } else {
+          console.error('투표 실패');
+        }
+      } catch (error) {
+        console.error('오류 발생: ' + error);
+      }
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <Container>
-        <HeaderContent
-          postData={postData}
-          isLoggedIn={isLoggedIn}  
-        />
+        <HeaderContent postData={postData} isLoggedIn={isLoggedIn} />
         <ContentDiv>
           <ImageContainer>
             {postData.images.map((image, index) => (
-              <ImgBox src={image.image} alt={`이미지 ${index + 1}`} key={index} />
+              <ImgBox
+                src={image.image}
+                alt={`이미지 ${index + 1}`}
+                key={index}
+              />
             ))}
           </ImageContainer>
-          <ContentBox>
-          {postData.contents}
-          </ContentBox>
+          <ContentBox>{postData.contents}</ContentBox>
         </ContentDiv>
         {/* 투표진행중 & 투표참여했을때 또는 내가쓴글 */}
         {postData.ongoing ? (
-        // 투표 진행 중인 경우
+          // 투표 진행 중인 경우
+          postData.vote.join ? (
+            // 투표에 참여한 경우
+            <VoteResult
+              choices={postData.vote.choices}
+              postData={postData}
+              selectedChoice={selectedChoice}
+              endAt={postData.end_at}
+              createdAt={postData.created_at}
+            />
+          ) : (
+            // 투표에 참여하지 않은 경우
+            <Votes
+              handleChoiceClick={handleChoiceClick}
+              createdAt={postData.created_at}
+              endAt={postData.end_at}
+              vote={postData.vote}
+              choices={postData.vote.choices}
+            />
+          )
+        ) : // 투표 종료 , 내가 참여했을때의 경우
         postData.vote.join ? (
-          // 투표에 참여한 경우
           <VoteResult
             choices={postData.vote.choices}
             postData={postData}
-            selectedChoice={selectedChoice}
             endAt={postData.end_at}
             createdAt={postData.created_at}
+            selectedChoice={selectedChoice}
           />
         ) : (
-          // 투표에 참여하지 않은 경우
-          <Votes
-            handleChoiceClick={handleChoiceClick}
-            createdAt={postData.created_at}
-            endAt={postData.end_at}
-            vote={postData.vote}
-            choices={postData.vote.choices}
-          />
-        )
-      ) : (
-        // 투표 종료 , 내가 참여했을때의 경우
-        postData.vote.join ? (
+          // 투표 종료, 내가 참여하지 않았을때
           <VoteResult
             choices={postData.vote.choices}
             postData={postData}
@@ -150,19 +154,7 @@ const PostDetail = () => {
             createdAt={postData.created_at}
             selectedChoice={selectedChoice}
           />
-        ) : (
-        // 투표 종료, 내가 참여하지 않았을때
-          <VoteResult
-            choices={postData.vote.choices}
-            postData={postData}
-            endAt={postData.end_at}
-            createdAt={postData.created_at}
-            selectedChoice={selectedChoice}
-          />
-        )
-      )}
-       
-        
+        )}
       </Container>
       <TagContainer>
         {postData.tags.map((tag, index) => (
@@ -172,7 +164,7 @@ const PostDetail = () => {
       <CountContainer>
         <VoteCount>
           <BsChatSquareDots />
-           {postData.chat_count}명참여
+          {postData.chat_count}명참여
         </VoteCount>
         <ChatCount>
           <PiChartBarHorizontalFill />
@@ -180,23 +172,21 @@ const PostDetail = () => {
         </ChatCount>
       </CountContainer>
       <ChatBox>
-      <Chat/>
-    
+        <Chat postId={postId} />
       </ChatBox>
     </ThemeProvider>
   );
 };
 
-
 export default PostDetail;
 const ChatBox = styled.div`
-width:60%;
-height:600px;
-margin:auto;
-`
+  width: 60%;
+  height: 600px;
+  margin: auto;
+`;
 const ContentBox = styled.div`
-margin-left:25px;
-`
+  margin-left: 25px;
+`;
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -204,19 +194,18 @@ const Container = styled.div`
   align-items: center;
 `;
 const ImgBox = styled.img`
-width:550px;
-height:500px;
-margin-bottom:20px;
-margin-left:25px;
-marin:auto
+  width: 550px;
+  height: 500px;
+  margin-bottom: 20px;
+  margin-left: 25px;
+  marin: auto;
 `;
 
 const ContentDiv = styled.div`
   margin: 30px;
   width: 60%;
   font-size: 20px;
-  font-weight:600;
-  
+  font-weight: 600;
 `;
 
 const TagContainer = styled.div`
@@ -242,14 +231,13 @@ const CountContainer = styled.div`
   margin: auto;
   width: 58%;
   margin-top: 15px;
-  margin-bottom:10px;
+  margin-bottom: 10px;
 `;
 const VoteCount = styled.div`
   display: flex;
   font-size: 15px;
   margin-right: 10px;
   color: ${({ theme }) => theme.medium_purple};
-
 `;
 
 const ChatCount = styled.div`
