@@ -41,8 +41,6 @@ const Chat = ({ postId }) => {
       } else {
         setMessageLists((prevMessages) => [...newMessages, ...prevMessages]);
       }
-
-      // Update lastChatMessageId for the next fetch
       setLastChatMessageId(
         newMessages.length > 0 ? newMessages[0].message_id : 0,
       );
@@ -51,8 +49,8 @@ const Chat = ({ postId }) => {
       console.error('데이터를 불러오는 중 에러 발생:', error);
     }
   };
+  //스크롤을 위로 올렸을때 이전 채팅데이터 받아옴
   useEffect(() => {
-    // Scroll to the top when messageLists changes (initial load and new messages)
     const handleScroll = () => {
       if (chatContainerRef.current) {
         const scrolledToTop =
@@ -74,7 +72,7 @@ const Chat = ({ postId }) => {
       }
     };
   }, []);
-
+  //웹소켓 연결
   useEffect(() => {
     const websocket = new WebSocket(`ws://13.124.61.246:8080/ws-stomp`);
     stompClient.current = new Stomp.Client({
@@ -118,7 +116,7 @@ const Chat = ({ postId }) => {
   const handleMessageChange = (e) => {
     setMessage(e.target.value);
   };
-
+//메세지 SEND 함수
   const sendMessage = () => {
     if (message.trim() === '') return;
     if (stompClient.current && stompClient.current.connected) {
@@ -134,10 +132,11 @@ const Chat = ({ postId }) => {
       console.error('WebSocket 연결이 아직 완료되지 않았습니다.');
     }
   };
-
+  // 내메세지인지 상대방인지 구별(UI 구현)
   const isMyMessage = (message) => {
     return message.member_id === MEMBER_ID;
   };
+  //채팅 시간 함수
   const formatDate = (createdAt) => {
     const date = new Date(createdAt);
     const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1)
