@@ -68,7 +68,7 @@ const Login = () => {
           'userInfo',
           JSON.stringify(generalUserInfo),
         );
-        navigate('/user/interests');
+        navigate('/post-list');
       }
     }
 
@@ -78,15 +78,15 @@ const Login = () => {
     // } else {
     //   navigate('/post-list');
     // }
-  }, [generalUserInfo, navigate]);
+  }, [generalUserInfo]);
 
   return (
     <ThemeProvider theme={theme}>
       <Container>
         <StyledP>로그인</StyledP>
-        <KakaoLoginImg
-          src="/kakao_login.png"
-          alt="카카오 로그인"
+        <GoogleLoginImg
+          src="/google_login.png"
+          alt="구글 로그인"
           onClick={handleKakaoLoginButton}
         />
         <StyledSpan>또는 이메일로 로그인</StyledSpan>
@@ -150,8 +150,8 @@ const StyledForm = styled.form`
   flex-direction: column;
 `;
 
-const KakaoLoginImg = styled.img`
-  width: 350px;
+const GoogleLoginImg = styled.img`
+  width: 300px;
   cursor: pointer;
 `;
 
