@@ -1,42 +1,42 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-import { useRecoilState } from 'recoil';
-import { GeneralUserInfo } from '../recoil/AllAtom';
+import { auth, db } from '../firebase-config';
+import { getAdditionalUserInfo } from 'firebase/auth';
+import { getDocs, collection, query, where } from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
 import Button from '../components/Button';
 
 function UserInfo() {
-  const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
-  const USER_TOKEN = userInfo.accessToken;
-
-  const [userData, setUserData] = useState({});
+  const [userInfo, setUserInfo] = useState([]);
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [checkPassword, setCheckPassword] = useState('');
-  const [generalUserInfo, setGeneralUserInfo] = useRecoilState(GeneralUserInfo);
 
-  const interestsTopic = userData.interests
-    ? userData.interests.join(', ')
+  const interestsTopic = userInfo.interests
+    ? userInfo.interests.join(', ')
     : '';
 
   const fetchData = async () => {
     try {
-      const response = await axios.get('http://solumon.site:8080/user', {
-        headers: {
-          'X-AUTH-TOKEN': USER_TOKEN,
-          'Content-Type': 'application/json',
-        },
-        withCredentials: true,
-      });
-      if (response.status === 200) {
-        const json = response.data;
-        setUserData(json);
-      } else {
-        console.error('로딩 실패');
+      const user = auth.currentUser;
+
+      //파이어베이스 스토어에서 'users'컬렉션을 쿼리설정해 , uid 필드가 result.user.uid 같은 문서 찾기
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', user.uid),
+      );
+      //getDocs 를 사용하여 원하는 데이터 반환
+      const userQueryData = await getDocs(userQuery);
+      const userDoc = userQueryData.docs[0];
+
+      if (user !== null) {
+        setUserInfo({
+          nickname: userDoc.data().nickName,
+          email: user.email,
+        });
       }
     } catch (error) {
       console.log(`Something Wrong: ${error.message}`);
@@ -46,28 +46,28 @@ function UserInfo() {
   const handleSaveButton = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put(
-        'http://solumon.site:8080/user',
-        {
-          nickname: nickname,
-          password: password,
-          new_password: newPassword,
-        },
-        {
-          headers: {
-            'X-AUTH-TOKEN': USER_TOKEN,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        },
-      );
-      if (response.status === 200) {
-        const json = response.data;
-        console.log(json);
-        fetchData();
-      } else {
-        response.data.errorMessage && alert(response.data.errorMessage);
-      }
+      // const response = await axios.put(
+      //   'http://solumon.site:8080/user',
+      //   {
+      //     nickname: nickname,
+      //     password: password,
+      //     new_password: newPassword,
+      //   },
+      //   {
+      //     headers: {
+      //       'X-AUTH-TOKEN': USER_TOKEN,
+      //       'Content-Type': 'application/json',
+      //     },
+      //     withCredentials: true,
+      //   },
+      // );
+      // if (response.status === 200) {
+      //   const json = response.data;
+      //   console.log(json);
+      //   fetchData();
+      // } else {
+      //   response.data.errorMessage && alert(response.data.errorMessage);
+      // }
     } catch (error) {
       console.log(`Something Wrong: ${error.message}`);
     }
@@ -89,7 +89,7 @@ function UserInfo() {
               name="nickname"
               type="text"
               onChange={(e) => setNickname(e.target.value)}
-              defaultValue={userData.nickname}
+              defaultValue={userInfo.nickname}
             ></StyledInput>
           </InputWrapper>
 
@@ -98,7 +98,7 @@ function UserInfo() {
             <StyledInput
               name="email"
               type="email"
-              value={userData.email}
+              value={userInfo.email}
               disabled
             ></StyledInput>
           </InputWrapper>
@@ -159,7 +159,7 @@ function UserInfo() {
             </StyledLink>
           </InputWrapper>
 
-          {userData === nickname ? (
+          {getAdditionalUserInfo === nickname ? (
             <CheckMessage>이미 사용중인 닉네임입니다.</CheckMessage>
           ) : (
             ''
