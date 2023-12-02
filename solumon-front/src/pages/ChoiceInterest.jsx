@@ -1,7 +1,15 @@
 import { useRecoilValue, useRecoilState } from 'recoil';
 import { GeneralUserInfo } from '../recoil/AllAtom';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { auth, db } from '../firebase-config';
+import {
+  updateDoc,
+  doc,
+  getDocs,
+  collection,
+  query,
+  where,
+} from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
@@ -12,38 +20,28 @@ function ChoiceInterest() {
   const [generalUserInfo, setGeneralUserInfo] = useRecoilState(GeneralUserInfo);
   const navigate = useNavigate();
 
-  const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
-  const USER_TOKEN = userInfo.accessToken;
-
   const handleClickSaveButton = async () => {
     console.log(generalUserInfo.interests);
     try {
-      const response = await axios.post(
-        'http://solumon.site:8080/user/interests',
-        {
-          interests: generalUserInfo.interests,
-        },
-        {
-          headers: {
-            'X-AUTH-TOKEN': USER_TOKEN,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        },
+      const user = auth.currentUser;
+
+      //파이어베이스 스토어에서 'users'컬렉션을 쿼리설정한 다음 uid 필드가 result.user.uid와(현재 유저의 uid와) 같은 문서 찾기
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', user.uid),
       );
 
-      if (response.status === 200) {
-        console.log(response.data);
-        window.localStorage.setItem(
-          'userInfo',
-          JSON.stringify(generalUserInfo),
-        );
-        navigate('/post-list');
-      } else {
-        console.error('이메일 정보 전송 X');
-      }
+      const querySnapshot = await getDocs(userQuery);
+      const userDoc = querySnapshot.docs[0];
 
-      // navigate('/posts/post-list');
+      if (userDoc) {
+        // users collection중 현재 로그인한 유저의 userDoc.id값과 일치한 문서를 찾아 업데이트함
+        await updateDoc(doc(db, 'users', userDoc.id), {
+          interests: generalUserInfo.interests,
+        });
+
+        navigate('/post-list');
+      }
     } catch (error) {
       console.error(error);
     }
