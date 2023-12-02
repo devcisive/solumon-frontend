@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { auth, db } from '../firebase-config';
 import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+} from 'firebase/auth';
+import {
   updateDoc,
   doc,
   getDocs,
@@ -49,6 +54,26 @@ function UserInfo() {
     }
   };
 
+  const handleChangePassword = async () => {
+    // 사용자 재인증을 위해 사용자 이메일과 현재 비밀번호가 일치하는지 확인
+    const credential = EmailAuthProvider.credential(user.email, password);
+    try {
+      const result = await reauthenticateWithCredential(user, credential);
+      if (result) {
+        // 사용자 재인증이 성공하면 비밀번호를 변경
+        updatePassword(user, newPassword)
+          .then(() => {
+            console.log('비밀번호 변경 성공');
+          })
+          .catch((error) => {
+            console.log(error.message);
+          });
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   const handleSaveButton = async (e) => {
     e.preventDefault();
     try {
@@ -67,6 +92,11 @@ function UserInfo() {
           nickName: nickname,
           interests: userInfo.interests,
         });
+      }
+
+      // 입력된 새 비밀번호 값이 있고 그 값이 비밀번호 확인 값과 일치할 때 비밀번호 변경함수 실행
+      if (newPassword === checkPassword && newPassword.length > 0) {
+        handleChangePassword();
       }
     } catch (error) {
       console.log(`Something Wrong: ${error.message}`);
@@ -150,7 +180,11 @@ function UserInfo() {
             <StyledInputLabel htmlFor="interests-topic">
               관심주제
             </StyledInputLabel>
-            <StyledLink to={'/user/interests'} style={{ marginBottom: '10px' }}>
+            <StyledLink
+              to={'/user/interests'}
+              style={{ marginBottom: '10px' }}
+              // onChange={(e) => setInterests(e.target.value)}
+            >
               {interestsTopic}
             </StyledLink>
           </InputWrapper>
