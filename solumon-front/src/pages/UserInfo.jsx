@@ -1,14 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { auth, db } from '../firebase-config';
-import { getAdditionalUserInfo } from 'firebase/auth';
-import { getDocs, collection, query, where } from 'firebase/firestore';
+import {
+  updateDoc,
+  doc,
+  getDocs,
+  collection,
+  query,
+  where,
+} from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
 import Button from '../components/Button';
 
 function UserInfo() {
+  const user = auth.currentUser;
   const [userInfo, setUserInfo] = useState([]);
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
@@ -21,8 +28,6 @@ function UserInfo() {
 
   const fetchData = async () => {
     try {
-      const user = auth.currentUser;
-
       //파이어베이스 스토어에서 'users'컬렉션을 쿼리설정해 , uid 필드가 result.user.uid 같은 문서 찾기
       const userQuery = query(
         collection(db, 'users'),
@@ -36,6 +41,7 @@ function UserInfo() {
         setUserInfo({
           nickname: userDoc.data().nickName,
           email: user.email,
+          interests: userDoc.data().interests,
         });
       }
     } catch (error) {
@@ -46,28 +52,22 @@ function UserInfo() {
   const handleSaveButton = async (e) => {
     e.preventDefault();
     try {
-      // const response = await axios.put(
-      //   'http://solumon.site:8080/user',
-      //   {
-      //     nickname: nickname,
-      //     password: password,
-      //     new_password: newPassword,
-      //   },
-      //   {
-      //     headers: {
-      //       'X-AUTH-TOKEN': USER_TOKEN,
-      //       'Content-Type': 'application/json',
-      //     },
-      //     withCredentials: true,
-      //   },
-      // );
-      // if (response.status === 200) {
-      //   const json = response.data;
-      //   console.log(json);
-      //   fetchData();
-      // } else {
-      //   response.data.errorMessage && alert(response.data.errorMessage);
-      // }
+      //파이어베이스 스토어에서 'users'컬렉션을 쿼리설정한 다음 uid 필드가 result.user.uid와(현재 유저의 uid와) 같은 문서 찾기
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', user.uid),
+      );
+
+      const querySnapshot = await getDocs(userQuery);
+      const userDoc = querySnapshot.docs[0];
+
+      if (userDoc) {
+        // users collection중 현재 로그인한 유저의 userDoc.id값과 일치한 문서를 찾아 업데이트함
+        await updateDoc(doc(db, 'users', userDoc.id), {
+          nickName: nickname,
+          interests: userInfo.interests,
+        });
+      }
     } catch (error) {
       console.log(`Something Wrong: ${error.message}`);
     }
@@ -150,25 +150,15 @@ function UserInfo() {
             <StyledInputLabel htmlFor="interests-topic">
               관심주제
             </StyledInputLabel>
-            <StyledLink
-              to={'/user/interests'}
-              style={{ marginBottom: '10px' }}
-              // onChange={(e) => setInterests(e.target.value)}
-            >
+            <StyledLink to={'/user/interests'} style={{ marginBottom: '10px' }}>
               {interestsTopic}
             </StyledLink>
           </InputWrapper>
 
-          {getAdditionalUserInfo === nickname ? (
-            <CheckMessage>이미 사용중인 닉네임입니다.</CheckMessage>
-          ) : (
-            ''
-          )}
-
           {newPassword === checkPassword ? (
             ''
           ) : (
-            <CheckMessage>비밀번호를 확인해주세요.</CheckMessage>
+            <CheckMessage>비밀번호가 일치하지 않습니다.</CheckMessage>
           )}
 
           <Button
