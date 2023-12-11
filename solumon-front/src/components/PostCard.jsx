@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
@@ -6,23 +7,22 @@ import PropTypes from 'prop-types';
 import { BsChatDots } from 'react-icons/bs';
 import { VscGraph } from 'react-icons/vsc';
 
-function PostCard({ postData, postCount, postOrder }) {
-  const postInfo = postData[postOrder] || [];
-
+function PostCard({ postData, postCount }) {
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
         <Container>
           {postData && postCount
-            ? postInfo.slice(0, postCount).map((post) => (
+            ? postData.slice(0, postCount).map((post) => (
                 <CardWrapper
-                  key={post.post_id}
-                  to={`/postsDetail/${post.post_id}`}
+                  key={post.postId}
+                  to={`/postsDetail/${post.postId}`}
                 >
                   <StyledThumbnail
                     src={
-                      post.image_url ||
-                      'https://via.placeholder.com/240x130.jpg'
+                      post.images && post.images.length > 0
+                        ? post.images[0].image
+                        : '/basic_thumbnail.jpg'
                     }
                   ></StyledThumbnail>
                   <PostPreview>
@@ -49,13 +49,14 @@ function PostCard({ postData, postCount, postOrder }) {
             : postData
             ? postData.map((post) => (
                 <CardWrapper
-                  key={post.post_id}
-                  to={`/postsDetail/${post.post_id}`}
+                  key={post.postId}
+                  to={`/postsDetail/${post.postId}`}
                 >
                   <StyledThumbnail
                     src={
-                      post.image_url ||
-                      'https://via.placeholder.com/240x130.jpg'
+                      post.images && post.images.length > 0
+                        ? post.images[0].image
+                        : '/basic_thumbnail.jpg'
                     }
                   ></StyledThumbnail>
                   <PostPreview>
@@ -79,7 +80,7 @@ function PostCard({ postData, postCount, postOrder }) {
                   </PostPreview>
                 </CardWrapper>
               ))
-            : postInfo.length === 0 && (
+            : postData.length === 0 && (
                 <div>해당 데이터가 존재하지 않습니다.</div>
               )}
         </Container>
@@ -91,14 +92,12 @@ function PostCard({ postData, postCount, postOrder }) {
 PostCard.propTypes = {
   postData: PropTypes.array.isRequired,
   postCount: PropTypes.number,
-  postOrder: PropTypes.string,
 };
 
 export default PostCard;
 
 const Wrapper = styled.div`
   width: 1280px;
-  /* min-height: 640px; */
 `;
 
 const Container = styled.div`
