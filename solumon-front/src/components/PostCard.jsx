@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
@@ -7,12 +6,49 @@ import PropTypes from 'prop-types';
 import { BsChatDots } from 'react-icons/bs';
 import { VscGraph } from 'react-icons/vsc';
 
-function PostCard({ postData, postCount }) {
+function PostCard({ postData, postCount, currentPage }) {
+  const startIndex = (currentPage - 1) * postCount;
+  const endIndex = startIndex + postCount;
+
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
         <Container>
-          {postData && postCount
+          {postData && postCount && currentPage
+            ? postData.slice(startIndex, endIndex).map((post) => (
+                <CardWrapper
+                  key={post.postId}
+                  to={`/postsDetail/${post.postId}`}
+                >
+                  <StyledThumbnail
+                    src={
+                      post.images && post.images.length > 0
+                        ? post.images[0].image
+                        : '/basic_thumbnail.jpg'
+                    }
+                  ></StyledThumbnail>
+                  <PostPreview>
+                    <Title>{post.title}</Title>
+                    <Content>{post.contents}</Content>
+                    <PostInfo>
+                      <Date>{post.created_at.slice(0, 10)}</Date>
+                      <CountWrapper>
+                        <ChatCount>
+                          <BsChatDots />
+                          {post.chat_count}명 참여
+                        </ChatCount>
+                        <VoteCount>
+                          <VscGraph />
+                          {post.vote_count}명 참여
+                        </VoteCount>
+                      </CountWrapper>
+                    </PostInfo>
+                    <Line></Line>
+                    <Writer>by. {post.nickname}</Writer>
+                  </PostPreview>
+                </CardWrapper>
+              ))
+            : postData && postCount
             ? postData.slice(0, postCount).map((post) => (
                 <CardWrapper
                   key={post.postId}
@@ -46,8 +82,8 @@ function PostCard({ postData, postCount }) {
                   </PostPreview>
                 </CardWrapper>
               ))
-            : postData
-            ? postData.map((post) => (
+            : postData &&
+              postData.map((post) => (
                 <CardWrapper
                   key={post.postId}
                   to={`/postsDetail/${post.postId}`}
@@ -79,10 +115,7 @@ function PostCard({ postData, postCount }) {
                     <Writer>by. {post.nickname}</Writer>
                   </PostPreview>
                 </CardWrapper>
-              ))
-            : postData.length === 0 && (
-                <div>해당 데이터가 존재하지 않습니다.</div>
-              )}
+              ))}
         </Container>
       </Wrapper>
     </ThemeProvider>
@@ -92,6 +125,7 @@ function PostCard({ postData, postCount }) {
 PostCard.propTypes = {
   postData: PropTypes.array.isRequired,
   postCount: PropTypes.number,
+  currentPage: PropTypes.number,
 };
 
 export default PostCard;
