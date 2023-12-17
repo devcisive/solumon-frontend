@@ -35,11 +35,11 @@ function PostCard({ postData, postCount, currentPage }) {
                       <CountWrapper>
                         <ChatCount>
                           <BsChatDots />
-                          {post.chat_count}명 참여
+                          {post.total_comment_count}명 참여
                         </ChatCount>
                         <VoteCount>
                           <VscGraph />
-                          {post.vote_count}명 참여
+                          {post.total_vote_count}명 참여
                         </VoteCount>
                       </CountWrapper>
                     </PostInfo>
@@ -69,11 +69,11 @@ function PostCard({ postData, postCount, currentPage }) {
                       <CountWrapper>
                         <ChatCount>
                           <BsChatDots />
-                          {post.chat_count}명 참여
+                          {post.total_comment_count}명 참여
                         </ChatCount>
                         <VoteCount>
                           <VscGraph />
-                          {post.vote_count}명 참여
+                          {post.total_vote_count}명 참여
                         </VoteCount>
                       </CountWrapper>
                     </PostInfo>
@@ -103,11 +103,11 @@ function PostCard({ postData, postCount, currentPage }) {
                       <CountWrapper>
                         <ChatCount>
                           <BsChatDots />
-                          {post.chat_count}명 참여
+                          {post.total_comment_count}명 참여
                         </ChatCount>
                         <VoteCount>
                           <VscGraph />
-                          {post.vote_count}명 참여
+                          {post.total_vote_count}명 참여
                         </VoteCount>
                       </CountWrapper>
                     </PostInfo>
@@ -143,7 +143,7 @@ const Container = styled.div`
 
 const CardWrapper = styled(Link)`
   width: 240px;
-  min-height: 310px;
+  max-height: 340px;
   border-radius: 10px;
   background-color: ${({ theme }) => theme.linen};
   text-decoration: none;
@@ -173,6 +173,7 @@ const Content = styled.p`
   font-size: 14px;
   color: ${({ theme }) => theme.dark_purple};
   display: -webkit-box;
+  min-height: 40px;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow: hidden;
