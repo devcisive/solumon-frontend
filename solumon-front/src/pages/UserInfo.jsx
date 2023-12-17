@@ -5,6 +5,7 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword,
+  updateProfile,
 } from 'firebase/auth';
 import {
   updateDoc,
@@ -87,11 +88,15 @@ function UserInfo() {
       const userDoc = querySnapshot.docs[0];
 
       if (userDoc) {
+        await updateProfile(user, { displayName: nickname });
+
         // users collection중 현재 로그인한 유저의 userDoc.id값과 일치한 문서를 찾아 업데이트함
         await updateDoc(doc(db, 'users', userDoc.id), {
           nickName: nickname,
           interests: userInfo.interests,
         });
+
+        alert('회원정보가 수정되었습니다.');
       }
 
       // 입력된 새 비밀번호 값이 있고 그 값이 비밀번호 확인 값과 일치할 때 비밀번호 변경함수 실행
