@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import { db } from '../firebase-config';
+import { getDocs, collection, orderBy, query } from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
@@ -11,11 +12,7 @@ import PostCard from '../components/PostCard';
 import Pagination from '../components/Pagination';
 
 function PostCategory() {
-  const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
-  const USER_TOKEN = userInfo.accessToken;
-
   const [postData, setPostData] = useState([]);
-  const [postDataLength, setPostDataLength] = useState(0);
   const [selectedTab, setSelectedTab] = useState('진행중인 고민');
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -113,27 +110,35 @@ function PostCategory() {
     });
   };
 
+  const fetchOrderedData = async (orderByField, order) => {
+    const querySnapshot = await getDocs(
+      query(collection(db, 'posts-write'), orderBy(orderByField, order)),
+    );
+
+    const dataList = [];
+    querySnapshot.forEach((doc) => {
+      dataList.push({
+        postId: doc.id,
+        ...doc.data(),
+      });
+    });
+
+    return dataList;
+  };
+
   const fetchData = async () => {
-    try {
-      const response = await axios.get(
-        `http://solumon.site:8080/posts?postType=${postType}&postStatus=${postStatus}&postOrder=${postOrder}&pageNum=${currentPage}`,
-        {
-          headers: {
-            'X-AUTH-TOKEN': USER_TOKEN,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        },
-      );
-      if (response.status === 200) {
-        const json = response.data;
-        setPostDataLength(json.totalElements);
-        setPostData(json.content);
-      } else {
-        console.error('로딩 실패');
-      }
-    } catch (error) {
-      console.log(`Something Wrong: ${error.message}`);
+    if (postOrder === 'LATEST') {
+      const data = await fetchOrderedData('created_at', 'desc');
+      setPostData(data);
+    } else if (postOrder === 'MOST_CHAT_PARTICIPANTS') {
+      const data = await fetchOrderedData('total_comment_count', 'desc');
+      setPostData(data);
+    } else if (postOrder === 'MOST_VOTES') {
+      const data = await fetchOrderedData('total_vote_count', 'desc');
+      setPostData(data);
+    } else {
+      const data = await fetchOrderedData('created_at');
+      setPostData(data);
     }
   };
 
@@ -168,10 +173,14 @@ function PostCategory() {
               onClick={handleSortChange}
             />
           </SortWrapper>
-          <PostCard postData={postData} />
+          <PostCard
+            postData={postData}
+            postCount={10}
+            currentPage={currentPage}
+          />
         </PostSection>
         <Pagination
-          totalPages={Math.ceil(postDataLength / 10)}
+          totalPages={Math.ceil(postData.length / 10)}
           currentPage={currentPage}
           onPageChange={handlePageChange}
         />
