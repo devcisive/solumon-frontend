@@ -6,14 +6,12 @@ import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
 import { CiSearch } from 'react-icons/ci';
-import TabsComponent from '../components/TabsComponent';
 import SortSelector from '../components/SortSelector';
 import PostCard from '../components/PostCard';
 import Pagination from '../components/Pagination';
 
 function PostCategory() {
   const [postData, setPostData] = useState([]);
-  const [selectedTab, setSelectedTab] = useState('진행중인 고민');
   const [searchParams, setSearchParams] = useSearchParams();
 
   let postType = searchParams.get('postType');
@@ -80,27 +78,6 @@ function PostCategory() {
     console.log(sortValue);
   };
 
-  const onTabChange = (newTab) => {
-    if (newTab === '진행중인 고민') {
-      // 클릭한 탭에 따라 쿼리값 변경
-      setSearchParams({
-        postType: postType,
-        postStatus: 'ONGOING',
-        postOrder: postOrder,
-        pageNum: currentPage,
-      });
-    } else {
-      setSearchParams({
-        postType: postType,
-        postStatus: 'COMPLETED',
-        postOrder: postOrder,
-        pageNum: currentPage,
-      });
-    }
-    // 클릭된 탭에 따라 어떤 데이터를 불러올지 결정
-    setSelectedTab(newTab);
-  };
-
   const handlePageChange = (newPage) => {
     setSearchParams({
       postType: postType,
@@ -157,11 +134,6 @@ function PostCategory() {
             </Link>
           </TitleWrapper>
           <SortWrapper>
-            <TabsComponent
-              tabLabels={['진행중인 고민', '결정이 완료된 고민']}
-              defaultTab={0}
-              onClick={onTabChange}
-            />
             <SortSelector
               sortLabels={[
                 '최신순',
@@ -223,7 +195,6 @@ const SearchIcon = styled(CiSearch)`
 
 const SortWrapper = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-self: flex-end;
   margin-bottom: 20px;
 `;
