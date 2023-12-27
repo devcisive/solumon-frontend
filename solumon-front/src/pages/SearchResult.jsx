@@ -8,20 +8,15 @@ import theme from '../style/theme';
 import PropTypes from 'prop-types';
 
 import { CiSearch } from 'react-icons/ci';
-import TabsComponent from '../components/TabsComponent';
 import SortSelector from '../components/SortSelector';
 import PostCard from '../components/PostCard';
 import Pagination from '../components/Pagination';
 
 function SearchResult() {
-  const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
-  const USER_TOKEN = userInfo.accessToken;
-
   const { searchType } = useParams();
   const searchKeyword = useRecoilValue(SearchKeyword);
   const [postData, setPostData] = useState([]);
   const [postDataLength, setPostDataLength] = useState(0);
-  const [selectedTab, setSelectedTab] = useState('진행중인 고민');
   const [currentPage, setCurrentPage] = useState(1);
 
   let postType = 'GENERAL';
@@ -49,44 +44,11 @@ function SearchResult() {
     console.log(sortValue);
   };
 
-  const onTabChange = (newTab) => {
-    if (newTab === '진행중인 고민') {
-      // 클릭한 탭에 따라 쿼리값 변경
-      postStatus = 'ONGOING';
-    } else {
-      postStatus = 'COMPLETED';
-    }
-    // 클릭된 탭에 따라 어떤 데이터를 불러올지 결정
-    setSelectedTab(newTab);
-  };
-
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
 
-  const fetchData = async () => {
-    try {
-      const response = await axios.get(
-        `http://solumon.site:8080/posts/search?keyWord=${searchKeyword}&postStatus=ONGOING&postOrder=LATEST&searchType=${searchType}&pageNum=${currentPage}`,
-        {
-          headers: {
-            'X-AUTH-TOKEN': USER_TOKEN,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        },
-      );
-      if (response.status === 200) {
-        const json = response.data;
-        setPostDataLength(json.totalElements);
-        setPostData(json.content);
-      } else {
-        console.error('로딩 실패');
-      }
-    } catch (error) {
-      console.log(`Something Wrong: ${error.message}`);
-    }
-  };
+  const fetchData = async () => {};
 
   useEffect(() => {
     fetchData();
@@ -103,11 +65,6 @@ function SearchResult() {
             </Link>
           </TitleWrapper>
           <SortWrapper>
-            <TabsComponent
-              tabLabels={['진행중인 고민', '결정이 완료된 고민']}
-              defaultTab={0}
-              onClick={onTabChange}
-            />
             <SortSelector
               sortLabels={[
                 '최신순',
@@ -165,7 +122,7 @@ const SearchIcon = styled(CiSearch)`
 
 const SortWrapper = styled.div`
   display: flex;
-  align-items: center;
+  align-self: flex-end;
   justify-content: space-between;
   margin-bottom: 20px;
 `;
