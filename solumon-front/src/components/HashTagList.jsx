@@ -51,7 +51,7 @@ function HashTagList() {
 
   useEffect(() => {
     setHashTagChoice({
-      hasgTag: selectedHashTag,
+      hashTag: selectedHashTag,
     });
   }, [selectedHashTag]);
 
