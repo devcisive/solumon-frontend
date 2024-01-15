@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { auth, db } from '../firebase-config';
+import { getDocs, collection, orderBy, query, where } from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
@@ -8,31 +9,13 @@ import { HiOutlinePencilSquare } from 'react-icons/hi2';
 import { CiSearch } from 'react-icons/ci';
 import PostCard from '../components/PostCard';
 
-const postInfoList = [
-  {
-    title: '아직 결정하지 못한 고민들',
-    postOrder: 'LATEST',
-    link: '/posts?postType=GENERAL&postStatus=ONGOING&postOrder=LATEST&pageNum=1',
-  },
-  {
-    title: '채팅 참여자가 많은 고민들',
-    postOrder: 'MOST_CHAT_PARTICIPANTS',
-    link: '/posts?postType=GENERAL&postStatus=ONGOING&postOrder=MOST_CHAT_PARTICIPANTS&pageNum=1',
-  },
-  {
-    title: '투표 참여자가 많은 고민들',
-    postOrder: 'MOST_VOTES',
-    link: '/posts?postType=GENERAL&postStatus=ONGOING&postOrder=MOST_VOTES&pageNum=1',
-  },
-];
-
 function PostList() {
-  const [postData, setPostData] = useState([]);
+  const user = auth.currentUser;
+  const [latestPostData, setLatestPostData] = useState([]);
+  const [chatCountPostData, setChatCountPostData] = useState([]);
+  const [voteCountPostData, setVoteCountPostData] = useState([]);
+  const [myInterest, setMyInterest] = useState([]);
   const [interestPostData, setInterestPostData] = useState([]);
-
-  const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
-  const USER_TOKEN = userInfo.accessToken;
-  const USER_INTERESTS = userInfo.interests;
   const navigate = useNavigate();
 
   const HandleButtonClick = () => {
@@ -40,82 +23,81 @@ function PostList() {
   };
 
   const fetchInterestsData = async () => {
-    try {
-      const response = await axios.get(
-        `http://solumon.site:8080/posts?postType=INTEREST&postStatus=ONGOING&postOrder=LATEST&pageNum=1`,
-        {
-          headers: {
-            'X-AUTH-TOKEN': USER_TOKEN,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        },
+    if (user) {
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', user.uid),
       );
-      if (response.status === 200) {
-        const json = response.data;
-        setInterestPostData(json.content);
-      } else {
-        console.error('로딩 실패');
+
+      const querySnapshot = await getDocs(userQuery);
+      const userDoc = querySnapshot.docs[0];
+
+      if (userDoc) {
+        setMyInterest(userDoc.data().interests);
       }
-    } catch (error) {
-      console.log(`Something Wrong: ${error.message}`);
+
+      const allData = await fetchOrderedData('created_at', 'desc');
+
+      if (allData.length > 0 && myInterest.length > 0) {
+        const interestPosts = allData.filter(
+          (post) =>
+            post.tags &&
+            Array.isArray(post.tags.hashTag) &&
+            post.tags.hashTag.some((tag) => myInterest.includes(tag)),
+        );
+
+        setInterestPostData(interestPosts);
+      }
     }
   };
 
-  const fetchData = () => {
-    const fetchDataPromises = postInfoList.map((item) =>
-      axios
-        .get(
-          `http://solumon.site:8080/posts?postType=GENERAL&postStatus=ONGOING&postOrder=${item.postOrder}&pageNum=1`,
-          {
-            headers: {
-              'X-AUTH-TOKEN': USER_TOKEN,
-              'Content-Type': 'application/json',
-            },
-            withCredentials: true,
-          },
-        )
-        .then((response) => {
-          const json = response.data;
-
-          // 불러온 postData는 아래와 같은 형식으로 저장됨
-          // {LATEST: [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]},
-          // {MOST_CHAT_PARTICIPANTS: [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]},
-          // {MOST_VOTES: [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]},
-          setPostData((prevData) => ({
-            ...prevData,
-            [item.postOrder]: json.content,
-          }));
-        })
-        .catch((error) => {
-          console.log(`Something Wrong: ${error.message}`);
-        }),
+  const fetchOrderedData = async (orderByField, order) => {
+    const querySnapshot = await getDocs(
+      query(collection(db, 'posts-write'), orderBy(orderByField, order)),
     );
-
-    // 모든 fetchData 프로미스를 병렬로 실행
-    Promise.all(fetchDataPromises)
-      .then(() => {
-        console.log('데이터 로드 완료');
-        console.log(postData);
-      })
-      .catch((error) => {
-        console.log(`Error loading data: ${error}`);
-      });
+    const dataList = querySnapshot.docs.map((doc) => ({
+      postId: doc.id,
+      ...doc.data(),
+    }));
+    return dataList;
   };
 
   useEffect(() => {
-    fetchData(); // 초기 렌더링 시 한 번 호출
-    // if (USER_INTERESTS) {
-    //   fetchInterestsData();
-    // }
-    fetchInterestsData();
-    console.log(interestPostData);
-  }, []);
+    const fetchAllData = async () => {
+      await fetchInterestsData();
+      const latestData = await fetchOrderedData('created_at', 'desc');
+      const chatCountData = await fetchOrderedData(
+        'total_comment_count',
+        'desc',
+      );
+      const voteCountData = await fetchOrderedData('total_vote_count', 'desc');
+
+      setLatestPostData(latestData);
+      setChatCountPostData(chatCountData);
+      setVoteCountPostData(voteCountData);
+    };
+
+    fetchAllData();
+  }, [user]);
 
   useEffect(() => {
-    // postInfoList 배열의 아이템이 변경될 때마다 fetchData 호출
-    fetchData();
-  }, [postInfoList]);
+    // myInterest가 변경되면 별도의 useEffect를 사용하여 관심분야 데이터를 다시 가져옴
+    if (user && myInterest.length > 0) {
+      fetchInterestsData();
+    }
+  }, [user, myInterest]);
+
+  const renderPostSection = (title, orderField, postData) => (
+    <PostSection>
+      <SectionTitle>{title}</SectionTitle>
+      <AllPostsLink
+        to={`/posts?postType=GENERAL&postStatus=ONGOING&postOrder=${orderField}&pageNum=1`}
+      >
+        전체보기 {'>'}
+      </AllPostsLink>
+      <PostCard postData={postData} postCount={5} />
+    </PostSection>
+  );
 
   return (
     <ThemeProvider theme={theme}>
@@ -138,21 +120,24 @@ function PostList() {
           >
             전체보기 {'>'}
           </AllPostsLink>
-          <PostCard postData={interestPostData} />
+          <PostCard postData={interestPostData} postCount={5} />
         </PostSection>
 
-        {postInfoList.map((item, idx) => (
-          <PostSection key={idx}>
-            <SectionTitle>{item.title}</SectionTitle>
-            <AllPostsLink to={item.link}>전체보기 {'>'}</AllPostsLink>
-            <PostCard
-              // 특정 카테고리에 해당하는 데이터를 map으로 할당하기 위해 postOrder를 props로 넘김
-              postData={postData}
-              postOrder={item.postOrder}
-              postCount={5}
-            />
-          </PostSection>
-        ))}
+        {renderPostSection(
+          '아직 결정하지 못한 고민들',
+          'LATEST',
+          latestPostData,
+        )}
+        {renderPostSection(
+          '채팅 참여자가 많은 고민들',
+          'MOST_CHAT_PARTICIPANTS',
+          chatCountPostData,
+        )}
+        {renderPostSection(
+          '투표 참여자가 많은 고민들',
+          'MOST_VOTES',
+          voteCountPostData,
+        )}
       </Wrapper>
     </ThemeProvider>
   );
@@ -220,4 +205,3 @@ const StyledHiOutlinePencilSquare = styled(HiOutlinePencilSquare)`
   font-size: 30px;
   margin-right: 10px;
 `;
-
