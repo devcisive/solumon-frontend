@@ -1,110 +1,107 @@
 import { useState, useEffect } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { useRecoilState } from 'recoil';
-import { GeneralUserInfo } from '../recoil/AllAtom';
-import axios from 'axios';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
-
 import Button from '../components/Button';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, provider } from '../firebase-config';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { getDocs, collection, query, where } from 'firebase/firestore';
+import { db } from '../firebase-config';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [generalUserInfo, setGeneralUserInfo] = useRecoilState(GeneralUserInfo);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [userInfo, setUserInfo] = useState([]);
   const navigate = useNavigate();
 
-  const REST_API_KEY = '478ce5c02a05e42ebd74f42edf66e003'; //REST API KEY
-  const REDIRECT_URI = 'http://localhost:5173/user/start/kakao'; //Redirect URI
-  // auth 요청 URL
-  const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
-
-  const handleKakaoLoginButton = () => {
-    window.location.href = KAKAO_AUTH_URL;
-  };
+  useEffect(() => {
+    if (userInfo.firstLogIn !== undefined) {
+      window.localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      navigate('/post-list');
+    }
+  }, [userInfo, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    console.log('일반로그인');
     try {
-      const response = await axios.post(
-        'http://solumon.site:8080/user/sign-in/general',
-        { email: email, password: password },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        },
+      const result = await signInWithEmailAndPassword(
+        auth,
+        loginEmail,
+        loginPassword,
       );
-      if (response.status === 200) {
-        console.log(response.data);
-        console.log('로그인 성공');
+      //파이어베이스 스토어에서 'users'컬렉션을 쿼리설정해 , uid 필드가 result.user.uid 같은 문서 찾기
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', result.user.uid),
+      );
+      //getDocs 를 사용하여 원하는 데이터 반환
+      const userQueryData = await getDocs(userQuery);
 
-        setGeneralUserInfo({
-          accessToken: response.data.access_token,
-          firstLogIn: response.data.is_first_log_in,
-          memberId: response.data.member_id,
-          nickname: response.data.nickname,
+      //우리가 찾는 uid 값과 같은 문서가있다면 닉네임 추출
+      if (userQueryData.docs) {
+        const userDoc = userQueryData.docs[0];
+        const userNickName = userDoc.data().nickName;
+        const isFirstLogin = result.user.createdAt === result.user.lastLoginAt;
+
+        setUserInfo({
+          accessToken: result.user.accessToken,
+          firstLogIn: isFirstLogin,
+          memberId: result.user.uid,
+          nickname: userNickName,
+          interests: [],
         });
-      } else {
-        console.error('로그인 실패');
       }
     } catch (error) {
-      console.error('오류 발생: ' + error.message);
+      console.log(error.message);
     }
   };
 
-  useEffect(() => {
-    // generalUserInfo가 업데이트될 때 호출됨
-    if (generalUserInfo.accessToken) {
-      if (generalUserInfo.first_log_in) {
-        window.localStorage.setItem(
-          'userInfo',
-          JSON.stringify(generalUserInfo),
-        );
-        navigate('/user/interests');
-      } else {
-        window.localStorage.setItem(
-          'userInfo',
-          JSON.stringify(generalUserInfo),
-        );
-        navigate('/user/interests');
-      }
-    }
+  const handleGoogleLogin = async () => {
+    console.log('구글로그인');
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const isFirstLogin =
+        result.user.metadata.createdAt === result.user.metadata.lastLoginAt;
 
-    // generalUserInfo의 userToken 값을 기반으로 페이지 이동
-    // if (generalUserInfo.userToken) {
-    //   navigate('/user/interests');
-    // } else {
-    //   navigate('/post-list');
-    // }
-  }, [generalUserInfo, navigate]);
+      console.log(result);
+      setUserInfo({
+        accessToken: result.user.accessToken,
+        firstLogIn: isFirstLogin,
+        memberId: result.user.uid,
+        nickname: result.user.displayName,
+        interests: [],
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <ThemeProvider theme={theme}>
       <Container>
-        <StyledP>로그인</StyledP>
-        <KakaoLoginImg
-          src="/kakao_login.png"
-          alt="카카오 로그인"
-          onClick={handleKakaoLoginButton}
+        <GoogleLoginImg
+          src="/google_login.png"
+          alt="구글 로그인"
+          onClick={handleGoogleLogin}
         />
         <StyledSpan>또는 이메일로 로그인</StyledSpan>
         <StyledForm>
           <StyledInput
-            type="text"
+            type="email"
             id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={loginEmail}
+            onChange={(event) => setLoginEmail(event.target.value)}
             placeholder="이메일주소를 입력해주세요"
             autoComplete="username"
             required
           ></StyledInput>
           <StyledInput
             type="password"
-            value={password}
+            value={loginPassword}
             id="passWord"
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(event) => setLoginPassword(event.target.value)}
             placeholder="비밀번호를 입력해주세요"
             autoComplete="current-password"
             required
@@ -132,6 +129,11 @@ const Login = () => {
 };
 
 export default Login;
+const GoogleLoginImg = styled.img`
+  width: 300px;
+  cursor: pointer;
+  height: 60px;
+`;
 
 const Container = styled.div`
   display: flex;
@@ -150,24 +152,12 @@ const StyledForm = styled.form`
   flex-direction: column;
 `;
 
-const KakaoLoginImg = styled.img`
-  width: 350px;
-  cursor: pointer;
-`;
-
 const PinSearch = styled.div`
   width: auto;
   padding: 5px;
   border-bottom: 1px solid #000;
   cursor: pointer;
   margin-top: 25px;
-`;
-
-const StyledP = styled.div`
-  font-size: 24px;
-  font-weight: bold;
-  color: ${({ theme }) => theme.dark_purple};
-  margin-bottom: 60px;
 `;
 
 const StyledSpan = styled.span`
