@@ -5,13 +5,16 @@ import { IoIosRemoveCircle } from 'react-icons/io';
 import { AiFillMinusCircle, AiFillPlusCircle } from 'react-icons/ai';
 import { BsPlusSquare } from 'react-icons/bs';
 import Button from '../components/Button';
-// import { useNavigate } from 'react-router-dom';
-import { useRecoilState } from 'recoil';
-import { GeneralUserInfo } from '../recoil/AllAtom';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
-
+import { db } from '../firebase-config';
+import { addDoc, collection } from 'firebase/firestore';
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from 'firebase/storage';
+const storage = getStorage();
 
 const Posts = () => {
   const navigate = useNavigate();
@@ -24,19 +27,19 @@ const Posts = () => {
   const [currentHashtag, setCurrentHashtag] = useState('');
   const [representative, setRepresentative] = useState(null);
   const [filePreviews, setFilePreviews] = useState([]);
-  const [files, setFiles] = useState([])
-  // const [generalUserInfo, setGeneralUserInfo] = useRecoilState(GeneralUserInfo);
-  const userInfo = useRecoilState(GeneralUserInfo);
-  const accessToken = userInfo[0].accessToken;
-  
-  
+  const [files, setFiles] = useState([]);
+  const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
+  const currentUserUid = storedUserInfo.memberId;
+  const nickName = storedUserInfo.nickname;
+
   const handleFileChange = (event) => {
     //사진 업로드
     const files = event.target.files;
     const fileNames = Array.from(files).map((file) => file.name); // 파일명 추출
     const fileObjects = Array.from(files).map((file) =>
-    URL.createObjectURL(file),
+      URL.createObjectURL(file),
     );
+    console.log(files);
 
     setSelectedFile((prevSelectedFile) => [
       ...(prevSelectedFile || []),
@@ -46,14 +49,14 @@ const Posts = () => {
       ...(prevFilePreviews || []),
       ...fileObjects,
     ]);
-    setFiles((prevFiles)=>[
-      ...(prevFiles || []),
-      ...files
-    ])
+    setFiles((prevFiles) => [...(prevFiles || []), ...files]);
     if (representative === null && fileObjects.length > 0) {
       //대표이미지를 선택하지 않았을때, 임의로 첫번째로 대표이미지 설정
       setRepresentative(0);
     }
+    console.log(files);
+    console.log(selectedFile);
+    console.log(filePreviews);
   };
 
   // 사진 삭제
@@ -63,13 +66,13 @@ const Posts = () => {
       updatedFiles.splice(index, 1);
       return updatedFiles;
     });
-  
+
     setFilePreviews((prevFilePreviews) => {
       const updatedPreviews = [...prevFilePreviews];
       updatedPreviews.splice(index, 1);
       return updatedPreviews;
     });
-  
+
     if (index === representative) {
       setRepresentative(null);
     } else if (index < representative) {
@@ -77,7 +80,27 @@ const Posts = () => {
       setRepresentative(representative - 1);
     }
   };
+  //사진이미지 스토리지에 업로드
+  const uploadImages = async () => {
+    const imageUrls = [];
 
+    for (const [index, file] of files.entries()) {
+      const storageRef = ref(storage, `images/${file.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+      //url 변형하기
+      await uploadTask.then(async (snapshot) => {
+        const imageUrl = await getDownloadURL(snapshot.ref);
+        imageUrls.push({
+          image: imageUrl,
+          name: file.name,
+          index: index + 1,
+          representative: index === representative,
+        });
+      });
+    }
+
+    return imageUrls;
+  };
   //투표항목입력할때 발생하는 onchange
   const handleOptionChange = (index, value) => {
     const newOptions = [...options];
@@ -97,8 +120,10 @@ const Posts = () => {
   //투표마감일 입력 onChange
   const handleTimeInputChange = (e, setEndDate) => {
     const inputTime = e.target.value;
-    const clientTime = new Date(inputTime);
-    const parsedTime = new Date(clientTime); //분,초은 날리고 시간까지 전달해줘야함(자스에서사용위해)
+    const clientTime = new Date(inputTime + 'Z');
+    const parsedTime = new Date(
+      clientTime.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }),
+    );
     parsedTime.setMinutes(0);
     parsedTime.setSeconds(0);
     setEndDate(parsedTime.toISOString().slice(0, 19));
@@ -142,9 +167,9 @@ const Posts = () => {
     setHashtags(newHashtags);
   };
   // 게시글 데이터 생성
-  const RegisterSubmit = async(e) => {
+  const RegisterSubmit = async (e) => {
     e.preventDefault();
-    
+    const images = await uploadImages();
     //유효성(validation)
     if (!title || !content) {
       alert('제목과 내용을 작성해주세요.');
@@ -179,16 +204,18 @@ const Posts = () => {
       title,
       contents: content,
       tags: hashtags.map((tag) => ({ tag })),
-      images: selectedFile.map((image, index) => ({
-        image,
-        index: index + 1,
-        representative: index === representative,
-      })),
+      images,
+      uid: currentUserUid,
+      created_at: new Date().toISOString(),
+      nickname: nickName,
+      total_comment_count: 0,
+      total_vote_count: 0,
+      join: [],
     };
     // 투표 데이터 생성
-    const voteData = {
+    const vote = {
       choices: options.map((choice, index) => ({
-        choice_num: index + 1,
+        choice_num: index,
         choice_text: choice,
       })),
       end_at: endDate,
@@ -196,56 +223,25 @@ const Posts = () => {
     // 전체 데이터 구성
     const requestData = {
       ...postData,
-      vote: voteData,
+      vote,
     };
     console.log('등록 데이터:', requestData);
-    
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-    formData.append("images", files[i]);
+
+    try {
+      const postsCollection = collection(db, 'posts-write');
+      const newPostRef = await addDoc(postsCollection, requestData);
+      const postId = newPostRef.id;
+      console.log(`파이어스토어 저장완료`, postId);
+      navigate(`/postsDetail/${postId}`);
+    } catch (error) {
+      console.log(`파이어스토어 저장완료`, error.message);
     }
-
-    const json = JSON.stringify(requestData);
-    const blob = new Blob([json], { type: "application/json" })
-    formData.append("request", blob);
-   
-    const headers = {
-      'X-AUTH-TOKEN': accessToken,
-    };
-    // console.log(headers)
-
-    //   msw POST 요청 코드 //
-        try{
-            const response = await axios.post(
-              'http://solumon.site:8080/posts',
-             formData,
-              {
-                headers,
-                withCredentials: true
-                },
-            )
-            
-           
-            if (response.status === 200) {
-              console.log(response.data);
-              console.log('전달 성공');
-              navigate(`/postsDetail/${response.data.post_id}`);
-              
-             } else {
-                console.error('전달 실패');
-              }
-            } catch (error) {
-              console.error('오류 발생: ' + error);
-          
-            }
-          }
-
+  };
 
   return (
     <ThemeProvider theme={theme}>
-     
-        {/* 전체게시글작성폼*/}
-       <MainContainer onSubmit={RegisterSubmit} encType="multipart/form-data"> 
+      {/* 전체게시글작성폼*/}
+      <MainContainer onSubmit={RegisterSubmit} encType="multipart/form-data">
         <HeadContainer>
           {/* 제목과 등록버튼 */}
           <TitleSpan>게시글 작성</TitleSpan>
@@ -373,7 +369,6 @@ const Posts = () => {
             </Hashtag>
           ))}
         </HashtagContainer>
-      
       </MainContainer>
     </ThemeProvider>
   );
@@ -385,7 +380,7 @@ const MainContainer = styled.form`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin:50px auto;
+  margin: 50px auto;
 `;
 const TitleSpan = styled.span`
   font-size: 30px;
@@ -393,12 +388,12 @@ const TitleSpan = styled.span`
   color: ${({ theme }) => theme.dark_purple};
   margin-bottom: 10px;
   display: inline;
-
+  font-family: 'Noto Sans KR';
 `;
 const HeadContainer = styled.div`
   display: flex;
   flex-direction: row;
-  width: 50%;
+  width: 49%;
   justify-content: space-between;
   margin-bottom: 10px;
 `;
@@ -433,7 +428,7 @@ const ContentTextArea = styled.textarea`
   }
 `;
 const FileContainer = styled.div`
-  width: 75%;
+  width: 76.5%;
   display: flex;
   justify-content: center;
   align-items: center;
