@@ -22,3 +22,8 @@ export const SearchKeyword = atom({
   key: 'SearchKeyword',
   default: '',
 });
+
+export const HashTagChoice = atom({
+  key: 'HashTagChoice',
+  default: [],
+});

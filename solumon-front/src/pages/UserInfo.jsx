@@ -1,72 +1,107 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-import { useRecoilState } from 'recoil';
-import { GeneralUserInfo } from '../recoil/AllAtom';
+import { auth, db } from '../firebase-config';
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+  updateProfile,
+} from 'firebase/auth';
+import {
+  updateDoc,
+  doc,
+  getDocs,
+  collection,
+  query,
+  where,
+} from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
 import Button from '../components/Button';
 
 function UserInfo() {
-  const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
-  const USER_TOKEN = userInfo.accessToken;
-
-  const [userData, setUserData] = useState({});
+  const user = auth.currentUser;
+  const [userInfo, setUserInfo] = useState([]);
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [checkPassword, setCheckPassword] = useState('');
-  const [generalUserInfo, setGeneralUserInfo] = useRecoilState(GeneralUserInfo);
 
-  const interestsTopic = userData.interests
-    ? userData.interests.join(', ')
+  const interestsTopic = userInfo.interests
+    ? userInfo.interests.join(', ')
     : '';
 
   const fetchData = async () => {
     try {
-      const response = await axios.get('http://solumon.site:8080/user', {
-        headers: {
-          'X-AUTH-TOKEN': USER_TOKEN,
-          'Content-Type': 'application/json',
-        },
-        withCredentials: true,
-      });
-      if (response.status === 200) {
-        const json = response.data;
-        setUserData(json);
-      } else {
-        console.error('로딩 실패');
+      //파이어베이스 스토어에서 'users'컬렉션을 쿼리설정해 , uid 필드가 result.user.uid 같은 문서 찾기
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', user.uid),
+      );
+      //getDocs 를 사용하여 원하는 데이터 반환
+      const userQueryData = await getDocs(userQuery);
+      const userDoc = userQueryData.docs[0];
+
+      if (user !== null) {
+        setUserInfo({
+          nickname: userDoc.data().nickName,
+          email: user.email,
+          interests: userDoc.data().interests,
+        });
       }
     } catch (error) {
       console.log(`Something Wrong: ${error.message}`);
     }
   };
 
+  const handleChangePassword = async () => {
+    // 사용자 재인증을 위해 사용자 이메일과 현재 비밀번호가 일치하는지 확인
+    const credential = EmailAuthProvider.credential(user.email, password);
+    try {
+      const result = await reauthenticateWithCredential(user, credential);
+      if (result) {
+        // 사용자 재인증이 성공하면 비밀번호를 변경
+        updatePassword(user, newPassword)
+          .then(() => {
+            console.log('비밀번호 변경 성공');
+          })
+          .catch((error) => {
+            console.log(error.message);
+          });
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   const handleSaveButton = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put(
-        'http://solumon.site:8080/user',
-        {
-          nickname: nickname,
-          password: password,
-          new_password: newPassword,
-        },
-        {
-          headers: {
-            'X-AUTH-TOKEN': USER_TOKEN,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        },
+      //파이어베이스 스토어에서 'users'컬렉션을 쿼리설정한 다음 uid 필드가 result.user.uid와(현재 유저의 uid와) 같은 문서 찾기
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', user.uid),
       );
-      if (response.status === 200) {
-        const json = response.data;
-        console.log(json);
-        fetchData();
-      } else {
-        response.data.errorMessage && alert(response.data.errorMessage);
+
+      const querySnapshot = await getDocs(userQuery);
+      const userDoc = querySnapshot.docs[0];
+
+      if (userDoc) {
+        await updateProfile(user, { displayName: nickname });
+
+        // users collection중 현재 로그인한 유저의 userDoc.id값과 일치한 문서를 찾아 업데이트함
+        await updateDoc(doc(db, 'users', userDoc.id), {
+          nickName: nickname,
+          interests: userInfo.interests,
+        });
+
+        alert('회원정보가 수정되었습니다.');
+      }
+
+      // 입력된 새 비밀번호 값이 있고 그 값이 비밀번호 확인 값과 일치할 때 비밀번호 변경함수 실행
+      if (newPassword === checkPassword && newPassword.length > 0) {
+        handleChangePassword();
       }
     } catch (error) {
       console.log(`Something Wrong: ${error.message}`);
@@ -89,7 +124,7 @@ function UserInfo() {
               name="nickname"
               type="text"
               onChange={(e) => setNickname(e.target.value)}
-              defaultValue={userData.nickname}
+              defaultValue={userInfo.nickname}
             ></StyledInput>
           </InputWrapper>
 
@@ -98,7 +133,7 @@ function UserInfo() {
             <StyledInput
               name="email"
               type="email"
-              value={userData.email}
+              value={userInfo.email}
               disabled
             ></StyledInput>
           </InputWrapper>
@@ -159,16 +194,10 @@ function UserInfo() {
             </StyledLink>
           </InputWrapper>
 
-          {userData === nickname ? (
-            <CheckMessage>이미 사용중인 닉네임입니다.</CheckMessage>
-          ) : (
-            ''
-          )}
-
           {newPassword === checkPassword ? (
             ''
           ) : (
-            <CheckMessage>비밀번호를 확인해주세요.</CheckMessage>
+            <CheckMessage>비밀번호가 일치하지 않습니다.</CheckMessage>
           )}
 
           <Button
