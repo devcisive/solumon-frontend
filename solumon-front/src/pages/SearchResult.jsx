@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import axios from 'axios';
-import { useRecoilValue } from 'recoil';
-import { SearchKeyword } from '../recoil/AllAtom';
+import { db } from '../firebase-config';
+import { getDocs, collection, orderBy, query } from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
-import PropTypes from 'prop-types';
 
 import { CiSearch } from 'react-icons/ci';
 import SortSelector from '../components/SortSelector';
@@ -14,45 +12,92 @@ import Pagination from '../components/Pagination';
 
 function SearchResult() {
   const { searchType } = useParams();
-  const searchKeyword = useRecoilValue(SearchKeyword);
-  const [postData, setPostData] = useState([]);
-  const [postDataLength, setPostDataLength] = useState(0);
+  const { keyword } = useParams();
+  const [searchData, setSearchData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-
-  let postType = 'GENERAL';
-  let postStatus = 'ONGOING';
-  let postOrder = 'LATEST';
 
   let categoryTitle = '';
 
   if (searchType === 'CONTENT') {
-    categoryTitle = '제목 및 본문 검색결과';
+    categoryTitle = '제목 검색결과';
   } else {
     categoryTitle = '태그 검색결과';
   }
 
-  const handleSortChange = (sortValue) => {
-    if (sortValue === '최신순') {
-      postOrder = 'LATEST';
-    } else if (sortValue === '채팅 참여 순') {
-      postOrder = 'MOST_CHAT_PARTICIPANTS';
-    } else if (sortValue === '투표 참여 순') {
-      postOrder = 'MOST_VOTES';
+  const handleSortChange = async (sortValue) => {
+    if (searchType === 'CONTENT') {
+      if (sortValue === '최신순') {
+        filterTitleSearchData('created_at', 'desc');
+      } else if (sortValue === '채팅 참여 순') {
+        filterTitleSearchData('total_comment_count', 'desc');
+      } else if (sortValue === '투표 참여 순') {
+        filterTitleSearchData('total_vote_count', 'desc');
+      } else {
+        filterTitleSearchData('created_at');
+      }
     } else {
-      postOrder = 'IMMINENT_CLOSE';
+      if (sortValue === '최신순') {
+        filterTagSearchData('created_at', 'desc');
+      } else if (sortValue === '채팅 참여 순') {
+        filterTagSearchData('total_comment_count', 'desc');
+      } else if (sortValue === '투표 참여 순') {
+        filterTagSearchData('total_vote_count', 'desc');
+      } else {
+        filterTagSearchData('created_at');
+      }
     }
-    console.log(sortValue);
   };
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
 
-  const fetchData = async () => {};
+  const fetchOrderedData = async (orderByField, order) => {
+    const querySnapshot = await getDocs(
+      query(collection(db, 'posts-write'), orderBy(orderByField, order)),
+    );
+
+    const dataList = [];
+    querySnapshot.forEach((doc) => {
+      dataList.push({
+        postId: doc.id,
+        ...doc.data(),
+      });
+    });
+
+    return dataList;
+  };
+
+  const filterTagSearchData = async (orderByField, order) => {
+    const data = await fetchOrderedData(orderByField, order);
+
+    if (data.length > 0) {
+      const filteredData = data.filter(
+        (item) =>
+          item.tags &&
+          Array.isArray(item.tags.hashTag) &&
+          item.tags.hashTag.includes(keyword),
+      );
+      setSearchData(filteredData);
+    }
+  };
+
+  const filterTitleSearchData = async (orderByField, order) => {
+    const data = await fetchOrderedData(orderByField, order);
+
+    if (data.length > 0) {
+      const filteredData = data.filter((item) => item.title.includes(keyword));
+      setSearchData(filteredData);
+    }
+  };
 
   useEffect(() => {
-    fetchData();
-  }, [searchType, searchKeyword, postType, postStatus, postOrder, currentPage]);
+    if (searchType === 'CONTENT') {
+      filterTitleSearchData('created_at', 'desc');
+    } else {
+      filterTagSearchData('created_at', 'desc');
+    }
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>
@@ -76,10 +121,14 @@ function SearchResult() {
               onClick={handleSortChange}
             />
           </SortWrapper>
-          <PostCard postData={postData} />
+          <PostCard
+            postData={searchData}
+            postCount={10}
+            currentPage={currentPage}
+          />
         </PostSection>
         <Pagination
-          totalPages={Math.ceil(postDataLength / 10)}
+          totalPages={Math.ceil(searchData.length / 10)}
           currentPage={currentPage}
           onPageChange={handlePageChange}
         />
