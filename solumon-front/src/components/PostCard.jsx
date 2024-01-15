@@ -6,23 +6,25 @@ import PropTypes from 'prop-types';
 import { BsChatDots } from 'react-icons/bs';
 import { VscGraph } from 'react-icons/vsc';
 
-function PostCard({ postData, postCount, postOrder }) {
-  const postInfo = postData[postOrder] || [];
+function PostCard({ postData, postCount, currentPage }) {
+  const startIndex = (currentPage - 1) * postCount;
+  const endIndex = startIndex + postCount;
 
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
         <Container>
-          {postData && postCount
-            ? postInfo.slice(0, postCount).map((post) => (
+          {postData && postCount && currentPage
+            ? postData.slice(startIndex, endIndex).map((post) => (
                 <CardWrapper
-                  key={post.post_id}
-                  to={`/postsDetail/${post.post_id}`}
+                  key={post.postId}
+                  to={`/postsDetail/${post.postId}`}
                 >
                   <StyledThumbnail
                     src={
-                      post.image_url ||
-                      'https://via.placeholder.com/240x130.jpg'
+                      post.images && post.images.length > 0
+                        ? post.images[0].image
+                        : '/basic_thumbnail.jpg'
                     }
                   ></StyledThumbnail>
                   <PostPreview>
@@ -33,11 +35,11 @@ function PostCard({ postData, postCount, postOrder }) {
                       <CountWrapper>
                         <ChatCount>
                           <BsChatDots />
-                          {post.chat_count}명 참여
+                          {post.total_comment_count}명 참여
                         </ChatCount>
                         <VoteCount>
                           <VscGraph />
-                          {post.vote_count}명 참여
+                          {post.total_vote_count}명 참여
                         </VoteCount>
                       </CountWrapper>
                     </PostInfo>
@@ -46,16 +48,17 @@ function PostCard({ postData, postCount, postOrder }) {
                   </PostPreview>
                 </CardWrapper>
               ))
-            : postData
-            ? postData.map((post) => (
+            : postData && postCount
+            ? postData.slice(0, postCount).map((post) => (
                 <CardWrapper
-                  key={post.post_id}
-                  to={`/postsDetail/${post.post_id}`}
+                  key={post.postId}
+                  to={`/postsDetail/${post.postId}`}
                 >
                   <StyledThumbnail
                     src={
-                      post.image_url ||
-                      'https://via.placeholder.com/240x130.jpg'
+                      post.images && post.images.length > 0
+                        ? post.images[0].image
+                        : '/basic_thumbnail.jpg'
                     }
                   ></StyledThumbnail>
                   <PostPreview>
@@ -66,11 +69,11 @@ function PostCard({ postData, postCount, postOrder }) {
                       <CountWrapper>
                         <ChatCount>
                           <BsChatDots />
-                          {post.chat_count}명 참여
+                          {post.total_comment_count}명 참여
                         </ChatCount>
                         <VoteCount>
                           <VscGraph />
-                          {post.vote_count}명 참여
+                          {post.total_vote_count}명 참여
                         </VoteCount>
                       </CountWrapper>
                     </PostInfo>
@@ -79,9 +82,40 @@ function PostCard({ postData, postCount, postOrder }) {
                   </PostPreview>
                 </CardWrapper>
               ))
-            : postInfo.length === 0 && (
-                <div>해당 데이터가 존재하지 않습니다.</div>
-              )}
+            : postData &&
+              postData.map((post) => (
+                <CardWrapper
+                  key={post.postId}
+                  to={`/postsDetail/${post.postId}`}
+                >
+                  <StyledThumbnail
+                    src={
+                      post.images && post.images.length > 0
+                        ? post.images[0].image
+                        : '/basic_thumbnail.jpg'
+                    }
+                  ></StyledThumbnail>
+                  <PostPreview>
+                    <Title>{post.title}</Title>
+                    <Content>{post.contents}</Content>
+                    <PostInfo>
+                      <Date>{post.created_at.slice(0, 10)}</Date>
+                      <CountWrapper>
+                        <ChatCount>
+                          <BsChatDots />
+                          {post.total_comment_count}명 참여
+                        </ChatCount>
+                        <VoteCount>
+                          <VscGraph />
+                          {post.total_vote_count}명 참여
+                        </VoteCount>
+                      </CountWrapper>
+                    </PostInfo>
+                    <Line></Line>
+                    <Writer>by. {post.nickname}</Writer>
+                  </PostPreview>
+                </CardWrapper>
+              ))}
         </Container>
       </Wrapper>
     </ThemeProvider>
@@ -91,14 +125,13 @@ function PostCard({ postData, postCount, postOrder }) {
 PostCard.propTypes = {
   postData: PropTypes.array.isRequired,
   postCount: PropTypes.number,
-  postOrder: PropTypes.string,
+  currentPage: PropTypes.number,
 };
 
 export default PostCard;
 
 const Wrapper = styled.div`
   width: 1280px;
-  /* min-height: 640px; */
 `;
 
 const Container = styled.div`
@@ -110,7 +143,7 @@ const Container = styled.div`
 
 const CardWrapper = styled(Link)`
   width: 240px;
-  min-height: 310px;
+  max-height: 340px;
   border-radius: 10px;
   background-color: ${({ theme }) => theme.linen};
   text-decoration: none;
@@ -140,6 +173,7 @@ const Content = styled.p`
   font-size: 14px;
   color: ${({ theme }) => theme.dark_purple};
   display: -webkit-box;
+  min-height: 40px;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow: hidden;

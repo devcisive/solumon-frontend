@@ -1,22 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import { db } from '../firebase-config';
+import { getDocs, collection, orderBy, query } from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
 import { CiSearch } from 'react-icons/ci';
-import TabsComponent from '../components/TabsComponent';
 import SortSelector from '../components/SortSelector';
 import PostCard from '../components/PostCard';
 import Pagination from '../components/Pagination';
 
 function PostCategory() {
-  const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
-  const USER_TOKEN = userInfo.accessToken;
-
   const [postData, setPostData] = useState([]);
-  const [postDataLength, setPostDataLength] = useState(0);
-  const [selectedTab, setSelectedTab] = useState('진행중인 고민');
   const [searchParams, setSearchParams] = useSearchParams();
 
   let postType = searchParams.get('postType');
@@ -83,27 +78,6 @@ function PostCategory() {
     console.log(sortValue);
   };
 
-  const onTabChange = (newTab) => {
-    if (newTab === '진행중인 고민') {
-      // 클릭한 탭에 따라 쿼리값 변경
-      setSearchParams({
-        postType: postType,
-        postStatus: 'ONGOING',
-        postOrder: postOrder,
-        pageNum: currentPage,
-      });
-    } else {
-      setSearchParams({
-        postType: postType,
-        postStatus: 'COMPLETED',
-        postOrder: postOrder,
-        pageNum: currentPage,
-      });
-    }
-    // 클릭된 탭에 따라 어떤 데이터를 불러올지 결정
-    setSelectedTab(newTab);
-  };
-
   const handlePageChange = (newPage) => {
     setSearchParams({
       postType: postType,
@@ -113,27 +87,35 @@ function PostCategory() {
     });
   };
 
+  const fetchOrderedData = async (orderByField, order) => {
+    const querySnapshot = await getDocs(
+      query(collection(db, 'posts-write'), orderBy(orderByField, order)),
+    );
+
+    const dataList = [];
+    querySnapshot.forEach((doc) => {
+      dataList.push({
+        postId: doc.id,
+        ...doc.data(),
+      });
+    });
+
+    return dataList;
+  };
+
   const fetchData = async () => {
-    try {
-      const response = await axios.get(
-        `http://solumon.site:8080/posts?postType=${postType}&postStatus=${postStatus}&postOrder=${postOrder}&pageNum=${currentPage}`,
-        {
-          headers: {
-            'X-AUTH-TOKEN': USER_TOKEN,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        },
-      );
-      if (response.status === 200) {
-        const json = response.data;
-        setPostDataLength(json.totalElements);
-        setPostData(json.content);
-      } else {
-        console.error('로딩 실패');
-      }
-    } catch (error) {
-      console.log(`Something Wrong: ${error.message}`);
+    if (postOrder === 'LATEST') {
+      const data = await fetchOrderedData('created_at', 'desc');
+      setPostData(data);
+    } else if (postOrder === 'MOST_CHAT_PARTICIPANTS') {
+      const data = await fetchOrderedData('total_comment_count', 'desc');
+      setPostData(data);
+    } else if (postOrder === 'MOST_VOTES') {
+      const data = await fetchOrderedData('total_vote_count', 'desc');
+      setPostData(data);
+    } else {
+      const data = await fetchOrderedData('created_at');
+      setPostData(data);
     }
   };
 
@@ -152,11 +134,6 @@ function PostCategory() {
             </Link>
           </TitleWrapper>
           <SortWrapper>
-            <TabsComponent
-              tabLabels={['진행중인 고민', '결정이 완료된 고민']}
-              defaultTab={0}
-              onClick={onTabChange}
-            />
             <SortSelector
               sortLabels={[
                 '최신순',
@@ -168,10 +145,14 @@ function PostCategory() {
               onClick={handleSortChange}
             />
           </SortWrapper>
-          <PostCard postData={postData} />
+          <PostCard
+            postData={postData}
+            postCount={10}
+            currentPage={currentPage}
+          />
         </PostSection>
         <Pagination
-          totalPages={Math.ceil(postDataLength / 10)}
+          totalPages={Math.ceil(postData.length / 10)}
           currentPage={currentPage}
           onPageChange={handlePageChange}
         />
@@ -214,7 +195,6 @@ const SearchIcon = styled(CiSearch)`
 
 const SortWrapper = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-self: flex-end;
   margin-bottom: 20px;
 `;

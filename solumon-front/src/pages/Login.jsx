@@ -58,6 +58,7 @@ const Login = () => {
     }
   };
 
+
   const handleGoogleLogin = async () => {
     console.log('구글로그인');
     try {
@@ -77,6 +78,33 @@ const Login = () => {
       console.log(err);
     }
   };
+  
+  useEffect(() => {
+    // generalUserInfo가 업데이트될 때 호출됨
+    if (generalUserInfo.accessToken) {
+      if (generalUserInfo.first_log_in) {
+        window.localStorage.setItem(
+          'userInfo',
+          JSON.stringify(generalUserInfo),
+        );
+        navigate('/user/interests');
+      } else {
+        window.localStorage.setItem(
+          'userInfo',
+          JSON.stringify(generalUserInfo),
+        );
+        navigate('/post-list');
+      }
+    }
+
+    // generalUserInfo의 userToken 값을 기반으로 페이지 이동
+    // if (generalUserInfo.userToken) {
+    //   navigate('/user/interests');
+    // } else {
+    //   navigate('/post-list');
+    // }
+  }, [generalUserInfo]);
+
 
   return (
     <ThemeProvider theme={theme}>
