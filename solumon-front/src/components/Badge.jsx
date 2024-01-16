@@ -35,6 +35,6 @@ const StyledSpan = styled.span`
   color: ${({ theme }) => theme.dark_purple};
   background-color: ${({ theme }) => theme.light_purple};
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 2px 4px;
 `;
