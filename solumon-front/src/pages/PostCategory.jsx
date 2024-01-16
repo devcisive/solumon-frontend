@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { db } from '../firebase-config';
-import { getDocs, collection, orderBy, query } from 'firebase/firestore';
+import { auth, db } from '../firebase-config';
+import { getDocs, collection, orderBy, query, where } from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
@@ -11,7 +11,9 @@ import PostCard from '../components/PostCard';
 import Pagination from '../components/Pagination';
 
 function PostCategory() {
+  const user = auth.currentUser;
   const [postData, setPostData] = useState([]);
+  const [myInterest, setMyInterest] = useState([]);
   const [searchParams, setSearchParams] = useSearchParams();
 
   let postType = searchParams.get('postType');
@@ -87,6 +89,36 @@ function PostCategory() {
     });
   };
 
+  const fetchInterestsData = async (orderByField, order) => {
+    if (user) {
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', user.uid),
+      );
+
+      const querySnapshot = await getDocs(userQuery);
+      const userDoc = querySnapshot.docs[0];
+
+      if (!userDoc) return;
+
+      setMyInterest(userDoc.data().interests);
+
+      const allData = await fetchOrderedData(orderByField, order);
+      const userInterests = userDoc.data().interests || [];
+
+      if (allData.length > 0 && userInterests.length > 0) {
+        const interestPosts = allData.filter(
+          (post) =>
+            post.tags &&
+            Array.isArray(post.tags.hashTag) &&
+            post.tags.hashTag.some((tag) => userInterests.includes(tag)),
+        );
+
+        return interestPosts;
+      }
+    }
+  };
+
   const fetchOrderedData = async (orderByField, order) => {
     const querySnapshot = await getDocs(
       query(collection(db, 'posts-write'), orderBy(orderByField, order)),
@@ -104,18 +136,34 @@ function PostCategory() {
   };
 
   const fetchData = async () => {
-    if (postOrder === 'LATEST') {
-      const data = await fetchOrderedData('created_at', 'desc');
-      setPostData(data);
-    } else if (postOrder === 'MOST_CHAT_PARTICIPANTS') {
-      const data = await fetchOrderedData('total_comment_count', 'desc');
-      setPostData(data);
-    } else if (postOrder === 'MOST_VOTES') {
-      const data = await fetchOrderedData('total_vote_count', 'desc');
-      setPostData(data);
+    if (postType === 'GENERAL') {
+      if (postOrder === 'LATEST') {
+        const data = await fetchOrderedData('created_at', 'desc');
+        setPostData(data);
+      } else if (postOrder === 'MOST_CHAT_PARTICIPANTS') {
+        const data = await fetchOrderedData('total_comment_count', 'desc');
+        setPostData(data);
+      } else if (postOrder === 'MOST_VOTES') {
+        const data = await fetchOrderedData('total_vote_count', 'desc');
+        setPostData(data);
+      } else {
+        const data = await fetchOrderedData('created_at');
+        setPostData(data);
+      }
     } else {
-      const data = await fetchOrderedData('created_at');
-      setPostData(data);
+      if (postOrder === 'LATEST') {
+        const data = await fetchInterestsData('created_at', 'desc');
+        setPostData(data);
+      } else if (postOrder === 'MOST_CHAT_PARTICIPANTS') {
+        const data = await fetchInterestsData('total_comment_count', 'desc');
+        setPostData(data);
+      } else if (postOrder === 'MOST_VOTES') {
+        const data = await fetchInterestsData('total_vote_count', 'desc');
+        setPostData(data);
+      } else {
+        const data = await fetchInterestsData('created_at');
+        setPostData(data);
+      }
     }
   };
 
