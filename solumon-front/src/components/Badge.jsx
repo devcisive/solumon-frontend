@@ -6,7 +6,6 @@ function Badge({ end_at }) {
   const isVoteExpired = (endDate) => {
     const currentTime = new Date().getTime();
     const voteEndTime = new Date(endDate).getTime();
-    console.log(currentTime);
     return currentTime > voteEndTime;
   };
 
