@@ -3,6 +3,7 @@ import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import PropTypes from 'prop-types';
 
+import Badge from './Badge';
 import { BsChatDots } from 'react-icons/bs';
 import { VscGraph } from 'react-icons/vsc';
 
@@ -31,7 +32,13 @@ function PostCard({ postData, postCount, currentPage }) {
                     <Title>{post.title}</Title>
                     <Content>{post.contents}</Content>
                     <PostInfo>
-                      <Date>{post.created_at.slice(0, 10)}</Date>
+                      <DateInfo>
+                        <Date>
+                          {post.created_at.slice(0, 10)}&nbsp;~&nbsp;
+                          {post.vote.end_at.slice(0, 10)}
+                        </Date>
+                        <Badge end_at={post.vote.end_at} />
+                      </DateInfo>
                       <CountWrapper>
                         <ChatCount>
                           <BsChatDots />
@@ -65,7 +72,13 @@ function PostCard({ postData, postCount, currentPage }) {
                     <Title>{post.title}</Title>
                     <Content>{post.contents}</Content>
                     <PostInfo>
-                      <Date>{post.created_at.slice(0, 10)}</Date>
+                      <DateInfo>
+                        <Date>
+                          {post.created_at.slice(0, 10)}&nbsp;~&nbsp;
+                          {post.vote.end_at.slice(0, 10)}
+                        </Date>
+                        <Badge end_at={post.vote.end_at} />
+                      </DateInfo>
                       <CountWrapper>
                         <ChatCount>
                           <BsChatDots />
@@ -99,7 +112,13 @@ function PostCard({ postData, postCount, currentPage }) {
                     <Title>{post.title}</Title>
                     <Content>{post.contents}</Content>
                     <PostInfo>
-                      <Date>{post.created_at.slice(0, 10)}</Date>
+                      <DateInfo>
+                        <Date>
+                          {post.created_at.slice(0, 10)}&nbsp;~&nbsp;
+                          {post.vote.end_at.slice(0, 10)}
+                        </Date>
+                        <Badge end_at={post.vote.end_at} />
+                      </DateInfo>
                       <CountWrapper>
                         <ChatCount>
                           <BsChatDots />
@@ -189,7 +208,13 @@ const PostInfo = styled.div`
   margin-bottom: 10px;
 `;
 
-const Date = styled.span``;
+const DateInfo = styled.div`
+  display: flex;
+`;
+
+const Date = styled.span`
+  margin-right: 10px;
+`;
 
 const CountWrapper = styled.div`
   display: flex;

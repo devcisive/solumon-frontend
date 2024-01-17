@@ -6,7 +6,6 @@ function Badge({ end_at }) {
   const isVoteExpired = (endDate) => {
     const currentTime = new Date().getTime();
     const voteEndTime = new Date(endDate).getTime();
-    console.log(currentTime);
     return currentTime > voteEndTime;
   };
 
@@ -35,6 +34,6 @@ const StyledSpan = styled.span`
   color: ${({ theme }) => theme.dark_purple};
   background-color: ${({ theme }) => theme.light_purple};
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 2px 4px;
 `;
