@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import { auth, db } from '../firebase-config';
+import { getDocs, collection, orderBy, query, where } from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
@@ -10,69 +10,64 @@ import PostCard from '../components/PostCard';
 import Pagination from '../components/Pagination';
 
 function MyHistory() {
-  const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
-  const USER_TOKEN = userInfo.accessToken;
-
+  const user = auth.currentUser;
   const [postData, setPostData] = useState([]);
-  const [postDataLength, setPostDataLength] = useState(0);
   const [selectedTab, setSelectedTab] = useState('진행중인 고민');
   const [currentPage, setCurrentPage] = useState(1);
 
-  let postParticipateType = 'WRITE';
-  let postStatus = 'ONGOING';
-  let postOrder = 'LATEST';
-
-  const handleSortChange = (sortValue) => {
+  const handleSortChange = async (sortValue) => {
     if (sortValue === '최신순') {
-      postOrder = 'LATEST';
+      const data = await customData('created_at', 'desc');
+      setPostData(data);
     } else if (sortValue === '채팅 참여 순') {
-      postOrder = 'MOST_CHAT_PARTICIPANTS';
+      const data = await customData('total_comment_count', 'desc');
+      setPostData(data);
     } else if (sortValue === '투표 참여 순') {
-      postOrder = 'MOST_VOTES';
+      const data = await customData('total_vote_count', 'desc');
+      setPostData(data);
     } else {
-      postOrder = 'IMMINENT_CLOSE';
+      const data = await customData('created_at');
+      setPostData(data);
     }
   };
 
-  const onTabChange = (newTab) => {
-    if (newTab === '내가 작성한 글') {
-      // 클릭한 탭에 따라 쿼리값 변경
-      postParticipateType = 'WRITE';
-    } else if (newTab === '투표에 참여한 글') {
-      postParticipateType = 'VOTE';
-    } else {
-      postParticipateType = 'CHAT';
-    }
-    // 클릭된 탭에 따라 어떤 데이터를 불러올지 결정
-    setSelectedTab(newTab);
-  };
+  const onTabChange = (newTab) => {};
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
 
-  const fetchData = async () => {
-    try {
-      const response = await axios.get(
-        `http://solumon.site:8080/user/mylog?postParticipateType=${postParticipateType}&postStatus=${postStatus}&postOrder=${postOrder}&pageNum=${currentPage}`,
-        {
-          headers: {
-            'X-AUTH-TOKEN': USER_TOKEN,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        },
-      );
-      if (response.status === 200) {
-        const json = response.data;
-        setPostDataLength(json.totalElements);
-        setPostData(json.content);
-      } else {
-        console.error('로딩 실패');
+  const customData = async (orderByField, order) => {
+    if (user) {
+      const uid = user.uid;
+      const allData = await fetchOrderedData(orderByField, order);
+
+      if (allData.length > 0 && uid) {
+        const myPosts = allData.filter((post) => post.uid === uid);
+        return myPosts;
       }
-    } catch (error) {
-      console.log(`Something Wrong: ${error.message}`);
     }
+  };
+
+  const fetchOrderedData = async (orderByField, order) => {
+    const querySnapshot = await getDocs(
+      query(collection(db, 'posts-write'), orderBy(orderByField, order)),
+    );
+
+    const dataList = [];
+    querySnapshot.forEach((doc) => {
+      dataList.push({
+        postId: doc.id,
+        ...doc.data(),
+      });
+    });
+
+    return dataList;
+  };
+
+  const fetchData = async () => {
+    const data = await customData('created_at', 'desc');
+    setPostData(data);
   };
 
   useEffect(() => {
@@ -80,9 +75,9 @@ function MyHistory() {
     console.log(postData);
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [postParticipateType, postStatus, postOrder, currentPage]);
+  // useEffect(() => {
+  //   fetchData();
+  // }, [postParticipateType, postStatus, postOrder, currentPage]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -115,7 +110,7 @@ function MyHistory() {
           <PostCard postData={postData} />
         </PostSection>
         <Pagination
-          totalPages={Math.ceil(postDataLength / 10)}
+          totalPages={Math.ceil(postData.length / 10)}
           currentPage={currentPage}
           onPageChange={handlePageChange}
         />
