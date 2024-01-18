@@ -1,16 +1,16 @@
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import PropTypes from 'prop-types';
+import { formatDate } from './utils';
 
-const Votes = ({ handleChoiceClick,createdAt, endAt, choices}) => {
-
+const Votes = ({ handleChoiceClick, createdAt, endAt, choices }) => {
   return (
     <ThemeProvider theme={theme}>
       <VoteContainer>
         <VoteHeader>
           <StyledSpan>투표</StyledSpan>
           <TimeSpan>
-            {createdAt}~{endAt}
+            {formatDate(createdAt)}~{formatDate(endAt)}
           </TimeSpan>
         </VoteHeader>
         <HorizontalLine />
@@ -21,7 +21,7 @@ const Votes = ({ handleChoiceClick,createdAt, endAt, choices}) => {
                 key={choice.choice_num}
                 onClick={() => handleChoiceClick(choice.choice_num)}
               >
-                {choice.choice_num}. {choice.choice_text}
+                {choice.choice_num + 1}. {choice.choice_text}
               </VoteContent>
             ))}
           </ul>
@@ -34,14 +34,14 @@ Votes.propTypes = {
   choices: PropTypes.array.isRequired,
   createdAt: PropTypes.string.isRequired,
   endAt: PropTypes.string.isRequired,
- 
+
   handleChoiceClick: PropTypes.func.isRequired,
 };
 
 export default Votes;
 const StyledSpan = styled.span`
-font-size:25px;
-`
+  font-size: 25px;
+`;
 const TimeSpan = styled.div``;
 const VoteContainer = styled.div`
   border: 1px solid ${({ theme }) => theme.medium_purple};
@@ -52,7 +52,7 @@ const VoteHeader = styled.div`
   display: flex;
   justify-content: space-between;
   margin: 20px;
-  padding:10px;
+  padding: 10px;
   font-weight: bold;
   color: ${({ theme }) => theme.medium_purple};
 `;
