@@ -2,20 +2,16 @@ import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import { PiSirenFill } from 'react-icons/pi';
 import { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { useRecoilState } from 'recoil';
-import { GeneralUserInfo } from '../recoil/AllAtom';
 import { useParams } from 'react-router-dom';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../firebase-config';
 
 const Ban = () => {
   const navigate = useNavigate();
   const { memberId } = useParams();
   const [selectedReason, setSelectedReason] = useState('');
   const [additionalComment, setAdditionalComment] = useState('');
-  const userInfo = useRecoilState(GeneralUserInfo);
-  const accessToken = userInfo[0].accessToken;
-
 
   const handleReasonChange = (event) => {
     setSelectedReason(event.target.value);
@@ -23,43 +19,25 @@ const Ban = () => {
   const handleCommentChange = (event) => {
     setAdditionalComment(event.target.value); // 추가 의견 업데이트
   };
-  const data = {
-    reported_member_id:memberId,
+  const Data = {
+    reported_member_id: memberId,
     report_type: selectedReason, // 선택된 라디오 버튼 값으로 reportType 설정
     report_content: additionalComment,
   };
-  console.log(data)
 
   // 신고 POST 요청 코드 //
-  const BanSubmit = async(e) => {
-    e.preventDefault();
-    const headers = {
-      'X-AUTH-TOKEN': accessToken,
-      'withCredentials': true
-    };
-        try{
-            const response = await axios.post(
-              `http://solumon.site:8080/user/report`,
-             data,
-              {
-                headers,
-                withCredentials: true
-                },
-            )
-            
-            if (response.status === 200) {
-              console.log('신고 접수');
-              alert('신고가 성공적으로 접수되었습니다.');
-              navigate(`/post-list`);
-             } else {
-                console.error('신고 실패');
-              }
-            }
-             catch (error) {
-              console.error('오류 발생: ' + error);
-            }
-          }
-  
+  const BanSubmit = async () => {
+    try {
+      const reportCollection = collection(db, 'reports');
+      const reportData = await addDoc(reportCollection, Data);
+      if (reportData) {
+        navigate('/post-list');
+      }
+    } catch (error) {
+      console.error('오류 발생: ' + error);
+    }
+  };
+
   return (
     <>
       <Container>
