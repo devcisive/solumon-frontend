@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
-
 import Button from './Button';
 import { FaUserCircle } from 'react-icons/fa';
 import { Container } from '@mui/material';
@@ -63,7 +62,9 @@ function NavigationBar() {
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
-        <Logo to={userInfo.accessToken ? '/post-list' : '/login'}>솔루몬</Logo>
+        <Logo to={userInfo.accessToken ? '/post-list' : '/login'}>
+          <img src="/image/4.png"></img>
+        </Logo>
         {userInfo ? (
           <User>
             <UserName>
@@ -122,7 +123,7 @@ export default NavigationBar;
 const Wrapper = styled.div`
   position: relative;
   width: 100vw;
-  height: 55px;
+  height: 80px;
   display: flex;
   align-items: center;
   gap: 10px;
