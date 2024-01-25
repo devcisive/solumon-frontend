@@ -12,39 +12,94 @@ import Pagination from '../components/Pagination';
 function MyHistory() {
   const user = auth.currentUser;
   const [postData, setPostData] = useState([]);
-  const [selectedTab, setSelectedTab] = useState('진행중인 고민');
+  const [type, setType] = useState('uid');
+  const [selectedTab, setSelectedTab] = useState('내가 작성한 글');
   const [currentPage, setCurrentPage] = useState(1);
 
   const handleSortChange = async (sortValue) => {
     if (sortValue === '최신순') {
-      const data = await customData('created_at', 'desc');
+      const data = await customData('created_at', 'desc', type);
       setPostData(data);
     } else if (sortValue === '채팅 참여 순') {
-      const data = await customData('total_comment_count', 'desc');
+      const data = await customData('total_comment_count', 'desc', type);
       setPostData(data);
     } else if (sortValue === '투표 참여 순') {
-      const data = await customData('total_vote_count', 'desc');
+      const data = await customData('total_vote_count', 'desc', type);
       setPostData(data);
     } else {
-      const data = await customData('created_at');
+      const data = await customData('created_at', type);
       setPostData(data);
     }
   };
 
-  const onTabChange = (newTab) => {};
+  const onTabChange = async (newTab) => {
+    if (newTab === '내가 작성한 글') {
+      // 클릭한 탭에 따라 쿼리값 변경
+      setType('uid');
+      const data = await customData('created_at', 'desc', type);
+      setPostData(data);
+    } else if (newTab === '투표에 참여한 글') {
+      setType('join_posts');
+      const data = await customData('created_at', 'desc', type);
+      setPostData(data);
+    } else {
+      setType('reply_posts');
+      const data = await customData('created_at', 'desc', type);
+      setPostData(data);
+    }
+    // 클릭된 탭에 따라 어떤 데이터를 불러올지 결정
+    setSelectedTab(newTab);
+  };
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
 
-  const customData = async (orderByField, order) => {
+  // 현재 로그인한 유저의 정보가 있는 users 컬렉션을 가져옴
+  const getCurrentUser = async () => {
+    try {
+      //파이어베이스 스토어에서 'users'컬렉션을 쿼리설정해 , uid 필드가 result.user.uid 같은 문서 찾기
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', user.uid),
+      );
+      //getDocs 를 사용하여 원하는 데이터 반환
+      const userQueryData = await getDocs(userQuery);
+      const userDoc = userQueryData.docs[0];
+
+      if (userDoc !== null) {
+        const userData = userDoc.data();
+        return userData;
+      }
+    } catch (error) {
+      console.log(`Something Wrong: ${error.message}`);
+    }
+  };
+
+  const customData = async (orderByField, order, participants) => {
     if (user) {
-      const uid = user.uid;
+      const userData = await getCurrentUser();
       const allData = await fetchOrderedData(orderByField, order);
 
-      if (allData.length > 0 && uid) {
-        const myPosts = allData.filter((post) => post.uid === uid);
-        return myPosts;
+      if (userData && allData.length > 0) {
+        let myPosts;
+        if (type === 'uid') {
+          myPosts = allData.filter(
+            (post) => post.uid === userData[participants],
+          );
+
+          return myPosts;
+        } else if (type === 'join_posts' || type === 'reply_posts') {
+          // join_posts = [{postId: 12}, {postId: 34}]
+          const participantPostIds = userData[participants].map(
+            (participant) => participant.postId,
+          );
+          myPosts = allData.filter((post) =>
+            participantPostIds.includes(post.postId),
+          );
+
+          return myPosts;
+        }
       }
     }
   };
@@ -66,18 +121,14 @@ function MyHistory() {
   };
 
   const fetchData = async () => {
-    const data = await customData('created_at', 'desc');
+    const data = await customData('created_at', 'desc', type);
     setPostData(data);
   };
 
   useEffect(() => {
     fetchData();
-    console.log(postData);
-  }, []);
-
-  // useEffect(() => {
-  //   fetchData();
-  // }, [postParticipateType, postStatus, postOrder, currentPage]);
+    console.log(type);
+  }, [type]);
 
   return (
     <ThemeProvider theme={theme}>
