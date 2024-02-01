@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import { auth, db } from '../firebase-config';
+import { getDocs, collection, orderBy, query, where } from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
@@ -10,38 +10,36 @@ import PostCard from '../components/PostCard';
 import Pagination from '../components/Pagination';
 
 function MyHistory() {
-  const userInfo = JSON.parse(window.localStorage.getItem('userInfo'));
-  const USER_TOKEN = userInfo.accessToken;
-
+  const user = auth.currentUser;
   const [postData, setPostData] = useState([]);
-  const [postDataLength, setPostDataLength] = useState(0);
-  const [selectedTab, setSelectedTab] = useState('진행중인 고민');
+  const [type, setType] = useState('uid');
+  const [selectedTab, setSelectedTab] = useState('내가 작성한 글');
   const [currentPage, setCurrentPage] = useState(1);
 
-  let postParticipateType = 'WRITE';
-  let postStatus = 'ONGOING';
-  let postOrder = 'LATEST';
+  // const handleSortChange = async (sortValue) => {
+  //   if (sortValue === '최신순') {
+  //     const data = await customData('created_at', 'desc', type);
+  //     setPostData(data);
+  //   } else if (sortValue === '채팅 참여 순') {
+  //     const data = await customData('total_comment_count', 'desc', type);
+  //     setPostData(data);
+  //   } else if (sortValue === '투표 참여 순') {
+  //     const data = await customData('total_vote_count', 'desc', type);
+  //     setPostData(data);
+  //   } else {
+  //     const data = await customData('created_at', type);
+  //     setPostData(data);
+  //   }
+  // };
 
-  const handleSortChange = (sortValue) => {
-    if (sortValue === '최신순') {
-      postOrder = 'LATEST';
-    } else if (sortValue === '채팅 참여 순') {
-      postOrder = 'MOST_CHAT_PARTICIPANTS';
-    } else if (sortValue === '투표 참여 순') {
-      postOrder = 'MOST_VOTES';
-    } else {
-      postOrder = 'IMMINENT_CLOSE';
-    }
-  };
-
-  const onTabChange = (newTab) => {
+  const onTabChange = async (newTab) => {
     if (newTab === '내가 작성한 글') {
       // 클릭한 탭에 따라 쿼리값 변경
-      postParticipateType = 'WRITE';
+      setType('uid');
     } else if (newTab === '투표에 참여한 글') {
-      postParticipateType = 'VOTE';
+      setType('join_posts');
     } else {
-      postParticipateType = 'CHAT';
+      setType('reply_posts');
     }
     // 클릭된 탭에 따라 어떤 데이터를 불러올지 결정
     setSelectedTab(newTab);
@@ -51,38 +49,79 @@ function MyHistory() {
     setCurrentPage(newPage);
   };
 
-  const fetchData = async () => {
+  // 현재 로그인한 유저의 정보가 있는 users 컬렉션을 가져옴
+  const getCurrentUser = async () => {
     try {
-      const response = await axios.get(
-        `http://solumon.site:8080/user/mylog?postParticipateType=${postParticipateType}&postStatus=${postStatus}&postOrder=${postOrder}&pageNum=${currentPage}`,
-        {
-          headers: {
-            'X-AUTH-TOKEN': USER_TOKEN,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        },
+      //파이어베이스 스토어에서 'users'컬렉션을 쿼리설정해 , uid 필드가 result.user.uid 같은 문서 찾기
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', user.uid),
       );
-      if (response.status === 200) {
-        const json = response.data;
-        setPostDataLength(json.totalElements);
-        setPostData(json.content);
-      } else {
-        console.error('로딩 실패');
+      //getDocs 를 사용하여 원하는 데이터 반환
+      const userQueryData = await getDocs(userQuery);
+      const userDoc = userQueryData.docs[0];
+
+      if (userDoc !== null) {
+        const userData = userDoc.data();
+        return userData;
       }
     } catch (error) {
       console.log(`Something Wrong: ${error.message}`);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-    console.log(postData);
-  }, []);
+  const customData = async (orderByField, order, participants) => {
+    if (user) {
+      const userData = await getCurrentUser();
+      const allData = await fetchOrderedData(orderByField, order);
+
+      if (userData && allData.length > 0) {
+        let myPosts;
+        if (type === 'uid') {
+          myPosts = allData.filter(
+            (post) => post.uid === userData[participants],
+          );
+
+          return myPosts;
+        } else if (type === 'join_posts' || type === 'reply_posts') {
+          // join_posts = [{postId: 12}, {postId: 34}]
+          const participantPostIds = userData[participants].map(
+            (participant) => participant.postId,
+          );
+          myPosts = allData.filter((post) =>
+            participantPostIds.includes(post.postId),
+          );
+
+          return myPosts;
+        }
+      }
+    }
+  };
+
+  const fetchOrderedData = async (orderByField, order) => {
+    const querySnapshot = await getDocs(
+      query(collection(db, 'posts-write'), orderBy(orderByField, order)),
+    );
+
+    const dataList = [];
+    querySnapshot.forEach((doc) => {
+      dataList.push({
+        postId: doc.id,
+        ...doc.data(),
+      });
+    });
+
+    return dataList;
+  };
+
+  const fetchData = async () => {
+    const data = await customData('created_at', 'desc', type);
+    setPostData(data);
+  };
 
   useEffect(() => {
     fetchData();
-  }, [postParticipateType, postStatus, postOrder, currentPage]);
+  }, [type]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -101,7 +140,7 @@ function MyHistory() {
               defaultTab={0}
               onClick={onTabChange}
             />
-            <SortSelector
+            {/* <SortSelector
               sortLabels={[
                 '최신순',
                 '채팅 참여 순',
@@ -110,12 +149,12 @@ function MyHistory() {
               ]}
               defaultSort={0}
               onClick={handleSortChange}
-            />
+            /> */}
           </SortWrapper>
           <PostCard postData={postData} />
         </PostSection>
         <Pagination
-          totalPages={Math.ceil(postDataLength / 10)}
+          totalPages={Math.ceil(postData.length / 10)}
           currentPage={currentPage}
           onPageChange={handlePageChange}
         />
