@@ -16,36 +16,30 @@ function MyHistory() {
   const [selectedTab, setSelectedTab] = useState('내가 작성한 글');
   const [currentPage, setCurrentPage] = useState(1);
 
-  const handleSortChange = async (sortValue) => {
-    if (sortValue === '최신순') {
-      const data = await customData('created_at', 'desc', type);
-      setPostData(data);
-    } else if (sortValue === '채팅 참여 순') {
-      const data = await customData('total_comment_count', 'desc', type);
-      setPostData(data);
-    } else if (sortValue === '투표 참여 순') {
-      const data = await customData('total_vote_count', 'desc', type);
-      setPostData(data);
-    } else {
-      const data = await customData('created_at', type);
-      setPostData(data);
-    }
-  };
+  // const handleSortChange = async (sortValue) => {
+  //   if (sortValue === '최신순') {
+  //     const data = await customData('created_at', 'desc', type);
+  //     setPostData(data);
+  //   } else if (sortValue === '채팅 참여 순') {
+  //     const data = await customData('total_comment_count', 'desc', type);
+  //     setPostData(data);
+  //   } else if (sortValue === '투표 참여 순') {
+  //     const data = await customData('total_vote_count', 'desc', type);
+  //     setPostData(data);
+  //   } else {
+  //     const data = await customData('created_at', type);
+  //     setPostData(data);
+  //   }
+  // };
 
   const onTabChange = async (newTab) => {
     if (newTab === '내가 작성한 글') {
       // 클릭한 탭에 따라 쿼리값 변경
       setType('uid');
-      const data = await customData('created_at', 'desc', type);
-      setPostData(data);
     } else if (newTab === '투표에 참여한 글') {
       setType('join_posts');
-      const data = await customData('created_at', 'desc', type);
-      setPostData(data);
     } else {
       setType('reply_posts');
-      const data = await customData('created_at', 'desc', type);
-      setPostData(data);
     }
     // 클릭된 탭에 따라 어떤 데이터를 불러올지 결정
     setSelectedTab(newTab);
@@ -127,7 +121,6 @@ function MyHistory() {
 
   useEffect(() => {
     fetchData();
-    console.log(type);
   }, [type]);
 
   return (
@@ -147,7 +140,7 @@ function MyHistory() {
               defaultTab={0}
               onClick={onTabChange}
             />
-            <SortSelector
+            {/* <SortSelector
               sortLabels={[
                 '최신순',
                 '채팅 참여 순',
@@ -156,7 +149,7 @@ function MyHistory() {
               ]}
               defaultSort={0}
               onClick={handleSortChange}
-            />
+            /> */}
           </SortWrapper>
           <PostCard postData={postData} />
         </PostSection>
