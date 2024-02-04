@@ -52,6 +52,7 @@ const PostDetail = () => {
       console.error('오류 발생: ' + error);
     }
   };
+
   // 투표를 했는지 유무 판단하여 votes,voteResult 둘중의 컴포넌트 렌더링하기위해 join 값 저장
   const checkVoteJoin = async () => {
     try {
@@ -95,6 +96,7 @@ const PostDetail = () => {
       }
     });
   };
+
   //투표시 해당 투표항목 choice_count와 총 투표 수 업데이트 함수
   const handleVoteUpdate = async (postDocRef, choiceIndex) => {
     try {
@@ -170,6 +172,7 @@ const PostDetail = () => {
       console.error(error);
     }
   };
+
   //투표 함수(투표항목선택)
   const handleChoiceClick = async (choiceNum) => {
     if (isLoggedIn) {
@@ -279,8 +282,8 @@ const PostDetail = () => {
         )}
       </Container>
       <TagContainer>
-        {postData.tags.map((tag, index) => (
-          <TagBox key={index}>#{tag.tag}</TagBox>
+        {postData.tags.hashTag.map((tag, index) => (
+          <TagBox key={index}>#{tag}</TagBox>
         ))}
       </TagContainer>
       <CountContainer>
@@ -304,18 +307,19 @@ export default PostDetail;
 const ContentBox = styled.div`
   margin-left: 40px;
 `;
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   margin: auto;
   align-items: center;
 `;
+
 const ImgBox = styled.img`
   width: 550px;
   height: 500px;
   margin-bottom: 20px;
   margin-left: 25px;
-  marin: auto;
 `;
 
 const ContentDiv = styled.div`
@@ -330,6 +334,7 @@ const TagContainer = styled.div`
   margin: auto;
   width: 58%;
 `;
+
 const TagBox = styled.div`
   color: ${({ theme }) => theme.medium_purple};
   font-size: 20px;
@@ -343,6 +348,7 @@ const TagBox = styled.div`
   font-weight: 500;
   border-radius: 5px;
 `;
+
 const CountContainer = styled.div`
   display: flex;
   margin: auto;
@@ -350,6 +356,7 @@ const CountContainer = styled.div`
   margin-top: 15px;
   margin-bottom: 10px;
 `;
+
 const VoteCount = styled.div`
   display: flex;
   font-size: 15px;
@@ -362,8 +369,8 @@ const ChatCount = styled.div`
   color: ${({ theme }) => theme.medium_purple};
   font-size: 15px;
 `;
-//수정모드일때 화면 스타일 컴포넌트
 
+//수정모드일때 화면 스타일 컴포넌트
 const ImageContainer = styled.div`
   position: relative;
   margin-right: 5px;
