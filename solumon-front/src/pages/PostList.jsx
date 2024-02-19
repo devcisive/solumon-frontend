@@ -1,91 +1,26 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { auth, db } from '../firebase-config';
-import { getDocs, collection, orderBy, query, where } from 'firebase/firestore';
+import { auth } from '../firebase-config';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
 import { HiOutlinePencilSquare } from 'react-icons/hi2';
 import { CiSearch } from 'react-icons/ci';
 import PostCard from '../components/PostCard';
+import useFetchOrderedData from '../hooks/useFetchOrderedData';
+import useFetchInterestsData from '../hooks/useFetchInterestsData';
 
 function PostList() {
   const user = auth.currentUser;
-  const [latestPostData, setLatestPostData] = useState([]);
-  const [chatCountPostData, setChatCountPostData] = useState([]);
-  const [voteCountPostData, setVoteCountPostData] = useState([]);
-  const [myInterest, setMyInterest] = useState([]);
-  const [interestPostData, setInterestPostData] = useState([]);
+  const latestPostData = useFetchOrderedData('created_at', 'desc');
+  const chatCountPostData = useFetchOrderedData('total_comment_count', 'desc');
+  const voteCountPostData = useFetchOrderedData('total_vote_count', 'desc');
+  const interestPostData = useFetchInterestsData(user);
   const navigate = useNavigate();
 
   const HandleButtonClick = () => {
     navigate('/post-write');
   };
-
-  const fetchInterestsData = async () => {
-    if (user) {
-      const userQuery = query(
-        collection(db, 'users'),
-        where('uid', '==', user.uid),
-      );
-
-      const querySnapshot = await getDocs(userQuery);
-      const userDoc = querySnapshot.docs[0];
-
-      if (userDoc) {
-        setMyInterest(userDoc.data().interests);
-      }
-
-      const allData = await fetchOrderedData('created_at', 'desc');
-
-      if (allData.length > 0 && myInterest.length > 0) {
-        const interestPosts = allData.filter(
-          (post) =>
-            post.tags &&
-            Array.isArray(post.tags.hashTag) &&
-            post.tags.hashTag.some((tag) => myInterest.includes(tag)),
-        );
-
-        setInterestPostData(interestPosts);
-      }
-    }
-  };
-
-  const fetchOrderedData = async (orderByField, order) => {
-    const querySnapshot = await getDocs(
-      query(collection(db, 'posts-write'), orderBy(orderByField, order)),
-    );
-    const dataList = querySnapshot.docs.map((doc) => ({
-      postId: doc.id,
-      ...doc.data(),
-    }));
-    return dataList;
-  };
-
-  useEffect(() => {
-    const fetchAllData = async () => {
-      await fetchInterestsData();
-      const latestData = await fetchOrderedData('created_at', 'desc');
-      const chatCountData = await fetchOrderedData(
-        'total_comment_count',
-        'desc',
-      );
-      const voteCountData = await fetchOrderedData('total_vote_count', 'desc');
-
-      setLatestPostData(latestData);
-      setChatCountPostData(chatCountData);
-      setVoteCountPostData(voteCountData);
-    };
-
-    fetchAllData();
-  }, [user]);
-
-  useEffect(() => {
-    // myInterest가 변경되면 별도의 useEffect를 사용하여 관심분야 데이터를 다시 가져옴
-    if (user && myInterest.length > 0) {
-      fetchInterestsData();
-    }
-  }, [user, myInterest]);
 
   const renderPostSection = (title, orderField, postData) => (
     <PostSection>
@@ -123,11 +58,7 @@ function PostList() {
           <PostCard postData={interestPostData} postCount={5} />
         </PostSection>
 
-        {renderPostSection(
-          '아직 결정하지 못한 고민들',
-          'LATEST',
-          latestPostData,
-        )}
+        {renderPostSection('최근 올라온 고민들', 'LATEST', latestPostData)}
         {renderPostSection(
           '채팅 참여자가 많은 고민들',
           'MOST_CHAT_PARTICIPANTS',
@@ -193,6 +124,7 @@ const WriteButton = styled.button`
   justify-content: center;
   align-items: center;
   background-color: ${({ theme }) => theme.medium_purple};
+  border: none;
   color: white;
   padding: 12px;
   border-radius: 5px;
