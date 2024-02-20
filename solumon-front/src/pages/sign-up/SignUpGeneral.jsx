@@ -163,6 +163,19 @@ const StyledInput = styled.input`
   }
 `;
 
+const EmailAuthInput = styled.input`
+  width: 330px;
+  color: ${({ theme }) => theme.dark_purple};
+  background-color: ${({ theme }) => theme.light_purple};
+  padding: 10px;
+  border: none;
+  outline: none;
+
+  &::placeholder {
+    color: #3c3c3c;
+  }
+`;
+
 const InfoText = styled.p`
   color: ${({ theme }) => theme.dark_purple};
   background-color: ${({ theme }) => theme.linen};
@@ -171,19 +184,6 @@ const InfoText = styled.p`
   margin: 10px 0;
   padding: 12px 15px;
   border-radius: 10px;
-`;
-
-const EmailAuthInput = styled.input`
-  width: 280px;
-  color: ${({ theme }) => theme.dark_purple};
-  background-color: ${({ theme }) => theme.light_purple};
-  padding: 7px 0 7px 7px;
-  border: none;
-  outline: none;
-
-  &::placeholder {
-    color: #3c3c3c;
-  }
 `;
 
 const CheckMessage = styled.p`
