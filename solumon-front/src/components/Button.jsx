@@ -45,7 +45,7 @@ const StyledButton = styled.button`
   color: ${(props) => props.color || props.theme.linen};
   font-size: ${(props) => props.fontSize};
   font-weight: ${(props) => props.fontWeight || 400};
-
+  padding: ${(props) => props.padding || '0'};
   border-radius: ${(props) => props.borderRadius || '0'};
   border: none;
   cursor: pointer;
