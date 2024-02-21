@@ -162,7 +162,7 @@ const Container = styled.div`
 
 const CardWrapper = styled(Link)`
   width: 240px;
-  max-height: 340px;
+  max-height: 345px;
   border-radius: 10px;
   background-color: ${({ theme }) => theme.linen};
   text-decoration: none;
@@ -191,8 +191,9 @@ const Title = styled.h1`
 const Content = styled.p`
   font-size: 14px;
   color: ${({ theme }) => theme.dark_purple};
+  line-height: 17px;
   display: -webkit-box;
-  min-height: 40px;
+  min-height: 45px;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow: hidden;
