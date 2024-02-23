@@ -88,7 +88,7 @@ const CommentForm = ({ postId, postData }) => {
           placeholder="댓글을 입력하세요"
         ></CommentBox>
         <Button type="submit" onClick={handleSubmit}>
-          댓글작성
+          등록
         </Button>
       </Form>
     </ThemeProvider>
@@ -96,9 +96,10 @@ const CommentForm = ({ postId, postData }) => {
 };
 
 export default CommentForm;
+
 const Form = styled.form`
   display: flex;
-  margin: auto;
+  margin: 20px 0 10px 0;
   align-items: center;
   justify-content: center;
 `;
@@ -106,16 +107,20 @@ const Form = styled.form`
 const CommentBox = styled.input`
   width: 50%;
   height: 45px;
+  font-size: 16px;
+  padding-left: 15px;
   border: 1px solid #ccc;
+  border-radius: 5px;
 `;
+
 const Button = styled.div`
-  height: 30px;
+  height: 45px;
   display: flex;
   align-items: center;
   margin-left: 10px;
-  padding: 10px;
-  font-size: 13px;
+  padding: 1px 20px;
+  font-size: 16px;
   color: white;
   background-color: ${({ theme }) => theme.medium_purple};
-  border: 1px solid ${({ theme }) => theme.medium_purple};
+  border-radius: 5px;
 `;
