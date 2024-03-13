@@ -26,7 +26,6 @@ function SignUpGeneral() {
         email,
         password,
       );
-
       if (result) {
         await updateProfile(result.user, { displayName: nickname });
         //사용자 uid와 닉네임 'users'라는 컬렉션에 파이어스토어에 저장
