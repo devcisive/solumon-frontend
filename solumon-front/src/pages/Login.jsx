@@ -1,76 +1,365 @@
-import { ThemeProvider } from 'styled-components';
-import Button from '../components/Button';
+// import { useState, useEffect } from 'react';
+// import { Link, Navigate, useNavigate } from 'react-router-dom';
+// import styled, { ThemeProvider } from 'styled-components';
+// import theme from '../style/theme';
+// import Button from '../components/Button';
+// import { signInWithPopup } from 'firebase/auth';
+// import { auth, provider, db } from '../firebase-config';
+// import { signInWithEmailAndPassword } from 'firebase/auth';
+// import { getDocs, collection, query, where } from 'firebase/firestore';
+
+// const Login = () => {
+//   const [loginEmail, setLoginEmail] = useState('');
+//   const [loginPassword, setLoginPassword] = useState('');
+//   const [userInfo, setUserInfo] = useState([]);
+//   const navigate = useNavigate();
+
+//   useEffect(() => {
+//     if (userInfo.firstLogIn !== undefined) {
+//       window.localStorage.setItem('userInfo', JSON.stringify(userInfo));
+//       navigate('/post-list');
+//     }
+//   }, [userInfo, navigate]);
+
+//   const handleLogin = async (e) => {
+//     e.preventDefault();
+//     console.log('일반로그인');
+//     try {
+//       const result = await signInWithEmailAndPassword(
+//         auth,
+//         loginEmail,
+//         loginPassword,
+//       );
+//       //파이어베이스 스토어에서 'users'컬렉션을 쿼리설정해 , uid 필드가 result.user.uid 같은 문서 찾기
+//       const userQuery = query(
+//         collection(db, 'users'),
+//         where('uid', '==', result.user.uid),
+//       );
+//       //getDocs 를 사용하여 원하는 데이터 반환
+//       const userQueryData = await getDocs(userQuery);
+
+//       //우리가 찾는 uid 값과 같은 문서가있다면 닉네임 추출
+//       if (userQueryData.docs) {
+//         const userDoc = userQueryData.docs[0];
+//         const userNickName = userDoc.data().nickName;
+//         const isFirstLogin = result.user.createdAt === result.user.lastLoginAt;
+
+//         setUserInfo({
+//           accessToken: result.user.accessToken,
+//           firstLogIn: isFirstLogin,
+//           memberId: result.user.uid,
+//           nickname: userNickName,
+//           interests: [],
+//         });
+//       }
+//     } catch (error) {
+//       console.log(error.message);
+//     }
+//   };
+
+//   const handleGoogleLogin = async () => {
+//     console.log('구글로그인');
+//     try {
+//       const result = await signInWithPopup(auth, provider);
+//       const isFirstLogin =
+//         result.user.metadata.createdAt === result.user.metadata.lastLoginAt;
+
+//       console.log(result);
+//       setUserInfo({
+//         accessToken: result.user.accessToken,
+//         firstLogIn: isFirstLogin,
+//         memberId: result.user.uid,
+//         nickname: result.user.displayName,
+//         interests: [],
+//       });
+//     } catch (err) {
+//       console.log(err);
+//     }
+//   };
+
+//   useEffect(() => {
+//     // generalUserInfo가 업데이트될 때 호출됨
+//     if (generalUserInfo.accessToken) {
+//       if (generalUserInfo.first_log_in) {
+//         window.localStorage.setItem(
+//           'userInfo',
+//           JSON.stringify(generalUserInfo),
+//         );
+//         navigate('/user/interests');
+//       } else {
+//         window.localStorage.setItem(
+//           'userInfo',
+//           JSON.stringify(generalUserInfo),
+//         );
+//         navigate('/post-list');
+//       }
+//     }
+
+//     // generalUserInfo의 userToken 값을 기반으로 페이지 이동
+//     // if (generalUserInfo.userToken) {
+//     //   navigate('/user/interests');
+//     // } else {
+//     //   navigate('/post-list');
+//     // }
+//   }, [generalUserInfo]);
+
+//   return (
+//     <ThemeProvider theme={theme}>
+//       <Container>
+//         <GoogleLoginImg
+//           src="/google_login.png"
+//           alt="구글 로그인"
+//           onClick={handleGoogleLogin}
+//         />
+//         <StyledSpan>또는 이메일로 로그인</StyledSpan>
+//         <StyledForm>
+//           <StyledInput
+//             type="email"
+//             id="email"
+//             value={loginEmail}
+//             onChange={(event) => setLoginEmail(event.target.value)}
+//             placeholder="이메일주소를 입력해주세요"
+//             autoComplete="username"
+//             required
+//           ></StyledInput>
+//           <StyledInput
+//             type="password"
+//             value={loginPassword}
+//             id="passWord"
+//             onChange={(event) => setLoginPassword(event.target.value)}
+//             placeholder="비밀번호를 입력해주세요"
+//             autoComplete="current-password"
+//             required
+//           ></StyledInput>
+//           <Button
+//             name={'로그인'}
+//             type="button"
+//             onClick={handleLogin}
+//             fontSize={'16px'}
+//             padding={'10px'}
+//           />
+//         </StyledForm>
+//         <StyledLink to="/user/find-password">
+//           <PinSearch>비밀번호찾기</PinSearch>
+//         </StyledLink>
+//         <StyledHr></StyledHr>
+//         <TabContainer>
+//           <StyledLink to="/user/sign-up/general">
+//             <SignUp>이메일로 회원가입</SignUp>
+//           </StyledLink>
+//         </TabContainer>
+//       </Container>
+//     </ThemeProvider>
+//   );
+// };
+
+// export default Login;
+// const GoogleLoginImg = styled.img`
+//   width: 300px;
+//   cursor: pointer;
+//   height: 60px;
+// `;
+
+// const Container = styled.div`
+//   display: flex;
+//   flex-direction: column;
+//   align-items: center;
+//   margin-top: 70px;
+// `;
+
+// const StyledLink = styled(Link)`
+//   text-decoration: none;
+//   color: #000;
+// `;
+
+// const StyledForm = styled.form`
+//   display: flex;
+//   flex-direction: column;
+// `;
+
+// const PinSearch = styled.div`
+//   width: auto;
+//   padding: 5px;
+//   border-bottom: 1px solid #000;
+//   cursor: pointer;
+//   margin-top: 25px;
+// `;
+
+// const StyledSpan = styled.span`
+//   width: 200px;
+//   position: relative;
+//   display: inline;
+//   align-items: center;
+//   margin-top: 30px;
+//   margin-bottom: 30px;
+//   background-color: white;
+//   text-align: center;
+//   padding: 10px;
+//   z-index: 10;
+//   &::before,
+//   &::after {
+//     content: '';
+//     position: absolute;
+//     top: 50%;
+//     width: 200%;
+//     height: 0.5px;
+//     background-color: ${({ theme }) => theme.medium_purple};
+//   }
+
+//   &::before {
+//     left: -450px;
+//   }
+//   &::after {
+//     left: 230px;
+//   }
+// `;
+
+// const StyledHr = styled.hr`
+//   width: 1130px;
+//   color: ${({ theme }) => theme.medium_purple};
+//   margin-top: 15px;
+// `;
+
+// const StyledInput = styled.input`
+//   padding: 10px;
+//   width: 330px;
+//   background-color: ${({ theme }) => theme.light_purple};
+//   border: none;
+//   &::placeholder {
+//     color: #3c3c3c;
+//   }
+//   &:focus {
+//     outline: none;
+//   }
+
+//   margin-bottom: 15px;
+// `;
+
+// const TabContainer = styled.div`
+//   display: flex;
+// `;
+
+// const SignUp = styled.div`
+//   width: auto;
+//   padding: 5px;
+//   border-bottom: 1px solid #000;
+//   cursor: pointer;
+//   margin-top: 15px;
+// `;
+import { useState, useEffect } from 'react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
-import styled from 'styled-components';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-// import axios from 'axios';
+import Button from '../components/Button';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, provider } from '../firebase-config';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { getDocs, collection, query, where } from 'firebase/firestore';
+import { db } from '../firebase-config';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [passWord, setPassWord] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [userInfo, setUserInfo] = useState([]);
+  const navigate = useNavigate();
 
-  const REST_API_KEY = '478ce5c02a05e42ebd74f42edf66e003'; //REST API KEY
-  const REDIRECT_URI = 'http://localhost:5173/user/start/kakao'; //Redirect URI
-  // auth 요청 URL
-  const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
-
-  const handleKakaoLoginButton = () => {
-    window.location.href = KAKAO_AUTH_URL;
-  };
+  useEffect(() => {
+    if (userInfo.firstLogIn !== undefined) {
+      window.localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      navigate('/post-list');
+    }
+  }, [userInfo, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const response = await fetch('https://jsonplaceholder.typicode.com/users', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json', // JSON 형식의 데이터를 전송한다는 헤더 설정
-      },
-      body: JSON.stringify({ email, passWord }), // JSON 형식으로 사용자 이메일과 비밀번호를 전송
-    });
+    console.log('일반로그인');
+    try {
+      const result = await signInWithEmailAndPassword(
+        auth,
+        loginEmail,
+        loginPassword,
+      );
+      //파이어베이스 스토어에서 'users'컬렉션을 쿼리설정해 , uid 필드가 result.user.uid 같은 문서 찾기
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', result.user.uid),
+      );
+      //getDocs 를 사용하여 원하는 데이터 반환
+      const userQueryData = await getDocs(userQuery);
 
-    if (response.ok) {
-      console.log('로그인 성공');
-    } else {
-      console.error('로그인 실패');
+      //우리가 찾는 uid 값과 같은 문서가있다면 닉네임 추출
+      if (userQueryData.docs) {
+        const userDoc = userQueryData.docs[0];
+        const userNickName = userDoc.data().nickName;
+        const isFirstLogin = result.user.createdAt === result.user.lastLoginAt;
+
+        setUserInfo({
+          accessToken: result.user.accessToken,
+          firstLogIn: isFirstLogin,
+          memberId: result.user.uid,
+          nickname: userNickName,
+          interests: [],
+        });
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    console.log('구글로그인');
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const isFirstLogin =
+        result.user.metadata.createdAt === result.user.metadata.lastLoginAt;
+
+      console.log(result);
+      setUserInfo({
+        accessToken: result.user.accessToken,
+        firstLogIn: isFirstLogin,
+        memberId: result.user.uid,
+        nickname: result.user.displayName,
+        interests: [],
+      });
+    } catch (err) {
+      console.log(err);
     }
   };
 
   return (
     <ThemeProvider theme={theme}>
       <Container>
-        <StyledP>로그인</StyledP>
-        <KakaoLoginImg
-          src="/kakao_login.png"
-          alt="카카오 로그인"
-          onClick={handleKakaoLoginButton}
+        <GoogleLoginImg
+          src="/google_login.png"
+          alt="구글 로그인"
+          onClick={handleGoogleLogin}
         />
         <StyledSpan>또는 이메일로 로그인</StyledSpan>
         <StyledForm>
           <StyledInput
-            type="text"
+            type="email"
             id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={loginEmail}
+            onChange={(event) => setLoginEmail(event.target.value)}
             placeholder="이메일주소를 입력해주세요"
             autoComplete="username"
             required
           ></StyledInput>
           <StyledInput
             type="password"
-            value={passWord}
+            value={loginPassword}
             id="passWord"
-            onChange={(e) => setPassWord(e.target.value)}
+            onChange={(event) => setLoginPassword(event.target.value)}
             placeholder="비밀번호를 입력해주세요"
             autoComplete="current-password"
             required
           ></StyledInput>
           <Button
-            name="로그인"
+            name={'로그인'}
             type="button"
             onClick={handleLogin}
-            fontSize="16px"
-            padding="10px"
+            fontSize={'16px'}
+            padding={'10px'}
           />
         </StyledForm>
         <StyledLink to="/user/find-password">
@@ -88,6 +377,18 @@ const Login = () => {
 };
 
 export default Login;
+const GoogleLoginImg = styled.img`
+  width: 300px;
+  cursor: pointer;
+  height: 60px;
+`;
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 70px;
+`;
 
 const StyledLink = styled(Link)`
   text-decoration: none;
@@ -99,30 +400,12 @@ const StyledForm = styled.form`
   flex-direction: column;
 `;
 
-const KakaoLoginImg = styled.img`
-  width: 320px;
-  cursor: pointer;
-`;
-
 const PinSearch = styled.div`
   width: auto;
   padding: 5px;
   border-bottom: 1px solid #000;
   cursor: pointer;
   margin-top: 25px;
-`;
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-const StyledP = styled.div`
-  font-size: 25px;
-  font-weight: bold;
-  color: ${({ theme }) => theme.dark_purple};
-  margin: 70px;
 `;
 
 const StyledSpan = styled.span`
@@ -162,11 +445,11 @@ const StyledHr = styled.hr`
 
 const StyledInput = styled.input`
   padding: 10px;
-  width: 300px;
+  width: 330px;
   background-color: ${({ theme }) => theme.light_purple};
   border: none;
   &::placeholder {
-    color: ${({ theme }) => theme.medium_purple};
+    color: #3c3c3c;
   }
   &:focus {
     outline: none;

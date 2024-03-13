@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useRecoilState } from 'recoil';
-import { GeneralUserInfo } from '../recoil/AllAtom';
+import { useSetRecoilState } from 'recoil';
+import { HashTagChoice } from '../recoil/AllAtom';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
-const topicList = [
+const hashTagList = [
   '연애',
   '친구',
   '뷰티',
@@ -34,39 +34,38 @@ const topicList = [
   '전자기기',
 ];
 
-function InterestTopic() {
-  const [selectedTopic, setSelectedTopic] = useState([]);
-  const [generalUserInfo, setGeneralUserInfo] = useRecoilState(GeneralUserInfo);
+function HashTagList() {
+  const [selectedHashTag, setSelectedHashTag] = useState([]);
+  const setHashTagChoice = useSetRecoilState(HashTagChoice);
 
-  const handleClickTopic = (topic) => {
-    if (selectedTopic.includes(topic)) {
-      setSelectedTopic(selectedTopic.filter((item) => item !== topic));
+  const handleClickHashTag = (hashTag) => {
+    if (selectedHashTag.includes(hashTag)) {
+      setSelectedHashTag(selectedHashTag.filter((item) => item !== hashTag));
     } else {
       // 최대 5개까지만 선택 가능
-      if (selectedTopic.length < 5) {
-        setSelectedTopic([...selectedTopic, topic]);
+      if (selectedHashTag.length < 5) {
+        setSelectedHashTag([...selectedHashTag, hashTag]);
       }
     }
   };
 
   useEffect(() => {
-    setGeneralUserInfo({
-      ...generalUserInfo,
-      interests: selectedTopic,
+    setHashTagChoice({
+      hashTag: selectedHashTag,
     });
-  }, [selectedTopic]);
+  }, [selectedHashTag]);
 
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
         <StyledUl>
-          {topicList.map((topic, idx) => (
+          {hashTagList.map((hashTag, idx) => (
             <StyledLi
               key={idx}
-              onClick={() => handleClickTopic(topic)}
-              isSelected={selectedTopic.includes(topic)}
+              onClick={() => handleClickHashTag(hashTag)}
+              isSelected={selectedHashTag.includes(hashTag)}
             >
-              {topic}
+              {hashTag}
             </StyledLi>
           ))}
         </StyledUl>
@@ -75,31 +74,28 @@ function InterestTopic() {
   );
 }
 
-export default InterestTopic;
+export default HashTagList;
 
-const Wrapper = styled.div``;
+const Wrapper = styled.div`
+  margin-top: 20px;
+`;
 
 const StyledUl = styled.ul`
   display: flex;
   box-sizing: border-box;
   flex-wrap: wrap;
-  gap: 30px;
-  width: 640px;
+  gap: 15px;
 `;
 
 const StyledLi = styled.li`
   color: ${({ theme }) => theme.dark_purple};
   background-color: ${({ isSelected, theme }) =>
     isSelected ? theme.light_purple : 'transparent'};
-  font-size: 18px;
+  font-size: 14px;
   width: fit-content;
+  border: 1px solid ${({ theme }) => theme.light_purple};
   border-radius: 20px;
   padding: 10px;
   cursor: pointer;
-  margin-bottom: 20px;
-
-  /* &:hover {
-    color: ${({ theme }) => theme.linen};
-    background-color: ${({ theme }) => theme.medium_purple};
-  } */
+  margin-bottom: 10px;
 `;

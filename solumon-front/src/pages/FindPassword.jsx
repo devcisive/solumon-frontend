@@ -11,25 +11,22 @@ function FindPassword() {
 
   const handleFindPasswordButton = async (e) => {
     e.preventDefault();
-
     try {
-      const response = await fetch(
-        'https://jsonplaceholder.typicode.com/user/find-password',
+      const response = await axios.get(
+        'http://solumon.site:8080/user/find-password',
+        { email: email },
         {
-          method: 'POST',
           headers: {
-            'Content-Type': 'application/json', // JSON 형식의 데이터를 전송한다는 헤더 설정
+            'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ email }), // JSON 형식으로 사용자 이메일을 전송
+          withCredentials: true,
         },
       );
-
-      if (response.ok) {
-        // 요청이 성공적으로 완료된 경우
-        const data = await response.json(); // JSON 응답을 파싱
+      if (response.status === 200) {
+        const json = response.data;
+        console.log(json);
         setSendEmail(true);
       } else {
-        // 요청이 실패한 경우
         console.error('요청이 실패했습니다.');
       }
     } catch (error) {
@@ -50,8 +47,10 @@ function FindPassword() {
             required
           ></StyledInput>
           <InfoText>
-            이메일로 전송된 임시 비밀번호로 로그인하여
-            <br /> 회원정보에서 비밀번호를 수정할 수 있습니다.
+            📢 이메일로 전송된 임시 비밀번호로 로그인하여
+            <br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;회원정보에서 비밀번호를 수정할 수
+            있습니다.
           </InfoText>
           <Button
             type="submit"
@@ -103,13 +102,17 @@ const FindPasswordForm = styled.form`
 `;
 
 const StyledInput = styled.input`
-  width: 300px;
+  width: 330px;
   color: ${({ theme }) => theme.dark_purple};
   background-color: ${({ theme }) => theme.light_purple};
   font-size: 14px;
   padding: 10px;
   border: none;
   outline: none;
+
+  &::placeholder {
+    color: #3c3c3c;
+  }
 `;
 
 const InfoText = styled.p`
@@ -118,6 +121,6 @@ const InfoText = styled.p`
   font-size: 13px;
   line-height: 1.2rem;
   margin: 10px 0;
-  padding: 12px 15px;
+  padding: 12px 24px;
   border-radius: 10px;
 `;

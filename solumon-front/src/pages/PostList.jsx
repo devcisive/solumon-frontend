@@ -1,90 +1,74 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { auth } from '../firebase-config';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
+import { HiOutlinePencilSquare } from 'react-icons/hi2';
+import { CiSearch } from 'react-icons/ci';
 import PostCard from '../components/PostCard';
-
-const postInfoList = [
-  {
-    title: '아직 결정하지 못한 고민들',
-    postOrder: 'latest',
-    link: '/posts?postType=general&postStatus=ongoing&postOrder=latest&page=1',
-  },
-  {
-    title: '채팅 참여자가 많은 고민들',
-    postOrder: 'mostChatParticipants',
-    link: '/posts?postType=general&postStatus=ongoing&postOrder=mostChatParticipants&page=1',
-  },
-  {
-    title: '투표 참여자가 많은 고민들',
-    postOrder: 'mostVotes',
-    link: '/posts?postType=general&postStatus=ongoing&postOrder=mostVotes&page=1',
-  },
-];
+import useFetchOrderedData from '../hooks/useFetchOrderedData';
+import useFetchInterestsData from '../hooks/useFetchInterestsData';
 
 function PostList() {
-  const [postData, setPostData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const user = auth.currentUser;
+  const latestPostData = useFetchOrderedData('created_at', 'desc');
+  const chatCountPostData = useFetchOrderedData('total_comment_count', 'desc');
+  const voteCountPostData = useFetchOrderedData('total_vote_count', 'desc');
+  const interestPostData = useFetchInterestsData(user);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchData(); // 초기 렌더링 시 한 번 호출
-  }, []);
-
-  useEffect(() => {
-    // postInfoList 배열의 아이템이 변경될 때마다 fetchData 호출
-    fetchData();
-  }, [postInfoList]);
-
-  const fetchData = () => {
-    const fetchDataPromises = postInfoList.map((item) =>
-      fetch(
-        `https://jsonplaceholder.typicode.com/posts?postType=general&postStatus=ongoing&postOrder=${item.postOrder}`,
-      )
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`Network response was not ok (${response.status})`);
-          }
-          return response.json();
-        })
-        .then((json) => {
-          // 해당 item에 대한 데이터를 설정
-          setPostData((prevData) => ({
-            ...prevData,
-            [item.postOrder]: json,
-          }));
-        })
-        .catch((error) => {
-          console.log(`Something Wrong: ${error}`);
-        }),
-    );
-
-    // 모든 fetchData 프로미스를 병렬로 실행
-    Promise.all(fetchDataPromises)
-      .then(() => {
-        console.log('데이터 로드 완료');
-        setLoading(false); // 데이터 로드 완료 후 loading 상태를 false로 변경
-      })
-      .catch((error) => {
-        console.log(`Error loading data: ${error}`);
-        setLoading(false); // 에러 발생 시에도 loading 상태를 false로 변경
-      });
+  const HandleButtonClick = () => {
+    navigate('/post-write');
   };
+
+  const renderPostSection = (title, orderField, postData) => (
+    <PostSection>
+      <SectionTitle>{title}</SectionTitle>
+      <AllPostsLink
+        to={`/posts?postType=GENERAL&postStatus=ONGOING&postOrder=${orderField}&pageNum=1`}
+      >
+        전체보기 {'>'}
+      </AllPostsLink>
+      <PostCard postData={postData} postCount={5} />
+    </PostSection>
+  );
 
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
-        {postInfoList.map((item, idx) => (
-          <PostSection key={idx}>
-            <SectionTitle>{item.title}</SectionTitle>
-            <AllPostsLink to={item.link}>전체보기 {'>'}</AllPostsLink>
-            {loading ? ( // 데이터 로딩 중인 경우
-              <p>Loading...</p>
-            ) : (
-              <PostCard postData={postData[item.postOrder]} postCount={5} />
-            )}
-          </PostSection>
-        ))}
+        <WriteContainer>
+          <WriteButton onClick={HandleButtonClick}>
+            <StyledHiOutlinePencilSquare /> 글쓰기
+          </WriteButton>
+        </WriteContainer>
+        <Link to={'/search'}>
+          <SearchIcon />
+        </Link>
+
+        <PostSection>
+          <SectionTitle>관심주제와 관련된 고민들</SectionTitle>
+          <AllPostsLink
+            to={
+              '/posts?postType=INTEREST&postStatus=ONGOING&postOrder=LATEST&pageNum=1'
+            }
+          >
+            전체보기 {'>'}
+          </AllPostsLink>
+          <PostCard postData={interestPostData} postCount={5} />
+        </PostSection>
+
+        {renderPostSection('최근 올라온 고민들', 'LATEST', latestPostData)}
+        {renderPostSection(
+          '채팅 참여자가 많은 고민들',
+          'MOST_CHAT_PARTICIPANTS',
+          chatCountPostData,
+        )}
+        {renderPostSection(
+          '투표 참여자가 많은 고민들',
+          'MOST_VOTES',
+          voteCountPostData,
+        )}
       </Wrapper>
     </ThemeProvider>
   );
@@ -95,6 +79,15 @@ export default PostList;
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
+`;
+
+const SearchIcon = styled(CiSearch)`
+  width: 28px;
+  height: 28px;
+  color: ${({ theme }) => theme.dark_purple};
+  float: right;
+  margin-top: 20px;
+  margin-right: 115px;
 `;
 
 const PostSection = styled.div`
@@ -116,4 +109,31 @@ const AllPostsLink = styled(Link)`
   cursor: pointer;
   margin-bottom: 15px;
   align-self: flex-end;
+`;
+
+const WriteContainer = styled.div`
+  display: flex;
+  width: 1280px;
+  justify-content: flex-end;
+  margin: 20px auto;
+  margin-bottom: 0px;
+`;
+
+const WriteButton = styled.button`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: ${({ theme }) => theme.medium_purple};
+  border: none;
+  color: white;
+  padding: 12px;
+  border-radius: 5px;
+  font-size: 15px;
+  font-weight: bold;
+  width: 200px;
+`;
+
+const StyledHiOutlinePencilSquare = styled(HiOutlinePencilSquare)`
+  font-size: 30px;
+  margin-right: 10px;
 `;

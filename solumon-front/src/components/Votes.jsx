@@ -1,28 +1,27 @@
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import PropTypes from 'prop-types';
+import { formatDate } from './utils';
 
-const Votes = ({ vote, handleChoiceClick, postData, createdAt }) => {
-  const { end_at } = vote;
-
+const Votes = ({ handleChoiceClick, createdAt, endAt, choices }) => {
   return (
     <ThemeProvider theme={theme}>
       <VoteContainer>
         <VoteHeader>
-          <span>투표</span>
+          <StyledSpan>투표</StyledSpan>
           <TimeSpan>
-            {createdAt}~{end_at}
+            {formatDate(createdAt)}~{formatDate(endAt)}
           </TimeSpan>
         </VoteHeader>
         <HorizontalLine />
         <VoteContentContainer>
           <ul>
-            {postData.vote.choices.map((choice) => (
+            {choices.map((choice) => (
               <VoteContent
                 key={choice.choice_num}
                 onClick={() => handleChoiceClick(choice.choice_num)}
               >
-                {choice.choice_num}. {choice.choice_text}
+                {choice.choice_num + 1}. {choice.choice_text}
               </VoteContent>
             ))}
           </ul>
@@ -32,27 +31,28 @@ const Votes = ({ vote, handleChoiceClick, postData, createdAt }) => {
   );
 };
 Votes.propTypes = {
+  choices: PropTypes.array.isRequired,
   createdAt: PropTypes.string.isRequired,
-  vote: PropTypes.shape({
-    result_access_status: PropTypes.bool.isRequired,
-    end_at: PropTypes.string.isRequired,
-  }).isRequired,
+  endAt: PropTypes.string.isRequired,
+
   handleChoiceClick: PropTypes.func.isRequired,
-  postData: PropTypes.object.isRequired, // postData 객체를 전달받아야 합니다.
 };
 
 export default Votes;
+const StyledSpan = styled.span`
+  font-size: 25px;
+`;
 const TimeSpan = styled.div``;
 const VoteContainer = styled.div`
   border: 1px solid ${({ theme }) => theme.medium_purple};
   border-radius: 5px;
-  width: 60%;
+  width: 55%;
 `;
 const VoteHeader = styled.div`
   display: flex;
   justify-content: space-between;
   margin: 20px;
-
+  padding: 10px;
   font-weight: bold;
   color: ${({ theme }) => theme.medium_purple};
 `;
@@ -70,8 +70,8 @@ const VoteContent = styled.div`
   border: 1px solid ${({ theme }) => theme.medium_purple};
   color: ${({ theme }) => theme.medium_purple};
   margin: 10px;
-  padding: 15px;
+  padding: 20px;
   border-radius: 5px;
-  font-size: 13px;
+  font-size: 17px;
   font-weight: 400;
 `;

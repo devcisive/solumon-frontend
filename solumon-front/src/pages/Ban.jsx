@@ -2,10 +2,16 @@ import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import { PiSirenFill } from 'react-icons/pi';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../firebase-config';
 
 const Ban = () => {
+  const navigate = useNavigate();
+  const { memberId } = useParams();
   const [selectedReason, setSelectedReason] = useState('');
-  const [additionalComment, setAdditionalComment] = useState(''); // 선택된 신고사유 상태 추가
+  const [additionalComment, setAdditionalComment] = useState('');
 
   const handleReasonChange = (event) => {
     setSelectedReason(event.target.value);
@@ -13,35 +19,23 @@ const Ban = () => {
   const handleCommentChange = (event) => {
     setAdditionalComment(event.target.value); // 추가 의견 업데이트
   };
-  const BanSubmit = () => {
-    const data = {
-      reportType: selectedReason, // 선택된 라디오 버튼 값으로 reportType 설정
-      reportContent: additionalComment,
-    };
+  const Data = {
+    reported_member_id: memberId,
+    report_type: selectedReason, // 선택된 라디오 버튼 값으로 reportType 설정
+    report_content: additionalComment,
+  };
 
-    const Url = 'https://jsonplaceholder.typicode.com/user/:nickname/report';
-    // POST 요청 설정
-    fetch(Url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        throw new Error('Network response was not ok.');
-      })
-      .then((data) => {
-        // 서버 응답을 처리
-        alert('신고가 성공적으로 접수되었습니다.');
-      })
-      .catch((error) => {
-        // 오류 처리
-        alert('오류가 발생했습니다: ' + error.message);
-      });
+  // 신고 POST 요청 코드 //
+  const BanSubmit = async () => {
+    try {
+      const reportCollection = collection(db, 'reports');
+      const reportData = await addDoc(reportCollection, Data);
+      if (reportData) {
+        navigate('/post-list');
+      }
+    } catch (error) {
+      console.error('오류 발생: ' + error);
+    }
   };
 
   return (
@@ -88,7 +82,7 @@ const Ban = () => {
               <StyledInput
                 type="radio"
                 name="reportReason"
-                value=" OTHER"
+                value="OTHER"
                 checked={selectedReason === ' OTHER'}
                 onChange={handleReasonChange}
               />
@@ -101,7 +95,6 @@ const Ban = () => {
             onChange={handleCommentChange}
             placeholder="의견을 입력하세요"
           />
-
           <ButtonContainer>
             <BanButton onClick={BanSubmit}>신고하기</BanButton>
           </ButtonContainer>

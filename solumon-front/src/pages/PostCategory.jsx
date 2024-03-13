@@ -1,140 +1,209 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { auth, db } from '../firebase-config';
+import { getDocs, collection, orderBy, query, where } from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
-import PropTypes from 'prop-types';
 
 import { CiSearch } from 'react-icons/ci';
-import TabsComponent from '../components/TabsComponent';
 import SortSelector from '../components/SortSelector';
 import PostCard from '../components/PostCard';
 import Pagination from '../components/Pagination';
 
 function PostCategory() {
+  const user = auth.currentUser;
   const [postData, setPostData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedTab, setSelectedTab] = useState('진행중인 고민');
+  const [myInterest, setMyInterest] = useState([]);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const postType = searchParams.get('postType');
+  let postType = searchParams.get('postType');
   let postStatus = searchParams.get('postStatus');
-  const postOrder = searchParams.get('postOrder');
-  const currentPage = parseInt(searchParams.get('page')) || 1; // 현재 페이지 가져오기
-
-  const postPerPage = 10; // 한 페이지당 렌더링할 게시글 수
-  const indexOfLastPost = currentPage * postPerPage; // 한 페이지의 마지막 게시글의 인덱스
-  const indexOfFirstPost = indexOfLastPost - postPerPage; // 한 페이지의 첫 번째 게시글의 인덱스
-  const currentPosts = postData.slice(indexOfFirstPost, indexOfLastPost); // 해당 페이지에서 보여줄 데이터 나누기
+  let postOrder = searchParams.get('postOrder');
+  let currentPage = parseInt(searchParams.get('pageNum')) || 1; // 현재 페이지 가져오기
 
   let categoryTitle = '';
-  const categoryPrefix = postType === 'interest' ? '[관심주제] ' : '';
+  const categoryPrefix = postType === 'INTEREST' ? '[관심주제] ' : '';
 
   if (
-    (postType === 'general' || postType === 'interest') &&
-    postStatus !== 'completed'
+    (postType === 'GENERAL' || postType === 'INTEREST') &&
+    postStatus !== 'COMPLETED'
   ) {
-    if (postOrder === 'mostChatParticipants') {
+    if (postOrder === 'MOST_CHAT_PARTICIPANTS') {
       categoryTitle = categoryPrefix + '채팅 참여자가 많은 고민';
-    } else if (postOrder === 'mostVotes') {
+    } else if (postOrder === 'MOST_VOTES') {
       categoryTitle = categoryPrefix + '투표 참여자가 많은 고민';
-    } else if (postStatus === 'ongoing') {
-      if (postOrder === 'latest') {
+    } else if (postStatus === 'ONGOING') {
+      if (postOrder === 'LATEST') {
         categoryTitle = categoryPrefix + '아직 결정하지 못한 고민';
-      } else if (postOrder === 'imminentDeadline') {
+      } else if (postOrder === 'IMMINENT_CLOSE') {
         categoryTitle = categoryPrefix + '결정 시간이 임박한 고민';
       }
     }
   } else if (
-    (postType === 'interest' || postType === 'general') &&
-    postStatus === 'completed' &&
-    postOrder === 'latest'
+    (postType === 'INTEREST' || postType === 'GENERAL') &&
+    postStatus === 'COMPLETED' &&
+    postOrder === 'LATEST'
   ) {
     categoryTitle = categoryPrefix + '결정이 완료된 고민';
   }
 
-  const onTabChange = (newTab) => {
-    if (newTab === '진행중인 고민') {
-      // 클릭한 탭에 따라 쿼리값 변경
+  const handleSortChange = (sortValue) => {
+    if (sortValue === '최신순') {
       setSearchParams({
         postType: postType,
-        postStatus: 'ongoing',
-        postOrder: postOrder,
-        page: currentPage,
+        postStatus: postStatus,
+        postOrder: 'LATEST',
+        pageNum: currentPage,
+      });
+    } else if (sortValue === '채팅 참여 순') {
+      setSearchParams({
+        postType: postType,
+        postStatus: postStatus,
+        postOrder: 'MOST_CHAT_PARTICIPANTS',
+        pageNum: currentPage,
+      });
+    } else if (sortValue === '투표 참여 순') {
+      setSearchParams({
+        postType: postType,
+        postStatus: postStatus,
+        postOrder: 'MOST_VOTES',
+        pageNum: currentPage,
       });
     } else {
       setSearchParams({
         postType: postType,
-        postStatus: 'completed',
-        postOrder: postOrder,
-        page: currentPage,
+        postStatus: postStatus,
+        postOrder: 'IMMINENT_CLOSE',
+        pageNum: currentPage,
       });
     }
-    // 클릭된 탭에 따라 어떤 데이터를 불러올지 결정
-    setSelectedTab(newTab);
+    console.log(sortValue);
   };
 
-  const onPageChange = (newPage) => {
+  const handlePageChange = (newPage) => {
     setSearchParams({
       postType: postType,
       postStatus: postStatus,
       postOrder: postOrder,
-      page: newPage,
+      pageNum: newPage,
     });
   };
 
-  const fetchData = () => {
-    fetch(
-      `https://jsonplaceholder.typicode.com/posts?postType=${postType}&postStatus=${postStatus}&postOrder=${postOrder}&page=${currentPage}`,
-    )
-      .then((response) => {
-        return response.json();
-      })
-      .then((json) => {
-        setPostData(json);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.log(`Something Wrong: ${error}`);
-        setIsLoading(false);
+  const fetchInterestsData = async (orderByField, order) => {
+    if (user) {
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', user.uid),
+      );
+
+      const querySnapshot = await getDocs(userQuery);
+      const userDoc = querySnapshot.docs[0];
+
+      if (!userDoc) return;
+
+      setMyInterest(userDoc.data().interests);
+
+      const allData = await fetchOrderedData(orderByField, order);
+      const userInterests = userDoc.data().interests || [];
+
+      if (allData.length > 0 && userInterests.length > 0) {
+        const interestPosts = allData.filter(
+          (post) =>
+            post.tags &&
+            Array.isArray(post.tags.hashTag) &&
+            post.tags.hashTag.some((tag) => userInterests.includes(tag)),
+        );
+
+        return interestPosts;
+      }
+    }
+  };
+
+  const fetchOrderedData = async (orderByField, order) => {
+    const querySnapshot = await getDocs(
+      query(collection(db, 'posts-write'), orderBy(orderByField, order)),
+    );
+
+    const dataList = [];
+    querySnapshot.forEach((doc) => {
+      dataList.push({
+        postId: doc.id,
+        ...doc.data(),
       });
+    });
+
+    return dataList;
+  };
+
+  const fetchData = async () => {
+    if (postType === 'GENERAL') {
+      if (postOrder === 'LATEST') {
+        const data = await fetchOrderedData('created_at', 'desc');
+        setPostData(data);
+      } else if (postOrder === 'MOST_CHAT_PARTICIPANTS') {
+        const data = await fetchOrderedData('total_comment_count', 'desc');
+        setPostData(data);
+      } else if (postOrder === 'MOST_VOTES') {
+        const data = await fetchOrderedData('total_vote_count', 'desc');
+        setPostData(data);
+      } else {
+        const data = await fetchOrderedData('created_at');
+        setPostData(data);
+      }
+    } else {
+      if (postOrder === 'LATEST') {
+        const data = await fetchInterestsData('created_at', 'desc');
+        setPostData(data);
+      } else if (postOrder === 'MOST_CHAT_PARTICIPANTS') {
+        const data = await fetchInterestsData('total_comment_count', 'desc');
+        setPostData(data);
+      } else if (postOrder === 'MOST_VOTES') {
+        const data = await fetchInterestsData('total_vote_count', 'desc');
+        setPostData(data);
+      } else {
+        const data = await fetchInterestsData('created_at');
+        setPostData(data);
+      }
+    }
   };
 
   useEffect(() => {
-    setIsLoading(true);
     fetchData();
   }, [postType, postStatus, postOrder, currentPage]);
 
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
-        {isLoading ? (
-          <div>로딩 중입니다.</div>
-        ) : (
-          <>
-            <PostSection>
-              <TitleWrapper>
-                <CategoryTitle>{categoryTitle}</CategoryTitle>
-                <Link to={'/posts/search'}>
-                  <SearchIcon />
-                </Link>
-              </TitleWrapper>
-              <SortWrapper>
-                <TabsComponent
-                  tabLabels={['진행중인 고민', '결정이 완료된 고민']}
-                  defaultTab={0}
-                  onClick={onTabChange}
-                />
-                <SortSelector />
-              </SortWrapper>
-              <PostCard postData={currentPosts} />
-            </PostSection>
-            <Pagination
-              totalPages={Math.ceil(postData.length / postPerPage)}
-              currentPage={currentPage}
-              onPageChange={onPageChange}
+        <PostSection>
+          <TitleWrapper>
+            <CategoryTitle>{categoryTitle}</CategoryTitle>
+            <Link to={'/search'}>
+              <SearchIcon />
+            </Link>
+          </TitleWrapper>
+          <SortWrapper>
+            <SortSelector
+              sortLabels={[
+                '최신순',
+                '채팅 참여 순',
+                '투표 참여 순',
+                '마감 임박 순',
+              ]}
+              defaultSort={0}
+              onClick={handleSortChange}
             />
-          </>
-        )}
+          </SortWrapper>
+          <PostCard
+            postData={postData}
+            postCount={10}
+            currentPage={currentPage}
+          />
+        </PostSection>
+        <Pagination
+          totalPages={Math.ceil(postData.length / 10)}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+        />
       </Wrapper>
     </ThemeProvider>
   );
@@ -174,7 +243,6 @@ const SearchIcon = styled(CiSearch)`
 
 const SortWrapper = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
+  align-self: flex-end;
+  margin-bottom: 20px;
 `;
