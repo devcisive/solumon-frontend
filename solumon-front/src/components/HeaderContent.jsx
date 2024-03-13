@@ -9,9 +9,11 @@ import { deleteDoc, doc } from 'firebase/firestore';
 const HeaderContent = ({ isLoggedIn, postData }) => {
   const navigate = useNavigate();
   const { postId } = useParams();
+
   const goBack = () => {
     navigate('/post-list');
   };
+
   const handleEditClick = () => {
     console.log(postId);
     navigate(`/edit/${postId}`);
@@ -33,15 +35,18 @@ const HeaderContent = ({ isLoggedIn, postData }) => {
     }
     navigate('/post-list');
   };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const options = { year: 'numeric', month: 'numeric', day: 'numeric' };
     return date.toLocaleDateString(undefined, options);
   };
+
   HeaderContent.propTypes = {
     postData: PropTypes.object.isRequired,
     isLoggedIn: PropTypes.bool.isRequired,
   };
+
   return (
     <ThemeProvider theme={theme}>
       <StyledHeaderContainer>
@@ -70,26 +75,31 @@ const HeaderContent = ({ isLoggedIn, postData }) => {
 };
 
 export default HeaderContent;
+
 const StyledContainer1 = styled.div`
   display: flex;
   width: 70%;
 `;
+
 const StyledIoIosArrowBack = styled(IoIosArrowBack)`
   font-size: 30px;
   cursor: pointer;
   transform: translateX(-40px);
 `;
+
 const StyledHr = styled.hr`
   height: 1px;
   background-color: #ccc;
   margin: 10px 0;
-  width: 60%;
+  width: 900px;
 `;
+
 const StyledH1 = styled.h1`
   font-size: 30px;
   font-weight: bold;
   color: ${({ theme }) => theme.dark_purple};
 `;
+
 const StyledHeaderContainer = styled.div`
   display: flex;
   margin: 20px;
@@ -97,13 +107,14 @@ const StyledHeaderContainer = styled.div`
   width: 73%;
   justify-content: center;
 `;
+
 const StyledContainer2 = styled.div`
   display: flex;
   justify-content: space-between;
-  margin: 20px;
-  margin-left: -20px;
+  margin: 20px 20px 20px 10px;
   width: 55%;
 `;
+
 const BanSpan = styled.span`
   color: ${({ theme }) => theme.dark_purple};
   font-weight: bold;
@@ -113,31 +124,36 @@ const BanSpan = styled.span`
   padding: 10px;
   background-color: ${({ theme }) => theme.linen};
 `;
+
 const WriterSpan = styled.span`
   color: ${({ theme }) => theme.medium_purple};
   font-weight: bold;
   font-size: 18px;
 `;
+
 const TimeSpan = styled.span`
   color: ${({ theme }) => theme.medium_purple};
   font-weight: bold;
   font-size: 18px;
 `;
+
 const EditContainer = styled.div`
   display: flex;
   justify-content: flex-end;
-  margin-right: 60px;
+  margin-right: 40px;
 `;
 
 const EditButton = styled.button`
   background-color: ${({ theme }) => theme.medium_purple};
   color: ${({ theme }) => theme.linen};
   border-radius: 5px;
+  border: none;
   padding: 3px;
   cursor: pointer;
   width: 60px;
   margin-right: 1px;
 `;
+
 const DeleteButton = styled.button`
   border: none;
   border-radius: 5px;
