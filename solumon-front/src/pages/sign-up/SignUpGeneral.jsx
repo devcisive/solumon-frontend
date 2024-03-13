@@ -63,6 +63,7 @@ function SignUpGeneral() {
 
           <StyledInput
             type="password"
+            minlength="8"
             placeholder="비밀번호 (8~20자)"
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -78,16 +79,17 @@ function SignUpGeneral() {
           <StyledInput
             style={{ marginBottom: '10px' }}
             type="password"
+            minlength="8"
             placeholder="비밀번호 확인"
             onChange={(e) => setCheckPassword(e.target.value)}
             required
           ></StyledInput>
 
-          {userData === nickname ? (
+          {/* {userData === nickname ? (
             <CheckMessage>이미 사용중인 닉네임입니다.</CheckMessage>
           ) : (
             ''
-          )}
+          )} */}
           {email.includes('@')
             ? ''
             : email.length >= 1 && (

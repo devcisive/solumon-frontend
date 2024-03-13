@@ -128,7 +128,6 @@ function WithDraw() {
     </ThemeProvider>
   );
 }
-
 export default WithDraw;
 
 const Wrapper = styled.div`
