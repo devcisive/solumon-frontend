@@ -13,7 +13,7 @@ const Start = () => {
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    navigate('/user/sign-in/general');
+    navigate('/login');
   };
 
   useEffect(() => {
