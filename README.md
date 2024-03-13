@@ -53,4 +53,44 @@
     - props를 이용한 조건부 스타일링을 활용했습니다.
   - Recoil
     - 빠른 학습과 적용을 useState와 사용 방식이 유사한 recoil을 사용했습니다.
-  - 
+  - Axios
+    - 응답 데이터를 JSON으로 자동 변환하고 에러 핸들링이 쉽기 때문에 Axios를 사용했습니다.
+  - React Router v6
+    - 원하는 url 을 설정하여 컴포넌트와 연결하고 히스토리 기능을 사용했습니다.
+   
+  <br/> 
+
+  ## 페이지 소개
+  - 로그인
+    ![로그인](https://github.com/chaeeunj/WaW-project/assets/72565344/5e282fc4-5e40-4b97-8967-68aaf33604e1)
+
+  - 이메일 회원가입
+    ![이메일 회원가입](https://github.com/chaeeunj/WaW-project/assets/72565344/bd527d52-d289-47bb-878d-80db3613c157)
+
+  - 전체 게시판
+    ![전체 게시판 페이지](https://github.com/chaeeunj/WaW-project/assets/72565344/40bac27c-76b5-472e-aca1-215057fb4213)
+
+  - 카테고리별 게시판
+    ![카테고리별 게시판 페이지](https://github.com/devcisive/solumon-frontend/assets/72565344/9bb6be91-c528-4bcd-986a-0f43fff09449)
+
+  - 검색
+    - 태그 검색
+      ![검색 페이지_태그](https://github.com/devcisive/solumon-frontend/assets/72565344/5d141aa5-48ef-41cd-9050-a4db08aa98d7)
+
+    - 제목 검색
+      ![검색 페이지_제목](https://github.com/devcisive/solumon-frontend/assets/72565344/80b7efaf-ae0f-47ee-a8a6-580a4a5ed4eb)
+
+  - 게시글 조회
+    ![게시글 조회](https://github.com/devcisive/solumon-frontend/assets/72565344/67ca8e3d-e535-455f-8d3d-8751113ff478)
+
+  - 게시글 작성
+    ![127 0 0 1_5173_post-write](https://github.com/devcisive/solumon-frontend/assets/72565344/52a18264-a6e2-4103-a9f6-4e493f3806f5)
+
+  - 회원정보 조회 / 수정
+    ![회원정보](https://github.com/devcisive/solumon-frontend/assets/72565344/a7bba29e-73d7-466a-aa70-02275f12ae05)
+
+  - 내가 남긴 기록
+    ![내가 남긴 기록](https://github.com/devcisive/solumon-frontend/assets/72565344/f0177bfe-32ff-4654-82c9-8f202bc143e4)
+
+  - 회원탈퇴
+    ![회원탈퇴](https://github.com/devcisive/solumon-frontend/assets/72565344/e670169a-fa05-41ea-8d9a-7c787086cbf5)
