@@ -1,7 +1,7 @@
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import PropTypes from 'prop-types';
-import { formatDate } from './utils';
+import { formatDate } from './Utils';
 
 const Votes = ({ handleChoiceClick, createdAt, endAt, choices }) => {
   return (
