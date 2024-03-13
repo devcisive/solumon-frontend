@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useRecoilValue } from 'recoil';
+import { HashTagChoice } from '../recoil/AllAtom';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import { IoIosRemoveCircle } from 'react-icons/io';
 import { AiFillMinusCircle, AiFillPlusCircle } from 'react-icons/ai';
-import { BsPlusSquare } from 'react-icons/bs';
 import Button from '../components/Button';
+import HashTagList from '../components/HashTagList';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase-config';
 import { addDoc, collection } from 'firebase/firestore';
@@ -14,6 +16,7 @@ import {
   uploadBytesResumable,
   getDownloadURL,
 } from 'firebase/storage';
+
 const storage = getStorage();
 
 const Posts = () => {
@@ -23,8 +26,8 @@ const Posts = () => {
   const [content, setContent] = useState('');
   const [endDate, setEndDate] = useState('');
   const [options, setOptions] = useState(['', '', '', '', '']);
-  const [hashtags, setHashtags] = useState([]);
-  const [currentHashtag, setCurrentHashtag] = useState('');
+  const hashTagChoice = useRecoilValue(HashTagChoice);
+  const [toggle, setToggle] = useState(true);
   const [representative, setRepresentative] = useState(null);
   const [filePreviews, setFilePreviews] = useState([]);
   const [files, setFiles] = useState([]);
@@ -50,6 +53,7 @@ const Posts = () => {
       ...fileObjects,
     ]);
     setFiles((prevFiles) => [...(prevFiles || []), ...files]);
+
     if (representative === null && fileObjects.length > 0) {
       //대표이미지를 선택하지 않았을때, 임의로 첫번째로 대표이미지 설정
       setRepresentative(0);
@@ -80,6 +84,7 @@ const Posts = () => {
       setRepresentative(representative - 1);
     }
   };
+
   //사진이미지 스토리지에 업로드
   const uploadImages = async () => {
     const imageUrls = [];
@@ -101,12 +106,14 @@ const Posts = () => {
 
     return imageUrls;
   };
+
   //투표항목입력할때 발생하는 onchange
   const handleOptionChange = (index, value) => {
     const newOptions = [...options];
     newOptions[index] = value;
     setOptions(newOptions);
   };
+
   //사진 클릭해서 대표이미지 설정하기
   const handleImageClick = (index) => {
     setRepresentative((prevRepresentative) => {
@@ -117,6 +124,7 @@ const Posts = () => {
       return index;
     });
   };
+
   //투표마감일 입력 onChange
   const handleTimeInputChange = (e, setEndDate) => {
     const inputTime = e.target.value;
@@ -146,39 +154,32 @@ const Posts = () => {
     }
   };
 
-  //태그입력 onchange
-  const handleHashtagChange = (e) => {
-    setCurrentHashtag(e.target.value);
-  };
-  //태그 추가(등록) 함수
-  const addHashtag = () => {
-    if (
-      currentHashtag.trim() !== '' && //문자열 앞뒤 공백없앰
-      !hashtags.includes(currentHashtag.trim()) //기존해쉬태그와 중복확인
-    ) {
-      setHashtags([...hashtags, currentHashtag.trim()]);
-      setCurrentHashtag('');
+  // 해시태그 토글 버튼
+  const handleToggleTag = (value) => {
+    if (value === '태그 미사용') {
+      setToggle(true);
+    } else {
+      setToggle(false);
     }
+    console.log(value);
   };
-  //태그 제거 함수
-  const removeHashtag = (index) => {
-    const newHashtags = [...hashtags];
-    newHashtags.splice(index, 1);
-    setHashtags(newHashtags);
-  };
+
   // 게시글 데이터 생성
   const RegisterSubmit = async (e) => {
     e.preventDefault();
     const images = await uploadImages();
+
     //유효성(validation)
     if (!title || !content) {
       alert('제목과 내용을 작성해주세요.');
       return;
     }
+
     if (options.length < 2) {
       alert('최소 2개의 투표 항목을 입력해주세요.');
       return;
     }
+
     const hasEmptyOption = options.some((option) => option.trim() === '');
     if (hasEmptyOption) {
       alert('투표 항목을 모두 입력해주세요.');
@@ -194,8 +195,6 @@ const Posts = () => {
     setContent('');
     setEndDate('');
     setOptions(['', '', '', '', '']);
-    setHashtags([]);
-    setCurrentHashtag('');
     setRepresentative(null);
     setSelectedFile([]);
     setFilePreviews([]);
@@ -203,7 +202,7 @@ const Posts = () => {
     const postData = {
       title,
       contents: content,
-      tags: hashtags.map((tag) => ({ tag })),
+      tags: hashTagChoice,
       images,
       uid: currentUserUid,
       created_at: new Date().toISOString(),
@@ -212,6 +211,7 @@ const Posts = () => {
       total_vote_count: 0,
       join: [],
     };
+
     // 투표 데이터 생성
     const vote = {
       choices: options.map((choice, index) => ({
@@ -220,6 +220,7 @@ const Posts = () => {
       })),
       end_at: endDate,
     };
+
     // 전체 데이터 구성
     const requestData = {
       ...postData,
@@ -245,17 +246,6 @@ const Posts = () => {
         <HeadContainer>
           {/* 제목과 등록버튼 */}
           <TitleSpan>게시글 작성</TitleSpan>
-          <Button
-            name="등록"
-            type="submit"
-            onClick={RegisterSubmit}
-            bgColor={theme.medium_purple}
-            color={theme.linen}
-            fontSize="12px"
-            fontWeight={500}
-            padding="10px 40px"
-            borderRadius="5px"
-          />
         </HeadContainer>
 
         {/* 게시글 작성 폼 */}
@@ -348,33 +338,50 @@ const Posts = () => {
         </Container>
 
         {/* 해시태그 입력 */}
-        <HashContainer>
-          <HashtagInputContainer>
-            <HashtagInput
-              type="text"
-              placeholder="#태그 입력 (최대 5개 입력 가능)"
-              value={currentHashtag}
-              onChange={handleHashtagChange}
-            />
-            <StyledBsPlusSquare onClick={addHashtag} />
-          </HashtagInputContainer>
-        </HashContainer>
+        <ToggleContainer>
+          <ToggleWrapper>
+            <ToggleSpan
+              isSelected={toggle}
+              onClick={() => handleToggleTag('태그 미사용')}
+            >
+              태그 미사용
+            </ToggleSpan>
+            <ToggleSpan
+              isSelected={!toggle}
+              onClick={() => handleToggleTag('태그 사용')}
+            >
+              태그 사용
+            </ToggleSpan>
+          </ToggleWrapper>
+        </ToggleContainer>
 
         {/* 선택한 해시태그 목록 */}
-        <HashtagContainer>
-          {hashtags.map((hashtag, index) => (
-            <Hashtag key={index}>
-              #{hashtag}
-              <AiFillMinusCircle onClick={() => removeHashtag(index)} />
-            </Hashtag>
-          ))}
-        </HashtagContainer>
+        {toggle ? (
+          <></>
+        ) : (
+          <HashtagContainer>
+            <HashTagList />
+          </HashtagContainer>
+        )}
+        <ButtonContainer>
+          <Button
+            name="게시글 등록"
+            type="submit"
+            onClick={RegisterSubmit}
+            bgColor={theme.medium_purple}
+            fontSize="16px"
+            fontWeight={500}
+            padding="12px 70px"
+            borderRadius="5px"
+          />
+        </ButtonContainer>
       </MainContainer>
     </ThemeProvider>
   );
 };
 
 export default Posts;
+
 const MainContainer = styled.form`
   display: flex;
   flex-direction: column;
@@ -382,14 +389,15 @@ const MainContainer = styled.form`
   align-items: center;
   margin: 50px auto;
 `;
+
 const TitleSpan = styled.span`
   font-size: 30px;
   font-weight: bold;
   color: ${({ theme }) => theme.dark_purple};
   margin-bottom: 10px;
   display: inline;
-  font-family: 'Noto Sans KR';
 `;
+
 const HeadContainer = styled.div`
   display: flex;
   flex-direction: row;
@@ -397,6 +405,7 @@ const HeadContainer = styled.div`
   justify-content: space-between;
   margin-bottom: 10px;
 `;
+
 const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -404,6 +413,7 @@ const ContentContainer = styled.div`
   align-items: center;
   width: 70%;
 `;
+
 const TitleInput = styled.input`
   width: 70%;
   height: 35px;
@@ -414,25 +424,31 @@ const TitleInput = styled.input`
     outline: none;
   }
   margin-bottom: 10px;
+  padding-left: 10px;
 `;
+
 const ContentTextArea = styled.textarea`
   width: 70%;
   height: 400px;
+  line-height: 18px;
   border: 1px solid ${({ theme }) => theme.medium_purple};
   border-radius: 5px;
   color: ${({ theme }) => theme.medium_purple};
   margin-bottom: 10px;
+  padding: 10px 0 0 10px;
   resize: none;
   &:focus {
     outline: none;
   }
 `;
+
 const FileContainer = styled.div`
-  width: 76.5%;
+  width: 72%;
   display: flex;
   justify-content: center;
   align-items: center;
 `;
+
 const FileLabel = styled.label`
   padding: 11px 30px;
   background-color: ${({ theme }) => theme.medium_purple};
@@ -443,15 +459,18 @@ const FileLabel = styled.label`
   text-align: center;
   display: inline;
 `;
+
 const FileInput = styled.input`
   margin-top: 10px;
   display: none;
 `;
+
 const ImagesContainer = styled.div`
   display: flex;
   margin-bottom: 10px;
   width: 50%;
 `;
+
 const Badge = styled.div`
   position: absolute;
   top: 0;
@@ -463,10 +482,12 @@ const Badge = styled.div`
   font-weight: bold;
   font-size: 10px;
 `;
+
 const ImageContainer = styled.div`
   position: relative;
   margin-right: 5px;
 `;
+
 const StyledFileImg = styled.img`
   position: relative;
   width: 80px;
@@ -474,6 +495,7 @@ const StyledFileImg = styled.img`
   margin-left: 5px;
   border-radius: 5px;
 `;
+
 const RemoveCircleIcon = styled(IoIosRemoveCircle)`
   position: absolute;
   right: 0;
@@ -484,6 +506,7 @@ const RemoveCircleIcon = styled(IoIosRemoveCircle)`
   height: 15px;
   border-radius: 50%;
 `;
+
 const FileNameInput = styled.input`
   display: inline;
   width: 57%;
@@ -493,6 +516,7 @@ const FileNameInput = styled.input`
   border: 1px solid ${({ theme }) => theme.medium_purple};
   margin: 5px;
 `;
+
 const Container = styled.div`
   border: 1px solid ${({ theme }) => theme.medium_purple};
   width: 49%;
@@ -504,6 +528,7 @@ const Container = styled.div`
   align-items: center; /* 세로 가운데 정렬 */
   justify-content: center;
 `;
+
 const StyledContainer = styled.div`
   display: flex;
   margin-left: 60px;
@@ -519,22 +544,26 @@ const StyledContainer2 = styled.div`
   margin: 20px;
   margin-bottom: 30px;
 `;
+
 const StyledAiFillMinusCircle = styled(AiFillMinusCircle)`
   font-size: 24px;
   color: ${({ theme }) => theme.dark_purple};
   margin-right: 5px;
 `;
+
 const StyledAiFillPlusCircle = styled(AiFillPlusCircle)`
   font-size: 24px;
   color: ${({ theme }) => theme.dark_purple};
   margin-right: 5px;
 `;
+
 const OptionContainer = styled.div`
   display: flex;
   margin: 5px;
   align-items: center;
   flex: 1;
 `;
+
 const VoteLabel = styled.label`
   color: ${({ theme }) => theme.medium_purple};
   font-size: 12px;
@@ -544,54 +573,44 @@ const VoteEnd = styled.input`
   color: ${({ theme }) => theme.dark_purple};
   margin-left: 5px;
 `;
+
 const VoteChoice = styled.input`
   display: block;
   width: 100%;
   padding: 10px;
 `;
 
-const HashContainer = styled.div`
-  width: 70%;
-  border-radius: 5px;
-`;
-const HashtagInputContainer = styled.div`
+const ToggleContainer = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-const StyledBsPlusSquare = styled(BsPlusSquare)`
-  font-size: 24px;
-  margin-left: 5px;
+  width: 50%;
+  margin-top: 10px;
 `;
 
-const HashtagInput = styled.input`
-  width: 66%;
-  padding: 10px;
-  font-size: 13px;
-  border: 1px solid ${({ theme }) => theme.medium_purple};
-  border-radius: 5px;
+const ToggleWrapper = styled.div`
+  display: flex;
+
+  border: 1px solid ${({ theme }) => theme.light_purple};
+  border-radius: 15px;
 `;
+
+const ToggleSpan = styled.div`
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 15px;
+  background-color: ${({ isSelected, theme }) =>
+    isSelected ? theme.light_purple : 'transparent'};
+  transition: 0.3s;
+`;
+
 const HashtagContainer = styled.div`
   display: flex;
   flex-direction: row;
   width: 50%;
   align-items: center;
 `;
-const Hashtag = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin: 5px;
-  background-color: ${({ theme }) => theme.light_purple};
-  border: 1px solid ${({ theme }) => theme.medium_purple};
-  border-radius: 15px;
-  padding: 5px;
-  font-size: 14px;
-  font-weight: bold;
-  color: ${({ theme }) => theme.dark_purple};
 
-  & svg {
-    cursor: pointer;
-    margin-left: 5px;
-  }
+const ButtonContainer = styled.div`
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
 `;

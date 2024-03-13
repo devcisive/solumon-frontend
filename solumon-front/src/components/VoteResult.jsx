@@ -14,6 +14,7 @@ function VoteResult({ choices, postData, endAt, createdAt, postId }) {
   const [selectedChoice, setSelectedChoice] = useState(null);
   let isClosed;
   console.log(postId);
+
   const checkSelectedChoice = async () => {
     try {
       const selectedChoiceQuery = query(
@@ -42,6 +43,7 @@ function VoteResult({ choices, postData, endAt, createdAt, postId }) {
       isClosed = true;
     }
   };
+
   useEffect(() => {
     checkSelectedChoice();
   }, []);
@@ -104,6 +106,7 @@ function VoteResult({ choices, postData, endAt, createdAt, postId }) {
     </ThemeProvider>
   );
 }
+
 VoteResult.propTypes = {
   choices: PropTypes.array.isRequired,
   postData: PropTypes.object.isRequired,
@@ -116,16 +119,20 @@ VoteResult.propTypes = {
 };
 
 export default VoteResult;
+
 const TitleContainer = styled.div`
   display: flex;
   align-items: center;
 `;
+
 const VoteResultContainer = styled.div`
   border: 1px solid ${({ theme }) => theme.medium_purple};
   border-radius: 5px;
   width: 40%;
   background-color: ${(props) => (props.isClosed ? '#ccc' : 'transparent')};
+  margin: 20px 0;
 `;
+
 const ClosedBadge = styled.div`
   background-color: ${({ theme }) => theme.medium_purple};
   color: #fff;
@@ -136,22 +143,25 @@ const ClosedBadge = styled.div`
   text-align: center;
   margin-left: 10px;
 `;
+
 const HorizontalLine = styled.hr`
   border: none;
   border-top: 1px solid ${({ theme }) => theme.medium_purple};
   margin: 0;
 `;
+
 const ResultBar = styled.div`
   background-color: ${({ theme }) => theme.light_purple};
   color: ${({ theme }) => theme.medium_purple};
   width: ${(props) => props.$choicePercent}%;
   border-radius: 5px 0 0 5px; // 왼쪽만 둥글게
   height: 100%;
-  padding: 25px;
+  padding: 20px;
   white-space: nowrap;
   font-weight: ${(props) => (props.$isSelected ? 'bold' : 'normal')};
   color: ${(props) => (props.$isSelected ? 'black' : '')};
 `;
+
 const VoteHeader = styled.div`
   display: flex;
   justify-content: space-between;
@@ -164,25 +174,28 @@ const VoteHeader = styled.div`
 
 const ResultTitle = styled.div`
   color: ${({ theme }) => theme.medium_purple};
-  font-size: 23px;
+  font-size: 20px;
 `;
+
 const ResultItem = styled.div`
   border: 1px solid ${({ theme }) => theme.medium_purple};
-  color: ${({ theme }) => theme.medium_purple};
+  color: ${({ theme }) => theme.dark_purple};
   margin: 15px 30px;
   align-items: center;
   border-radius: 5px;
-  font-size: 18px;
-  font-weight: 400;
+  font-size: 16px;
+  font-weight: 500;
   display: flex;
   justify-content: space-between;
   width: ${(props) => props.$choicePercent};
 `;
+
 const VoteContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   margin: 20px;
 `;
+
 const TimeSpan = styled.span`
   color: ${({ theme }) => theme.medium_purple};
   font-weight: bold;
@@ -190,6 +203,7 @@ const TimeSpan = styled.span`
   margin-right: 20px;
   font-family: 'Noto Sans KR';
 `;
+
 const ChoicePercent = styled.span`
   color: ${({ theme }) => theme.medium_purple};
   display: flex;

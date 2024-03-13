@@ -1,23 +1,20 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { auth } from '../firebase-config';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import Button from './Button';
 import { FaUserCircle } from 'react-icons/fa';
-import { Container } from '@mui/material';
 
 function NavigationBar() {
   const userInfo = JSON.parse(window.localStorage.getItem('userInfo')) || 0;
-  const USER_TOKEN = userInfo.accessToken;
-  const nickname = userInfo.nickname || null;
+  const nickname = userInfo.nickname;
   const [userMenuActive, setUserMenuActive] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const navigate = useNavigate();
 
   const handleProfileIconClick = () => {
     setUserMenuActive(!userMenuActive);
-    // console.log(userMenuActive);
   };
 
   const handleLogout = () => {
@@ -26,26 +23,13 @@ function NavigationBar() {
 
   const handleLogoutConfirmButton = async () => {
     try {
-      const response = await axios.get(
-        'http://solumon.site:8080/user/log-out',
-        {
-          headers: {
-            'X-AUTH-TOKEN': USER_TOKEN,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        },
-      );
-      if (response.status === 200) {
-        const json = response.data;
-        console.log(json);
-        setOpenModal(false);
-        window.localStorage.removeItem('userInfo');
-        setUserMenuActive(false);
-        navigate('/login');
-      } else {
-        console.error('로딩 실패');
-      }
+      await auth.signOut();
+
+      console.log('로그아웃 성공');
+      setOpenModal(false);
+      window.localStorage.removeItem('userInfo');
+      setUserMenuActive(false);
+      navigate('/login');
     } catch (error) {
       console.log(`Something Wrong: ${error.message}`);
     }
@@ -55,15 +39,11 @@ function NavigationBar() {
     setOpenModal(false);
   };
 
-  // useEffect(() => {
-  //   console.log(userMenuActive);
-  // }, [userMenuActive]);
-
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
         <Logo to={userInfo.accessToken ? '/post-list' : '/login'}>
-          <img src="/image/4.png"></img>
+          <img src="/image/logo.png"></img>
         </Logo>
         {userInfo ? (
           <User>
@@ -127,6 +107,7 @@ const Wrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
+  z-index: 10;
   background-color: ${({ theme }) => theme.medium_purple};
 `;
 

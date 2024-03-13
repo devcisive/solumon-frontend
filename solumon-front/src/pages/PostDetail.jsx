@@ -304,10 +304,6 @@ const PostDetail = () => {
 
 export default PostDetail;
 
-const ContentBox = styled.div`
-  margin-left: 40px;
-`;
-
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -315,57 +311,64 @@ const Container = styled.div`
   align-items: center;
 `;
 
-const ImgBox = styled.img`
-  width: 550px;
-  height: 500px;
-  margin-bottom: 20px;
-  margin-left: 25px;
+const ContentDiv = styled.div`
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  width: 60%;
+  color: ${({ theme }) => theme.dark_purple};
 `;
 
-const ContentDiv = styled.div`
-  margin: 30px;
-  width: 60%;
+const ImgBox = styled.img`
+  width: 450px;
+  height: 400px;
+  margin: 20px 0;
+`;
+
+const ContentBox = styled.div`
+  margin: 15px 0 0 40px;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 500;
+  line-height: 26px;
 `;
 
 const TagContainer = styled.div`
   display: flex;
-  margin: auto;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0 0 0;
+  gap: 10px;
   width: 58%;
 `;
 
 const TagBox = styled.div`
-  color: ${({ theme }) => theme.medium_purple};
-  font-size: 20px;
-  margin: 2px;
-  margin-top: 30px;
-  margin-left: 5px;
-  border: 1px solid #ccc;
-  padding: 5px;
+  padding: 5px 8px;
+
   background-color: ${({ theme }) => theme.light_purple};
   color: ${({ theme }) => theme.dark_purple};
   font-weight: 500;
+  font-size: 16px;
   border-radius: 5px;
 `;
 
 const CountContainer = styled.div`
   display: flex;
-  margin: auto;
+  justify-content: center;
+  gap: 15px;
   width: 58%;
-  margin-top: 15px;
-  margin-bottom: 10px;
+  margin: 30px 0 10px 0;
 `;
 
 const VoteCount = styled.div`
   display: flex;
+  gap: 5px;
   font-size: 15px;
-  margin-right: 10px;
   color: ${({ theme }) => theme.medium_purple};
 `;
 
 const ChatCount = styled.div`
   display: flex;
+  gap: 5px;
   color: ${({ theme }) => theme.medium_purple};
   font-size: 15px;
 `;
