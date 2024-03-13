@@ -1,26 +1,59 @@
 import { useState } from 'react';
-import axios from 'axios';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
-
 import Button from '../components/Button';
+import { useNavigate } from 'react-router-dom';
+import { auth, db } from '../firebase-config';
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  signInWithEmailAndPassword,
+} from 'firebase/auth';
+
+import {
+  getDocs,
+  collection,
+  query,
+  where,
+  deleteDoc,
+} from 'firebase/firestore';
 
 function WithDraw() {
-  const [password, setPassword] = useState();
+  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [openModal, setOpenModal] = useState(false);
-  const userPassword = 123456;
+  const userInfo = JSON.parse(window.localStorage.getItem('userInfo')) || 0;
+  const nickName = userInfo.nickname || null;
+  const navigate = useNavigate();
 
   const handleWithDrawConfirmButton = async () => {
+    const user = auth.currentUser;
+    const authInfo = EmailAuthProvider.credential(email, password);
+
     try {
-      const response = await axios.delete(
-        'https://jsonplaceholder.typicode.com/user/withdraw',
-        {
-          password: password,
-        },
+      //회원탈퇴시 사용자가 입력한 이메일과 비밀번호로 사용자 다시확인
+      await reauthenticateWithCredential(user, authInfo);
+
+      //파이어스토어 저장했던 정보 삭제코드
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', result.user.uid),
       );
+      //getDocs를 사용하여 원하는 데이터 반환
+      const userQueryData = await getDocs(userQuery);
+      if (!userQueryData.empty) {
+        const userDocRef = userQueryData.docs[0].ref;
+        //파이어스토어 문서 정보 삭제
+        await deleteDoc(userDocRef);
+      }
+      // 파이어베이스에서 사용자 정보삭제
+      await user.delete();
       setOpenModal(false);
+      alert(`${nickName}님의 탈퇴가 완료되었습니다.`);
+      navigate('/login');
     } catch (error) {
-      console.error(error);
+      console.error(`오류발생: ${error.message}`);
     }
   };
 
@@ -30,9 +63,12 @@ function WithDraw() {
 
   const handleWithDrawButton = (e) => {
     e.preventDefault();
-    userPassword === password
-      ? setOpenModal(true)
-      : alert('비밀번호가 일치하지 않습니다.');
+    if (!password || !email) {
+      // 이메일과 비밀번호가 입력되지 않은 경우
+      alert('이메일과 비밀번호를 입력해주세요.');
+      return;
+    }
+    setOpenModal(true);
   };
 
   return (
@@ -66,6 +102,12 @@ function WithDraw() {
           <InfoText>본인 확인을 위한 비밀번호를 입력해주세요.</InfoText>
           <WithDrawForm name="user-withdraw" method="post">
             <StyledInput
+              type="email"
+              placeholder="이메일"
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            ></StyledInput>
+            <StyledInput
               type="password"
               placeholder="비밀번호"
               onChange={(e) => setPassword(e.target.value)}
@@ -86,7 +128,6 @@ function WithDraw() {
     </ThemeProvider>
   );
 }
-
 export default WithDraw;
 
 const Wrapper = styled.div`
@@ -134,6 +175,10 @@ const StyledInput = styled.input`
   padding: 10px;
   border: none;
   outline: none;
+
+  &::placeholder {
+    color: #3c3c3c;
+  }
 `;
 
 const ModalWrapper = styled.div`

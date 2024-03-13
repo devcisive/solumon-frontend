@@ -1,16 +1,25 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SectionsContainer, Section } from 'react-fullpage';
 import styled, { ThemeProvider, keyframes } from 'styled-components';
 import theme from '../style/theme';
+
 import { BiSolidChevronDownCircle } from 'react-icons/bi';
 
-import { useNavigate } from 'react-router-dom';
-
 const Start = () => {
+  const userInfo = JSON.parse(window.localStorage.getItem('userInfo')) || [];
+  const USER_TOKEN = userInfo.accessToken;
+
   const navigate = useNavigate();
 
   const handleLogin = () => {
     navigate('/user/sign-in/general');
   };
+
+  useEffect(() => {
+    USER_TOKEN && navigate('/post-list');
+  }, []);
+
   let options = {
     anchors: [
       'sectionOne',

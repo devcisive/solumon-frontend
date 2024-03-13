@@ -1,100 +1,45 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { auth } from '../../firebase-config';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../../style/theme';
 import Button from '../../components/Button';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '../../firebase-config';
 
 function SignUpGeneral() {
   const [userData, setUserData] = useState(null);
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
-  const [sendEmailAuthMsg, setSendEmailAuthMsg] = useState(false);
-  const [emailAuthNumber, setEmailAuthNumber] = useState(0);
-  const [canUseEmail, setCanUseEmail] = useState('');
   const [password, setPassword] = useState('');
   const [checkPassword, setCheckPassword] = useState('');
-  const [canSignUp, setCanSignUp] = useState([
-    {
-      emailAuth_button_click: false,
-      emailAuth_confirm_button_click: false,
-    },
-  ]);
-  const [id, setId] = useState(3);
 
-  const fetchData = async () => {
-    try {
-      const response = await axios.get(
-        'https://jsonplaceholder.typicode.com/users',
-      );
-      setUserData(response.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const navigate = useNavigate();
 
-  const handleEmailAuthButton = async (e) => {
+  // 파이어베이스를 사용한 회원가입
+  const handleSignUp = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        'http://solumon.site:8080/user/send-emailAuth',
-        {
-          email: email,
-        },
+      const result = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
       );
-      setSendEmailAuthMsg(true);
-      setCanSignUp({
-        ...canSignUp,
-        emailAuth_button_click: true,
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleEmailAuthConfirmButton = (e) => {
-    e.preventDefault();
-    Number(emailAuthNumber) === 231011
-      ? setCanUseEmail('사용 가능한 이메일 입니다.')
-      : setCanUseEmail('인증번호가 일치하지 않습니다.');
-
-    setCanSignUp({
-      ...canSignUp,
-      emailAuth_confirm_button_click: true,
-    });
-  };
-
-  const handleSignUpButton = async (e) => {
-    e.preventDefault();
-    if (
-      canSignUp.emailAuth_button_click &&
-      canSignUp.emailAuth_confirm_button_click
-    ) {
-      try {
-        const response = await axios.post(
-          'https://jsonplaceholder.typicode.com/users',
-          {
-            member_id: id,
-            nickname: nickname,
-            email: email,
-            password: password,
-          },
-        );
-
-        fetchData();
-
-        // ID 증가
-        setId(id + 1);
-      } catch (error) {
-        console.error(error);
+      if (result) {
+        await updateProfile(result.user, { displayName: nickname });
+        //사용자 uid와 닉네임 'users'라는 컬렉션에 파이어스토어에 저장
+        await addDoc(collection(db, 'users'), {
+          uid: result.user.uid,
+          nickName: nickname,
+        });
+        alert('회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.');
+        navigate('/login');
       }
-    } else {
-      alert('이메일 인증 후에 회원가입이 가능합니다.');
+    } catch (err) {
+      console.log(err);
     }
   };
-
-  // useEffect(() => {
-  //   fetchData();
-  // }, []);
 
   return (
     <ThemeProvider theme={theme}>
@@ -108,59 +53,43 @@ function SignUpGeneral() {
             onChange={(e) => setNickname(e.target.value)}
             required
           ></StyledInput>
-          <EmailAuthWrapper>
-            <EmailAuthInput
-              type="email"
-              placeholder="이메일 주소"
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            ></EmailAuthInput>
-            <Button
-              type="submit"
-              name={'인증'}
-              onClick={handleEmailAuthButton}
-              fontSize={'14px'}
-              padding={'8px 17px'}
-            />
-          </EmailAuthWrapper>
-          {sendEmailAuthMsg && (
-            <CheckMessage>이메일로 인증번호가 전송되었습니다.</CheckMessage>
-          )}
-          <EmailAuthWrapper>
-            <EmailAuthInput
-              type="number"
-              placeholder="인증번호"
-              onChange={(e) => setEmailAuthNumber(e.target.value)}
-              required
-            ></EmailAuthInput>
-            <Button
-              type="submit"
-              name={'확인'}
-              onClick={handleEmailAuthConfirmButton}
-              fontSize={'14px'}
-              padding={'8px 17px'}
-            />
-          </EmailAuthWrapper>
-          {canUseEmail && <CheckMessage>{canUseEmail}</CheckMessage>}
+
+          <EmailAuthInput
+            type="email"
+            placeholder="이메일 주소"
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          ></EmailAuthInput>
+
           <StyledInput
             type="password"
-            placeholder="비밀번호"
+            minlength="8"
+            placeholder="비밀번호 (8~20자)"
             onChange={(e) => setPassword(e.target.value)}
             required
           ></StyledInput>
+          <InfoText>
+            📢 비밀번호 입력 시 영문 대문자 또는 소문자, 숫자,
+            <br />
+            &nbsp;&nbsp;&nbsp;&nbsp; 특수문자 3가지를 모두 사용해야 합니다.
+            <br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(특수문자는 @ # $ % ^ & + = ! 만 사용
+            가능)
+          </InfoText>
           <StyledInput
             style={{ marginBottom: '10px' }}
             type="password"
+            minlength="8"
             placeholder="비밀번호 확인"
             onChange={(e) => setCheckPassword(e.target.value)}
             required
           ></StyledInput>
 
-          {userData === nickname ? (
+          {/* {userData === nickname ? (
             <CheckMessage>이미 사용중인 닉네임입니다.</CheckMessage>
           ) : (
             ''
-          )}
+          )} */}
           {email.includes('@')
             ? ''
             : email.length >= 1 && (
@@ -173,10 +102,10 @@ function SignUpGeneral() {
           )}
 
           <Button
-            type="submit"
+            type="button"
             value="sign-up-general"
             name={'회원가입'}
-            onClick={handleSignUpButton}
+            onClick={handleSignUp}
             fontSize={'16px'}
             padding={'10px 13px'}
           />
@@ -200,14 +129,14 @@ const Wrapper = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-top: 80px;
+  margin-top: 40px;
 `;
 
 const PageTitle = styled.h1`
   font-size: 24px;
-  font-weight: 500;
+  font-weight: 600;
   color: ${({ theme }) => theme.dark_purple};
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 `;
 
 const Line = styled.hr`
@@ -224,25 +153,39 @@ const SignInForm = styled.form`
 `;
 
 const StyledInput = styled.input`
-  width: 300px;
+  width: 330px;
   color: ${({ theme }) => theme.dark_purple};
   background-color: ${({ theme }) => theme.light_purple};
   padding: 10px;
   border: none;
   outline: none;
-`;
 
-const EmailAuthWrapper = styled.div`
-  display: flex;
+  &::placeholder {
+    color: #3c3c3c;
+  }
 `;
 
 const EmailAuthInput = styled.input`
-  width: 250px;
+  width: 330px;
   color: ${({ theme }) => theme.dark_purple};
   background-color: ${({ theme }) => theme.light_purple};
-  padding: 7px 0 7px 7px;
+  padding: 10px;
   border: none;
   outline: none;
+
+  &::placeholder {
+    color: #3c3c3c;
+  }
+`;
+
+const InfoText = styled.p`
+  color: ${({ theme }) => theme.dark_purple};
+  background-color: ${({ theme }) => theme.linen};
+  font-size: 13px;
+  line-height: 1.2rem;
+  margin: 10px 0;
+  padding: 12px 15px;
+  border-radius: 10px;
 `;
 
 const CheckMessage = styled.p`

@@ -1,7 +1,15 @@
-import { useRecoilValue } from 'recoil';
-import { UserInterestTopic } from '../recoil/AllAtom';
+import { useRecoilValue, useRecoilState } from 'recoil';
+import { GeneralUserInfo } from '../recoil/AllAtom';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { auth, db } from '../firebase-config';
+import {
+  updateDoc,
+  doc,
+  getDocs,
+  collection,
+  query,
+  where,
+} from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
@@ -9,39 +17,38 @@ import InterestTopic from '../components/InterestTopic';
 import Button from '../components/Button';
 
 function ChoiceInterest() {
-  const userInterestTopic = useRecoilValue(UserInterestTopic);
+  const [generalUserInfo, setGeneralUserInfo] = useRecoilState(GeneralUserInfo);
   const navigate = useNavigate();
 
-  // // 테스트를 위한 임시
-  // const fetchUserInterestData = async () => {
-  //   try {
-  //     const response = await axios.get(
-  //       'https://jsonplaceholder.typicode.com/user/interests',
-  //     );
-  //     console.log(response.body);
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
-
   const handleClickSaveButton = async () => {
+    console.log(generalUserInfo.interests);
     try {
-      const response = await axios.post(
-        'https://jsonplaceholder.typicode.com/user/interests',
-        {
-          member_id: userInterestTopic.member_id,
-          interests: userInterestTopic.interests,
-        },
+      const user = auth.currentUser;
+
+      //파이어베이스 스토어에서 'users'컬렉션을 쿼리설정한 다음 uid 필드가 result.user.uid와(현재 유저의 uid와) 같은 문서 찾기
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', user.uid),
       );
-      // fetchUserInterestData();
-      // navigate('/posts/post-list');
+
+      const querySnapshot = await getDocs(userQuery);
+      const userDoc = querySnapshot.docs[0];
+
+      if (userDoc) {
+        // users collection중 현재 로그인한 유저의 userDoc.id값과 일치한 문서를 찾아 업데이트함
+        await updateDoc(doc(db, 'users', userDoc.id), {
+          interests: generalUserInfo.interests,
+        });
+
+        navigate('/post-list');
+      }
     } catch (error) {
       console.error(error);
     }
   };
 
   const handleClickBackButton = () => {
-    navigate('/');
+    navigate('/post-list');
   };
 
   // 첫 로그인 시에만 이 페이지로 이동

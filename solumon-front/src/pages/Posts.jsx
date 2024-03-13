@@ -1,11 +1,23 @@
 import { useState } from 'react';
+import { useRecoilValue } from 'recoil';
+import { HashTagChoice } from '../recoil/AllAtom';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import { IoIosRemoveCircle } from 'react-icons/io';
 import { AiFillMinusCircle, AiFillPlusCircle } from 'react-icons/ai';
-import { BsPlusSquare } from 'react-icons/bs';
 import Button from '../components/Button';
+import HashTagList from '../components/HashTagList';
 import { useNavigate } from 'react-router-dom';
+import { db } from '../firebase-config';
+import { addDoc, collection } from 'firebase/firestore';
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from 'firebase/storage';
+
+const storage = getStorage();
 
 const Posts = () => {
   const navigate = useNavigate();
@@ -14,10 +26,14 @@ const Posts = () => {
   const [content, setContent] = useState('');
   const [endDate, setEndDate] = useState('');
   const [options, setOptions] = useState(['', '', '', '', '']);
-  const [hashtags, setHashtags] = useState([]);
-  const [currentHashtag, setCurrentHashtag] = useState('');
+  const hashTagChoice = useRecoilValue(HashTagChoice);
+  const [toggle, setToggle] = useState(true);
   const [representative, setRepresentative] = useState(null);
   const [filePreviews, setFilePreviews] = useState([]);
+  const [files, setFiles] = useState([]);
+  const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
+  const currentUserUid = storedUserInfo.memberId;
+  const nickName = storedUserInfo.nickname;
 
   const handleFileChange = (event) => {
     //사진 업로드
@@ -26,6 +42,7 @@ const Posts = () => {
     const fileObjects = Array.from(files).map((file) =>
       URL.createObjectURL(file),
     );
+    console.log(files);
 
     setSelectedFile((prevSelectedFile) => [
       ...(prevSelectedFile || []),
@@ -35,10 +52,15 @@ const Posts = () => {
       ...(prevFilePreviews || []),
       ...fileObjects,
     ]);
+    setFiles((prevFiles) => [...(prevFiles || []), ...files]);
+
     if (representative === null && fileObjects.length > 0) {
       //대표이미지를 선택하지 않았을때, 임의로 첫번째로 대표이미지 설정
       setRepresentative(0);
     }
+    console.log(files);
+    console.log(selectedFile);
+    console.log(filePreviews);
   };
 
   // 사진 삭제
@@ -46,14 +68,43 @@ const Posts = () => {
     setSelectedFile((prevSelectedFile) => {
       const updatedFiles = [...prevSelectedFile];
       updatedFiles.splice(index, 1);
-      if (index === representative) {
-        setRepresentative(null);
-      } else if (index < representative) {
-        // 제거된 이미지가 대표 이미지 앞에 있었을 경우,대표 이미지 인덱스를 감소
-        setRepresentative(representative - 1);
-      }
       return updatedFiles;
     });
+
+    setFilePreviews((prevFilePreviews) => {
+      const updatedPreviews = [...prevFilePreviews];
+      updatedPreviews.splice(index, 1);
+      return updatedPreviews;
+    });
+
+    if (index === representative) {
+      setRepresentative(null);
+    } else if (index < representative) {
+      // 제거된 이미지가 대표 이미지 앞에 있었을 경우, 대표 이미지 인덱스를 감소
+      setRepresentative(representative - 1);
+    }
+  };
+
+  //사진이미지 스토리지에 업로드
+  const uploadImages = async () => {
+    const imageUrls = [];
+
+    for (const [index, file] of files.entries()) {
+      const storageRef = ref(storage, `images/${file.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+      //url 변형하기
+      await uploadTask.then(async (snapshot) => {
+        const imageUrl = await getDownloadURL(snapshot.ref);
+        imageUrls.push({
+          image: imageUrl,
+          name: file.name,
+          index: index + 1,
+          representative: index === representative,
+        });
+      });
+    }
+
+    return imageUrls;
   };
 
   //투표항목입력할때 발생하는 onchange
@@ -62,6 +113,7 @@ const Posts = () => {
     newOptions[index] = value;
     setOptions(newOptions);
   };
+
   //사진 클릭해서 대표이미지 설정하기
   const handleImageClick = (index) => {
     setRepresentative((prevRepresentative) => {
@@ -72,13 +124,17 @@ const Posts = () => {
       return index;
     });
   };
+
   //투표마감일 입력 onChange
-  const handleTimeInputChange = (e, setTimeFunction) => {
+  const handleTimeInputChange = (e, setEndDate) => {
     const inputTime = e.target.value;
-    const parsedTime = new Date(inputTime); //분,초은 날리고 시간까지 전달해줘야함(자스에서사용위해)
+    const clientTime = new Date(inputTime + 'Z');
+    const parsedTime = new Date(
+      clientTime.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }),
+    );
     parsedTime.setMinutes(0);
     parsedTime.setSeconds(0);
-    setTimeFunction(parsedTime.toISOString().slice(0, 16));
+    setEndDate(parsedTime.toISOString().slice(0, 19));
   };
 
   //투표항목 제거하기(최소2개항목 유지)
@@ -98,50 +154,38 @@ const Posts = () => {
     }
   };
 
-  //태그입력 onchange
-  const handleHashtagChange = (e) => {
-    setCurrentHashtag(e.target.value);
-  };
-  //태그 추가(등록) 함수
-  const addHashtag = () => {
-    if (
-      currentHashtag.trim() !== '' && //문자열 앞뒤 공백없앰
-      !hashtags.includes(currentHashtag.trim()) //기존해쉬태그와 중복확인
-    ) {
-      setHashtags([...hashtags, currentHashtag.trim()]);
-      setCurrentHashtag('');
+  // 해시태그 토글 버튼
+  const handleToggleTag = (value) => {
+    if (value === '태그 미사용') {
+      setToggle(true);
+    } else {
+      setToggle(false);
     }
+    console.log(value);
   };
-  //태그 제거 함수
-  const removeHashtag = (index) => {
-    const newHashtags = [...hashtags];
-    newHashtags.splice(index, 1);
-    setHashtags(newHashtags);
-  };
+
   // 게시글 데이터 생성
-  const RegisterSubmit = () => {
+  const RegisterSubmit = async (e) => {
+    e.preventDefault();
+    const images = await uploadImages();
+
     //유효성(validation)
     if (!title || !content) {
       alert('제목과 내용을 작성해주세요.');
       return;
     }
-    // if (selectedFile.length === 0) {
-    //   const defaultImageUrl = '/image/기본썸네일.jpg'; // 실제 기본 이미지 파일 경로로 수정
-    //   setSelectedFile((prevSelectedFile) => {
-    //     return [...prevSelectedFile, defaultImageUrl];
-    //   });
-    //   setRepresentative(1); // 기본 이미지의 index를 0으로 설정
-    // }
+
     if (options.length < 2) {
       alert('최소 2개의 투표 항목을 입력해주세요.');
       return;
     }
+
     const hasEmptyOption = options.some((option) => option.trim() === '');
     if (hasEmptyOption) {
       alert('투표 항목을 모두 입력해주세요.');
       return;
     }
-    const currentTime = new Date().toISOString().slice(0, 16); // 현재 날짜와 시간
+    const currentTime = new Date().toISOString().slice(0, 17); // 현재 날짜와 시간
     if (endDate <= currentTime) {
       alert('유효한 투표 종료일을 선택해주세요.');
       return;
@@ -151,8 +195,6 @@ const Posts = () => {
     setContent('');
     setEndDate('');
     setOptions(['', '', '', '', '']);
-    setHashtags([]);
-    setCurrentHashtag('');
     setRepresentative(null);
     setSelectedFile([]);
     setFilePreviews([]);
@@ -160,71 +202,50 @@ const Posts = () => {
     const postData = {
       title,
       contents: content,
-      tags: hashtags.map((tag) => ({ tag })),
-      images: selectedFile.map((image, index) => ({
-        image,
-        index: index + 1,
-        representative: index === representative,
-      })),
+      tags: hashTagChoice,
+      images,
+      uid: currentUserUid,
+      created_at: new Date().toISOString(),
+      nickname: nickName,
+      total_comment_count: 0,
+      total_vote_count: 0,
+      join: [],
     };
+
     // 투표 데이터 생성
-    const voteData = {
+    const vote = {
       choices: options.map((choice, index) => ({
-        choice_num: index + 1,
+        choice_num: index,
         choice_text: choice,
       })),
       end_at: endDate,
     };
+
     // 전체 데이터 구성
     const requestData = {
       ...postData,
-      vote: voteData,
+      vote,
     };
     console.log('등록 데이터:', requestData);
 
-    //   msw POST 요청 코드 //
-    const Url = 'https://jsonplaceholder.typicode.com/posts';
-    fetch(Url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestData), // 데이터를 JSON 형태로 변환
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('네트워크 오류');
-        }
-        return response.json(); // JSON 형태의 응답 데이터를 파싱
-      })
-      .then((data) => {
-        console.log('응답 데이터:', data);
-        const postId = data.post_id;
-        navigate(`/posts/${postId}`);
-      })
-      .catch((error) => {
-        console.error('요청 오류:', error);
-      });
+    try {
+      const postsCollection = collection(db, 'posts-write');
+      const newPostRef = await addDoc(postsCollection, requestData);
+      const postId = newPostRef.id;
+      console.log(`파이어스토어 저장완료`, postId);
+      navigate(`/postsDetail/${postId}`);
+    } catch (error) {
+      console.log(`파이어스토어 저장완료`, error.message);
+    }
   };
 
   return (
     <ThemeProvider theme={theme}>
-      <MainContainer>
-        {/* 전체게시글작성폼*/}
+      {/* 전체게시글작성폼*/}
+      <MainContainer onSubmit={RegisterSubmit} encType="multipart/form-data">
         <HeadContainer>
           {/* 제목과 등록버튼 */}
           <TitleSpan>게시글 작성</TitleSpan>
-          <Button
-            name="등록"
-            type="button"
-            onClick={RegisterSubmit}
-            bgColor={theme.medium_purple}
-            color={theme.linen}
-            fontSize="12px"
-            fontWeight={500}
-            padding="10px 40px"
-            borderRadius="5px"
-          />
         </HeadContainer>
 
         {/* 게시글 작성 폼 */}
@@ -247,10 +268,10 @@ const Posts = () => {
         {/* 선택한 이미지 미리보기 */}
         {selectedFile && selectedFile.length > 0 && (
           <ImagesContainer>
-            {selectedFile.map((file, index) => (
+            {filePreviews.map((file, index) => (
               <ImageContainer key={index}>
                 <StyledFileImg
-                  src={filePreviews[index]}
+                  src={file}
                   alt={`미리보기 ${index + 1}`}
                   onClick={() => handleImageClick(index)}
                 />
@@ -277,18 +298,6 @@ const Posts = () => {
             value={selectedFile.length > 0 ? selectedFile.join(', ') : ''}
             readOnly
           ></FileNameInput>
-          {/* 업로드 버튼 */}
-          {/* <Button
-            name="업로드"
-            type="button"
-            onClick={RegisterSubmit}
-            bgColor={theme.medium_purple}
-            color={theme.linen}
-            fontSize="12px"
-            fontWeight={500}
-            padding="10px 40px"
-            borderRadius="5px"
-          /> */}
         </FileContainer>
 
         {/* 투표 작성 부분 */}
@@ -329,57 +338,74 @@ const Posts = () => {
         </Container>
 
         {/* 해시태그 입력 */}
-        <HashContainer>
-          <HashtagInputContainer>
-            <HashtagInput
-              type="text"
-              placeholder="#태그 입력 (최대 5개 입력 가능)"
-              value={currentHashtag}
-              onChange={handleHashtagChange}
-            />
-            <StyledBsPlusSquare onClick={addHashtag} />
-          </HashtagInputContainer>
-        </HashContainer>
+        <ToggleContainer>
+          <ToggleWrapper>
+            <ToggleSpan
+              isSelected={toggle}
+              onClick={() => handleToggleTag('태그 미사용')}
+            >
+              태그 미사용
+            </ToggleSpan>
+            <ToggleSpan
+              isSelected={!toggle}
+              onClick={() => handleToggleTag('태그 사용')}
+            >
+              태그 사용
+            </ToggleSpan>
+          </ToggleWrapper>
+        </ToggleContainer>
 
         {/* 선택한 해시태그 목록 */}
-        <HashtagContainer>
-          {hashtags.map((hashtag, index) => (
-            <Hashtag key={index}>
-              #{hashtag}
-              <AiFillMinusCircle onClick={() => removeHashtag(index)} />
-            </Hashtag>
-          ))}
-        </HashtagContainer>
+        {toggle ? (
+          <></>
+        ) : (
+          <HashtagContainer>
+            <HashTagList />
+          </HashtagContainer>
+        )}
+        <ButtonContainer>
+          <Button
+            name="게시글 등록"
+            type="submit"
+            onClick={RegisterSubmit}
+            bgColor={theme.medium_purple}
+            fontSize="16px"
+            fontWeight={500}
+            padding="12px 70px"
+            borderRadius="5px"
+          />
+        </ButtonContainer>
       </MainContainer>
     </ThemeProvider>
   );
 };
 
 export default Posts;
-const MainContainer = styled.div`
+
+const MainContainer = styled.form`
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-top: 50px;
-  margin-bottom: 50px;
+  margin: 50px auto;
 `;
+
 const TitleSpan = styled.span`
   font-size: 30px;
   font-weight: bold;
   color: ${({ theme }) => theme.dark_purple};
   margin-bottom: 10px;
   display: inline;
-  margin-right: 325px;
-  padding-bottom: 0px;
 `;
+
 const HeadContainer = styled.div`
   display: flex;
   flex-direction: row;
-  width: 70%;
-  justify-content: space-evenly;
+  width: 49%;
+  justify-content: space-between;
   margin-bottom: 10px;
 `;
+
 const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -387,6 +413,7 @@ const ContentContainer = styled.div`
   align-items: center;
   width: 70%;
 `;
+
 const TitleInput = styled.input`
   width: 70%;
   height: 35px;
@@ -397,25 +424,31 @@ const TitleInput = styled.input`
     outline: none;
   }
   margin-bottom: 10px;
+  padding-left: 10px;
 `;
+
 const ContentTextArea = styled.textarea`
   width: 70%;
   height: 400px;
+  line-height: 18px;
   border: 1px solid ${({ theme }) => theme.medium_purple};
   border-radius: 5px;
   color: ${({ theme }) => theme.medium_purple};
   margin-bottom: 10px;
+  padding: 10px 0 0 10px;
   resize: none;
   &:focus {
     outline: none;
   }
 `;
+
 const FileContainer = styled.div`
-  width: 70%;
+  width: 72%;
   display: flex;
   justify-content: center;
   align-items: center;
 `;
+
 const FileLabel = styled.label`
   padding: 11px 30px;
   background-color: ${({ theme }) => theme.medium_purple};
@@ -426,15 +459,18 @@ const FileLabel = styled.label`
   text-align: center;
   display: inline;
 `;
+
 const FileInput = styled.input`
   margin-top: 10px;
   display: none;
 `;
+
 const ImagesContainer = styled.div`
   display: flex;
   margin-bottom: 10px;
   width: 50%;
 `;
+
 const Badge = styled.div`
   position: absolute;
   top: 0;
@@ -446,17 +482,20 @@ const Badge = styled.div`
   font-weight: bold;
   font-size: 10px;
 `;
+
 const ImageContainer = styled.div`
   position: relative;
   margin-right: 5px;
 `;
+
 const StyledFileImg = styled.img`
   position: relative;
-  width: 50px;
+  width: 80px;
   border: 1px solid ${({ theme }) => theme.medium_purple};
-  margin-right: 5px;
+  margin-left: 5px;
   border-radius: 5px;
 `;
+
 const RemoveCircleIcon = styled(IoIosRemoveCircle)`
   position: absolute;
   right: 0;
@@ -467,6 +506,7 @@ const RemoveCircleIcon = styled(IoIosRemoveCircle)`
   height: 15px;
   border-radius: 50%;
 `;
+
 const FileNameInput = styled.input`
   display: inline;
   width: 57%;
@@ -476,6 +516,7 @@ const FileNameInput = styled.input`
   border: 1px solid ${({ theme }) => theme.medium_purple};
   margin: 5px;
 `;
+
 const Container = styled.div`
   border: 1px solid ${({ theme }) => theme.medium_purple};
   width: 49%;
@@ -487,6 +528,7 @@ const Container = styled.div`
   align-items: center; /* 세로 가운데 정렬 */
   justify-content: center;
 `;
+
 const StyledContainer = styled.div`
   display: flex;
   margin-left: 60px;
@@ -502,22 +544,26 @@ const StyledContainer2 = styled.div`
   margin: 20px;
   margin-bottom: 30px;
 `;
+
 const StyledAiFillMinusCircle = styled(AiFillMinusCircle)`
   font-size: 24px;
   color: ${({ theme }) => theme.dark_purple};
   margin-right: 5px;
 `;
+
 const StyledAiFillPlusCircle = styled(AiFillPlusCircle)`
   font-size: 24px;
   color: ${({ theme }) => theme.dark_purple};
   margin-right: 5px;
 `;
+
 const OptionContainer = styled.div`
   display: flex;
   margin: 5px;
   align-items: center;
   flex: 1;
 `;
+
 const VoteLabel = styled.label`
   color: ${({ theme }) => theme.medium_purple};
   font-size: 12px;
@@ -527,54 +573,44 @@ const VoteEnd = styled.input`
   color: ${({ theme }) => theme.dark_purple};
   margin-left: 5px;
 `;
+
 const VoteChoice = styled.input`
   display: block;
   width: 100%;
   padding: 10px;
 `;
 
-const HashContainer = styled.div`
-  width: 70%;
-  border-radius: 5px;
-`;
-const HashtagInputContainer = styled.div`
+const ToggleContainer = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-const StyledBsPlusSquare = styled(BsPlusSquare)`
-  font-size: 24px;
-  margin-left: 5px;
+  width: 50%;
+  margin-top: 10px;
 `;
 
-const HashtagInput = styled.input`
-  width: 66%;
-  padding: 10px;
-  font-size: 13px;
-  border: 1px solid ${({ theme }) => theme.medium_purple};
-  border-radius: 5px;
+const ToggleWrapper = styled.div`
+  display: flex;
+
+  border: 1px solid ${({ theme }) => theme.light_purple};
+  border-radius: 15px;
 `;
+
+const ToggleSpan = styled.div`
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 15px;
+  background-color: ${({ isSelected, theme }) =>
+    isSelected ? theme.light_purple : 'transparent'};
+  transition: 0.3s;
+`;
+
 const HashtagContainer = styled.div`
   display: flex;
   flex-direction: row;
   width: 50%;
   align-items: center;
 `;
-const Hashtag = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin: 5px;
-  background-color: ${({ theme }) => theme.light_purple};
-  border: 1px solid ${({ theme }) => theme.medium_purple};
-  border-radius: 15px;
-  padding: 5px;
-  font-size: 14px;
-  font-weight: bold;
-  color: ${({ theme }) => theme.dark_purple};
 
-  & svg {
-    cursor: pointer;
-    margin-left: 5px;
-  }
+const ButtonContainer = styled.div`
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
 `;

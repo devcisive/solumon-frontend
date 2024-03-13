@@ -1,69 +1,137 @@
-import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import PropTypes from 'prop-types';
 
+import Badge from './Badge';
 import { BsChatDots } from 'react-icons/bs';
 import { VscGraph } from 'react-icons/vsc';
 
-function PostCard({ postData, postCount }) {
+function PostCard({ postData, postCount, currentPage }) {
+  const startIndex = (currentPage - 1) * postCount;
+  const endIndex = startIndex + postCount;
+
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
         <Container>
-          {postData && postCount
-            ? postData.slice(0, postCount).map((post) => (
-                <CardWrapper key={post.post_id}>
+          {postData && postCount && currentPage
+            ? postData.slice(startIndex, endIndex).map((post) => (
+                <CardWrapper
+                  key={post.postId}
+                  to={`/postsDetail/${post.postId}`}
+                >
                   <StyledThumbnail
                     src={
-                      post.image_url ||
-                      'https://via.placeholder.com/240x130.jpg'
+                      post.images && post.images.length > 0
+                        ? post.images[0].image
+                        : '/basic_thumbnail.jpg'
                     }
                   ></StyledThumbnail>
                   <PostPreview>
                     <Title>{post.title}</Title>
-                    <Content>{post.preview}</Content>
+                    <Content>{post.contents}</Content>
                     <PostInfo>
-                      <Date>{post.created_at}</Date>
-                      <ChatCount>
-                        <BsChatDots />
-                        {post.chat_count}명 참여
-                      </ChatCount>
-                      <VoteCount>
-                        <VscGraph />
-                        {post.vote_count}명 참여
-                      </VoteCount>
+                      <DateInfo>
+                        <Date>
+                          {post.created_at.slice(0, 10)}&nbsp;~&nbsp;
+                          {post.vote.end_at.slice(0, 10)}
+                        </Date>
+                        <Badge end_at={post.vote.end_at} />
+                      </DateInfo>
+                      <CountWrapper>
+                        <ChatCount>
+                          <BsChatDots />
+                          {post.total_comment_count}명 참여
+                        </ChatCount>
+                        <VoteCount>
+                          <VscGraph />
+                          {post.total_vote_count}명 참여
+                        </VoteCount>
+                      </CountWrapper>
                     </PostInfo>
                     <Line></Line>
-                    <Writer>by. {post.writer}</Writer>
+                    <Writer>by. {post.nickname}</Writer>
+                  </PostPreview>
+                </CardWrapper>
+              ))
+            : postData && postCount
+            ? postData.slice(0, postCount).map((post) => (
+                <CardWrapper
+                  key={post.postId}
+                  to={`/postsDetail/${post.postId}`}
+                >
+                  <StyledThumbnail
+                    src={
+                      post.images && post.images.length > 0
+                        ? post.images[0].image
+                        : '/basic_thumbnail.jpg'
+                    }
+                  ></StyledThumbnail>
+                  <PostPreview>
+                    <Title>{post.title}</Title>
+                    <Content>{post.contents}</Content>
+                    <PostInfo>
+                      <DateInfo>
+                        <Date>
+                          {post.created_at.slice(0, 10)}&nbsp;~&nbsp;
+                          {post.vote.end_at.slice(0, 10)}
+                        </Date>
+                        <Badge end_at={post.vote.end_at} />
+                      </DateInfo>
+                      <CountWrapper>
+                        <ChatCount>
+                          <BsChatDots />
+                          {post.total_comment_count}명 참여
+                        </ChatCount>
+                        <VoteCount>
+                          <VscGraph />
+                          {post.total_vote_count}명 참여
+                        </VoteCount>
+                      </CountWrapper>
+                    </PostInfo>
+                    <Line></Line>
+                    <Writer>by. {post.nickname}</Writer>
                   </PostPreview>
                 </CardWrapper>
               ))
             : postData &&
               postData.map((post) => (
-                <CardWrapper key={post.post_id}>
+                <CardWrapper
+                  key={post.postId}
+                  to={`/postsDetail/${post.postId}`}
+                >
                   <StyledThumbnail
                     src={
-                      post.image_url ||
-                      'https://via.placeholder.com/240x130.jpg'
+                      post.images && post.images.length > 0
+                        ? post.images[0].image
+                        : '/basic_thumbnail.jpg'
                     }
                   ></StyledThumbnail>
                   <PostPreview>
                     <Title>{post.title}</Title>
-                    <Content>{post.preview}</Content>
+                    <Content>{post.contents}</Content>
                     <PostInfo>
-                      <Date>{post.created_at}</Date>
-                      <ChatCount>
-                        <BsChatDots />
-                        {post.chat_count}명 참여
-                      </ChatCount>
-                      <VoteCount>
-                        <VscGraph />
-                        {post.vote_count}명 참여
-                      </VoteCount>
+                      <DateInfo>
+                        <Date>
+                          {post.created_at.slice(0, 10)}&nbsp;~&nbsp;
+                          {post.vote.end_at.slice(0, 10)}
+                        </Date>
+                        <Badge end_at={post.vote.end_at} />
+                      </DateInfo>
+                      <CountWrapper>
+                        <ChatCount>
+                          <BsChatDots />
+                          {post.total_comment_count}명 참여
+                        </ChatCount>
+                        <VoteCount>
+                          <VscGraph />
+                          {post.total_vote_count}명 참여
+                        </VoteCount>
+                      </CountWrapper>
                     </PostInfo>
                     <Line></Line>
-                    <Writer>by. {post.writer}</Writer>
+                    <Writer>by. {post.nickname}</Writer>
                   </PostPreview>
                 </CardWrapper>
               ))}
@@ -76,6 +144,7 @@ function PostCard({ postData, postCount }) {
 PostCard.propTypes = {
   postData: PropTypes.array.isRequired,
   postCount: PropTypes.number,
+  currentPage: PropTypes.number,
 };
 
 export default PostCard;
@@ -91,11 +160,12 @@ const Container = styled.div`
   gap: 20px;
 `;
 
-const CardWrapper = styled.div`
+const CardWrapper = styled(Link)`
   width: 240px;
-  height: 310px;
+  max-height: 345px;
   border-radius: 10px;
   background-color: ${({ theme }) => theme.linen};
+  text-decoration: none;
 `;
 
 const StyledThumbnail = styled.img`
@@ -109,7 +179,7 @@ const PostPreview = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: ${({ theme }) => theme.dark_purple};
   white-space: nowrap;
@@ -119,25 +189,38 @@ const Title = styled.h1`
 `;
 
 const Content = styled.p`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.dark_purple};
+  line-height: 17px;
   display: -webkit-box;
+  min-height: 45px;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow: hidden;
-  margin-bottom: 25px;
+  margin-bottom: 30px;
 `;
 
 const PostInfo = styled.div`
   display: flex;
-  font-size: 10px;
+  flex-direction: column;
+  font-size: 12px;
   color: ${({ theme }) => theme.medium_purple};
-  align-items: center;
-  gap: 15px;
+  gap: 10px;
   margin-bottom: 10px;
 `;
 
-const Date = styled.span``;
+const DateInfo = styled.div`
+  display: flex;
+`;
+
+const Date = styled.span`
+  margin-right: 10px;
+`;
+
+const CountWrapper = styled.div`
+  display: flex;
+  gap: 20px;
+`;
 
 const ChatCount = styled.span`
   display: flex;
@@ -159,5 +242,5 @@ const Writer = styled.p`
   font-size: 13px;
   font-weight: 500;
   color: ${({ theme }) => theme.dark_purple};
-  padding: 5px 0;
+  padding: 2px 0;
 `;
