@@ -6,7 +6,7 @@ import { BsChatSquareDots } from 'react-icons/bs';
 import { PiChartBarHorizontalFill } from 'react-icons/pi';
 import VoteResult from '../components/VoteResult';
 import HeaderContent from '../components/HeaderContent';
-import Votes from '../components/votes';
+import Votes from '../components/Votes';
 import CommentForm from '../components/CommentForm';
 import { db, auth } from '../firebase-config';
 import {
