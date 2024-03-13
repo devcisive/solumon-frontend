@@ -2,7 +2,7 @@ import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import PropTypes from 'prop-types';
 import { useEffect, useState } from 'react';
-import { formatDate } from './utils';
+import { formatDate } from './Utils';
 import { db, auth } from '../firebase-config';
 import { collection, where, query, getDocs } from 'firebase/firestore';
 
