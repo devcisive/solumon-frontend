@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../firebase-config';
 import styled, { ThemeProvider } from 'styled-components';
@@ -42,9 +41,9 @@ function PostList() {
             <StyledHiOutlinePencilSquare /> 글쓰기
           </WriteButton>
         </WriteContainer>
-        <Link to={'/search'}>
+        <StyledLink to={'/search'}>
           <SearchIcon />
-        </Link>
+        </StyledLink>
 
         <PostSection>
           <SectionTitle>관심주제와 관련된 고민들</SectionTitle>
@@ -81,36 +80,6 @@ const Wrapper = styled.div`
   flex-direction: column;
 `;
 
-const SearchIcon = styled(CiSearch)`
-  width: 28px;
-  height: 28px;
-  color: ${({ theme }) => theme.dark_purple};
-  float: right;
-  margin-top: 20px;
-  margin-right: 115px;
-`;
-
-const PostSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin: 40px auto;
-`;
-
-const SectionTitle = styled.h1`
-  font-size: 26px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.dark_purple};
-  margin-bottom: 10px;
-`;
-
-const AllPostsLink = styled(Link)`
-  text-decoration: none;
-  color: ${({ theme }) => theme.medium_purple};
-  cursor: pointer;
-  margin-bottom: 15px;
-  align-self: flex-end;
-`;
-
 const WriteContainer = styled.div`
   display: flex;
   width: 1280px;
@@ -136,4 +105,39 @@ const WriteButton = styled.button`
 const StyledHiOutlinePencilSquare = styled(HiOutlinePencilSquare)`
   font-size: 30px;
   margin-right: 10px;
+`;
+
+const StyledLink = styled(Link)`
+  display: flex;
+  width: 1280px;
+  justify-content: flex-end;
+  margin: auto;
+  margin-top: 15px;
+`;
+
+const SearchIcon = styled(CiSearch)`
+  width: 28px;
+  height: 28px;
+  color: ${({ theme }) => theme.dark_purple};
+`;
+
+const PostSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin: 35px auto;
+`;
+
+const SectionTitle = styled.h1`
+  font-size: 26px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.dark_purple};
+  margin-bottom: 10px;
+`;
+
+const AllPostsLink = styled(Link)`
+  text-decoration: none;
+  color: ${({ theme }) => theme.medium_purple};
+  cursor: pointer;
+  margin-bottom: 15px;
+  align-self: flex-end;
 `;
