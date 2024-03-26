@@ -2,7 +2,7 @@ import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import PropTypes from 'prop-types';
 import { useNavigate, useParams } from 'react-router-dom';
-import { IoIosArrowBack } from 'react-icons/io';
+import { FaArrowLeft } from 'react-icons/fa6';
 import { db } from '../firebase-config';
 import { deleteDoc, doc } from 'firebase/firestore';
 
@@ -11,7 +11,7 @@ const HeaderContent = ({ isLoggedIn, postData }) => {
   const { postId } = useParams();
 
   const goBack = () => {
-    navigate('/post-list');
+    navigate(-1);
   };
 
   const handleEditClick = () => {
@@ -51,7 +51,7 @@ const HeaderContent = ({ isLoggedIn, postData }) => {
     <ThemeProvider theme={theme}>
       <StyledHeaderContainer>
         <StyledContainer1>
-          <StyledIoIosArrowBack onClick={goBack} />
+          <GoBackArrow title="뒤로가기" onClick={goBack} />
           <StyledH1>{postData.title}</StyledH1>
         </StyledContainer1>
         {isLoggedIn ? (
@@ -81,8 +81,9 @@ const StyledContainer1 = styled.div`
   width: 70%;
 `;
 
-const StyledIoIosArrowBack = styled(IoIosArrowBack)`
-  font-size: 30px;
+const GoBackArrow = styled(FaArrowLeft)`
+  color: ${({ theme }) => theme.medium_purple};
+  font-size: 26px;
   cursor: pointer;
   transform: translateX(-40px);
 `;

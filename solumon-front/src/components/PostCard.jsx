@@ -150,7 +150,7 @@ PostCard.propTypes = {
 export default PostCard;
 
 const Wrapper = styled.div`
-  width: 1280px;
+  width: 83.5vw;
 `;
 
 const Container = styled.div`
