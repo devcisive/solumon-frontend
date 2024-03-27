@@ -52,7 +52,7 @@
   - Styled-Component
     - props를 이용한 조건부 스타일링을 활용했습니다.
   - Recoil
-    - 빠른 학습과 적용을 useState와 사용 방식이 유사한 recoil을 사용했습니다.
+    - 빠른 학습과 적용을 위해 useState와 사용 방식이 유사한 recoil을 사용했습니다.
   - Axios
     - 응답 데이터를 JSON으로 자동 변환하고 에러 핸들링이 쉽기 때문에 Axios를 사용했습니다.
   - React Router v6
@@ -71,7 +71,7 @@
     ![전체 게시판 페이지](https://github.com/chaeeunj/WaW-project/assets/72565344/40bac27c-76b5-472e-aca1-215057fb4213)
 
   - 카테고리별 게시판
-    ![카테고리별 게시판 페이지](https://github.com/devcisive/solumon-frontend/assets/72565344/9bb6be91-c528-4bcd-986a-0f43fff09449)
+    ![image](https://github.com/devcisive/solumon-frontend/assets/72565344/7b9bc317-61f4-40a4-b0b0-1b0e24c72147)
 
   - 검색
     - 태그 검색
@@ -80,8 +80,15 @@
     - 제목 검색
       ![검색 페이지_제목](https://github.com/devcisive/solumon-frontend/assets/72565344/80b7efaf-ae0f-47ee-a8a6-580a4a5ed4eb)
 
+  - 검색 결과
+    ![image](https://github.com/devcisive/solumon-frontend/assets/72565344/56c39485-d3ae-4e8a-9a6c-5f3542f99f30)
+
   - 게시글 조회
-    ![게시글 조회](https://github.com/devcisive/solumon-frontend/assets/72565344/67ca8e3d-e535-455f-8d3d-8751113ff478)
+    - 투표 전
+      ![image](https://github.com/devcisive/solumon-frontend/assets/72565344/c857de31-222d-4f21-9a21-1aabd1093b67)
+ 
+    - 투표 후 
+      ![게시글 조회](https://github.com/devcisive/solumon-frontend/assets/72565344/67ca8e3d-e535-455f-8d3d-8751113ff478)
 
   - 게시글 작성
     ![127 0 0 1_5173_post-write](https://github.com/devcisive/solumon-frontend/assets/72565344/52a18264-a6e2-4103-a9f6-4e493f3806f5)
