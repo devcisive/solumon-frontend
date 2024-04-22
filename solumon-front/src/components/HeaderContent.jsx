@@ -50,25 +50,27 @@ const HeaderContent = ({ isLoggedIn, postData }) => {
   return (
     <ThemeProvider theme={theme}>
       <StyledHeaderContainer>
+        <GoBackArrow title="뒤로가기" onClick={goBack} />
         <StyledContainer1>
-          <GoBackArrow title="뒤로가기" onClick={goBack} />
           <StyledH1>{postData.title}</StyledH1>
+          {isLoggedIn ? (
+            <EditContainer>
+              <EditButton onClick={handleEditClick}>수정</EditButton>
+              <DeleteButton onClick={handleDeleteClick}>삭제</DeleteButton>
+            </EditContainer>
+          ) : (
+            <BanSpan onClick={() => navigate(`/ban/${postData.uid}`)}>
+              📢신고하기
+            </BanSpan>
+          )}
         </StyledContainer1>
-        {isLoggedIn ? (
-          <EditContainer>
-            <EditButton onClick={handleEditClick}>수정</EditButton>
-            <DeleteButton onClick={handleDeleteClick}>삭제</DeleteButton>
-          </EditContainer>
-        ) : (
-          <BanSpan onClick={() => navigate(`/ban/${postData.uid}`)}>
-            📢신고하기
-          </BanSpan>
-        )}
+
+        <StyledContainer2>
+          <WriterSpan>작성자 : {postData.nickname}</WriterSpan>
+          <TimeSpan>{formatDate(postData.created_at)}</TimeSpan>
+        </StyledContainer2>
       </StyledHeaderContainer>
-      <StyledContainer2>
-        <WriterSpan>작성자 : {postData.nickname}</WriterSpan>
-        <TimeSpan>{formatDate(postData.created_at)}</TimeSpan>
-      </StyledContainer2>
+
       <StyledHr />
     </ThemeProvider>
   );
@@ -76,16 +78,49 @@ const HeaderContent = ({ isLoggedIn, postData }) => {
 
 export default HeaderContent;
 
+const StyledHeaderContainer = styled.div`
+  width: 58vw;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  margin-top: 100px;
+  margin-bottom: 20px;
+`;
+
 const StyledContainer1 = styled.div`
   display: flex;
-  width: 70%;
+  justify-content: space-between;
+  margin-bottom: 30px;
 `;
 
 const GoBackArrow = styled(FaArrowLeft)`
+  position: absolute;
+  left: 250px;
+  top: 180px;
   color: ${({ theme }) => theme.medium_purple};
   font-size: 26px;
   cursor: pointer;
-  transform: translateX(-40px);
+`;
+
+const StyledH1 = styled.h1`
+  font-size: 26px;
+  font-weight: bold;
+  color: ${({ theme }) => theme.dark_purple};
+`;
+
+const StyledContainer2 = styled.div`
+  display: flex;
+  justify-content: space-between;
+`;
+
+const WriterSpan = styled.span`
+  color: ${({ theme }) => theme.medium_purple};
+  font-size: 18px;
+`;
+
+const TimeSpan = styled.span`
+  color: ${({ theme }) => theme.medium_purple};
+  font-size: 16px;
 `;
 
 const StyledHr = styled.hr`
@@ -95,53 +130,17 @@ const StyledHr = styled.hr`
   width: 900px;
 `;
 
-const StyledH1 = styled.h1`
-  font-size: 30px;
-  font-weight: bold;
-  color: ${({ theme }) => theme.dark_purple};
-`;
-
-const StyledHeaderContainer = styled.div`
-  display: flex;
-  margin: 20px;
-  margin-top: 100px;
-  width: 73%;
-  justify-content: center;
-`;
-
-const StyledContainer2 = styled.div`
-  display: flex;
-  justify-content: space-between;
-  margin: 20px 20px 20px 10px;
-  width: 55%;
-`;
-
 const BanSpan = styled.span`
   color: ${({ theme }) => theme.dark_purple};
   font-weight: bold;
-  margin-right: 80px;
   border: 1px solid ${({ theme }) => theme.linen};
   border-radius: 10px;
   padding: 10px;
   background-color: ${({ theme }) => theme.linen};
 `;
 
-const WriterSpan = styled.span`
-  color: ${({ theme }) => theme.medium_purple};
-  font-weight: bold;
-  font-size: 18px;
-`;
-
-const TimeSpan = styled.span`
-  color: ${({ theme }) => theme.medium_purple};
-  font-weight: bold;
-  font-size: 18px;
-`;
-
 const EditContainer = styled.div`
   display: flex;
-  justify-content: flex-end;
-  margin-right: 40px;
 `;
 
 const EditButton = styled.button`
