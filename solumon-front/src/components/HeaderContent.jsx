@@ -83,7 +83,7 @@ const StyledHeaderContainer = styled.div`
   display: flex;
   justify-content: center;
   flex-direction: column;
-  margin-top: 100px;
+  margin-top: 80px;
   margin-bottom: 20px;
 `;
 
@@ -96,7 +96,7 @@ const StyledContainer1 = styled.div`
 const GoBackArrow = styled(FaArrowLeft)`
   position: absolute;
   left: 250px;
-  top: 180px;
+  top: 160px;
   color: ${({ theme }) => theme.medium_purple};
   font-size: 26px;
   cursor: pointer;
@@ -127,7 +127,7 @@ const StyledHr = styled.hr`
   height: 1px;
   background-color: #ccc;
   margin: 10px 0;
-  width: 900px;
+  width: 58vw;
 `;
 
 const BanSpan = styled.span`
@@ -137,6 +137,7 @@ const BanSpan = styled.span`
   border-radius: 10px;
   padding: 10px;
   background-color: ${({ theme }) => theme.linen};
+  cursor: pointer;
 `;
 
 const EditContainer = styled.div`
