@@ -49,6 +49,7 @@ const CommentList = ({ postId }) => {
     }
     setEditedCommentContent(content);
   };
+
   // 댓글 삭제 기능 함수
   const handleDeleteButtonClick = async (commentId, replyId) => {
     try {
@@ -80,12 +81,14 @@ const CommentList = ({ postId }) => {
       console.error('Error deleting: ' + error);
     }
   };
+
   //댓글 취소 가능하게 만드는 함수
   const handelCancelButtonClick = async () => {
     setEditingCommentId(null);
     setEditedCommentContent('');
     setEditingReplyId('');
   };
+
   const handleSaveEditButtonClick = async (commentId, replyId) => {
     try {
       const updatedComments = comments.map((comment) => {
@@ -162,7 +165,11 @@ const CommentList = ({ postId }) => {
           {comments &&
             comments.map((comment) => (
               <CommentBox key={comment.id}>
-                <Name>{comment.userId}님</Name>
+                <CommentInfo>
+                  <Name>{comment.userId}님</Name>
+                  <Time>{formatDate(comment.createdAt)}</Time>
+                </CommentInfo>
+
                 {user.displayName === comment.userId && (
                   // 수정하려는 댓글의 아이디와 로그인한 유저의 아이디가 같을때 (수정, 삭제버튼 표시)
                   <>
@@ -194,7 +201,6 @@ const CommentList = ({ postId }) => {
                         <Content>{comment.content}</Content>
                         <StyledArea>
                           <StyledBox>
-                            <Time>{formatDate(comment.createdAt)}</Time>
                             <Reply
                               onClick={() => handleReplyButtonClick(comment.id)}
                             >
@@ -231,7 +237,6 @@ const CommentList = ({ postId }) => {
                     <Content>{comment.content}</Content>
                     <StyledArea>
                       <StyledBox>
-                        <Time>{formatDate(comment.createdAt)}</Time>
                         <Reply
                           onClick={() => handleReplyButtonClick(comment.id)}
                         >
@@ -252,15 +257,15 @@ const CommentList = ({ postId }) => {
                       <ReplyButton onClick={() => handleAddReply(comment.id)}>
                         답글작성
                       </ReplyButton>
+                      <CancelButton
+                        onClick={() => {
+                          setReplyContent('');
+                          setReplyingCommentId(null);
+                        }}
+                      >
+                        취소
+                      </CancelButton>
                     </ButtonBox>
-                    <CancelButton
-                      onClick={() => {
-                        setReplyContent('');
-                        setReplyingCommentId(null);
-                      }}
-                    >
-                      취소
-                    </CancelButton>
                   </>
                 )}
                 {comment.replies && comment.replies.length > 0 && (
@@ -270,11 +275,13 @@ const CommentList = ({ postId }) => {
                         <StyledArrow>
                           <MdSubdirectoryArrowRight />
                           <StyledBox2>
-                            <Name>{reply.userId}님</Name>
+                            <CommentInfo>
+                              <Name>{reply.userId}님</Name>
+                              <Time>{formatDate(reply.createdAt)}</Time>
+                            </CommentInfo>
                             <Content>{reply.content}</Content>
                           </StyledBox2>
                         </StyledArrow>
-                        <Time>{formatDate(reply.createdAt)}</Time>
                         {user.displayName === reply.userId && (
                           <>
                             {editingReplyId === reply.id ? (
@@ -347,83 +354,45 @@ const CommentList = ({ postId }) => {
 };
 
 export default CommentList;
-const StyledArrow = styled.div`
-  display: flex;
-  margin-left: -15px;
+
+const StyledContainer = styled.div`
+  width: 100%;
 `;
-const RepliesContainer = styled.div`
-  margin-left: 15px;
-  margin-top: 20px;
-`;
-const ReplyBox = styled.div`
-  margin-bottom: 15px;
-`;
-const StyledBox2 = styled.div``;
-const ReplyButton = styled.div``;
-const ReplyInput = styled.input`
-  margin-top: 10px;
-  margin-bottom: 10px;
-  width: 99.5%;
-  height: 50px;
-`;
-const StyledBox = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-const StyledArea = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-const ButtonBox = styled.div`
-  display: flex;
-  justify-content: flex-end;
-`;
-const EditButton = styled.button`
-  margin-right: 5px;
-  width: 50px;
-  padding: 5px;
-  background-color: ${({ theme }) => theme.linen};
-  border: none;
-`;
-const Reply = styled.button`
-  margin-left: 5px;
-  padding: 3px;
-  width: 50px;
-  border-radius: 5px;
-  background-color: #f5f5f5;
-`;
-const CancelButton = styled.button`
-  padding: 5px;
-  width: 50px;
-  border: none;
-  background-color: ${({ theme }) => theme.light_purple};
-`;
-const StyledContainer = styled.div``;
+
 const Container = styled.div`
   display: flex;
-  width: 50%;
   margin: auto;
   justify-content: flex-start;
   flex-direction: column;
+`;
+
+const CommentBox = styled.div`
+  border-bottom: 1px solid #ccc;
+  width: 100%;
+  margin: 10px 0 10px 0;
+  padding: 10px 0 10px 0;
+`;
+
+const CommentInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
 `;
 
 const Name = styled.p`
   font-weight: bold;
   margin-bottom: 5px;
 `;
-const Content = styled.p`
-  margin-bottom: 5px;
-  margin-top: 20px;
+
+const Time = styled.p`
+  font-size: 12px;
+  color: ${({ theme }) => theme.medium_purple};
 `;
-const Time = styled.p``;
-const CommentBox = styled.div`
-  border-bottom: 1px solid #ccc;
-  width: 100%;
-  margin: 10px;
-  padding: 10px;
-  padding-left: 0;
+
+const Content = styled.p`
+  margin-bottom: 8px;
+  margin-top: 15px;
+  line-height: 24px;
 `;
 
 const EditInput = styled.input`
@@ -431,4 +400,98 @@ const EditInput = styled.input`
   margin-bottom: 10px;
   width: 99.5%;
   height: 50px;
+`;
+
+const ButtonBox = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+`;
+
+const StyledArea = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const StyledBox = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const StyledArrow = styled.div`
+  display: flex;
+  margin-left: -15px;
+`;
+
+const RepliesContainer = styled.div`
+  margin-left: 15px;
+  margin-top: 20px;
+`;
+
+const ReplyBox = styled.div`
+  margin-bottom: 5px;
+`;
+
+const StyledBox2 = styled.div``;
+
+const ReplyInput = styled.input`
+  margin-top: 10px;
+  margin-bottom: 10px;
+  width: 99.5%;
+  height: 50px;
+`;
+
+const Reply = styled.button`
+  margin-top: 5px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  color: ${({ theme }) => theme.dark_purple};
+  background-color: ${({ theme }) => theme.linen};
+  cursor: pointer;
+`;
+
+const ReplyButton = styled.div`
+  color: ${({ theme }) => theme.dark_purple};
+  font-weight: 600;
+  cursor: pointer;
+
+  &::after {
+    content: '';
+    width: 1px;
+    height: 15px;
+    background-color: ${({ theme }) => theme.dark_purple};
+    display: inline-block;
+    margin: 0 5px 0 5px;
+    position: relative;
+    top: 1.7px;
+  }
+`;
+
+const CancelButton = styled.div`
+  font-size: 14px;
+  color: ${({ theme }) => theme.dark_purple};
+  cursor: pointer;
+`;
+
+const EditButton = styled.button`
+  font-size: 14px;
+  background-color: transparent;
+  padding: 0;
+  color: ${({ theme }) => theme.dark_purple};
+  border: none;
+  cursor: pointer;
+
+  &::after {
+    content: '';
+    width: 1px;
+    height: 15px;
+    background-color: ${({ theme }) => theme.dark_purple};
+    display: inline-block;
+    margin: 0 5px 0 5px;
+    position: relative;
+    top: 1.8px;
+  }
 `;
