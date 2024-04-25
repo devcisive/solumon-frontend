@@ -105,7 +105,7 @@ const Form = styled.form`
 `;
 
 const CommentBox = styled.input`
-  width: 50%;
+  width: 46vw;
   height: 45px;
   font-size: 16px;
   padding-left: 15px;
@@ -117,10 +117,11 @@ const Button = styled.div`
   height: 45px;
   display: flex;
   align-items: center;
-  margin-left: 10px;
+  margin-left: 15px;
   padding: 1px 20px;
   font-size: 16px;
   color: white;
   background-color: ${({ theme }) => theme.medium_purple};
   border-radius: 5px;
+  cursor: pointer;
 `;
