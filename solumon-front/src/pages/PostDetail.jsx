@@ -108,6 +108,7 @@ const PostDetail = () => {
         const currentChoice = postData?.voteResult?.[choiceIndex];
         const newCount = currentChoice ? currentChoice.choice_count + 1 : 1;
         console.log(newCount);
+
         // 투표 항목 업데이트
         await updateDoc(postDocRef, {
           [`voteResult.${choiceIndex}.choice_count`]: newCount,
@@ -154,6 +155,7 @@ const PostDetail = () => {
         const isDuplicateVote = voteJoinPosts.some(
           (item) => item.postId?.null === postId,
         );
+
         //중복 투표가 아닌 경우에만 join-posts 값 업데이트
         if (!isDuplicateVote) {
           const updatedJoinPosts = [...voteJoinPosts, { postId, choiceNum }];
@@ -280,24 +282,26 @@ const PostDetail = () => {
             postId={postId}
           />
         )}
+        <TagContainer>
+          {postData.tags.hashTag.map((tag, index) => (
+            <TagBox key={index}>#{tag}</TagBox>
+          ))}
+        </TagContainer>
+        <CountContainer>
+          <VoteCount>
+            <BsChatSquareDots title="댓글" />
+            {postData.total_comment_count}명참여
+          </VoteCount>
+          <ChatCount>
+            <PiChartBarHorizontalFill title="투표" />
+            {postData.total_vote_count}명참여
+          </ChatCount>
+        </CountContainer>
+        <CommentContainer>
+          <CommentForm postId={postId} postData={postData} />
+          <CommentList postId={postId} />
+        </CommentContainer>
       </Container>
-      <TagContainer>
-        {postData.tags.hashTag.map((tag, index) => (
-          <TagBox key={index}>#{tag}</TagBox>
-        ))}
-      </TagContainer>
-      <CountContainer>
-        <VoteCount>
-          <BsChatSquareDots />
-          {postData.total_comment_count}명참여
-        </VoteCount>
-        <ChatCount>
-          <PiChartBarHorizontalFill />
-          {postData.total_vote_count}명참여
-        </ChatCount>
-      </CountContainer>
-      <CommentForm postId={postId} postData={postData} />
-      <CommentList postId={postId} />
     </ThemeProvider>
   );
 };
@@ -306,17 +310,27 @@ export default PostDetail;
 
 const Container = styled.div`
   display: flex;
+  align-items: center;
+  justify-content: center;
   flex-direction: column;
   margin: auto;
-  align-items: center;
 `;
 
 const ContentDiv = styled.div`
+  width: 53vw;
   margin: 20px 0;
   display: flex;
+  justify-content: center;
   flex-direction: column;
-  width: 60%;
   color: ${({ theme }) => theme.dark_purple};
+`;
+
+//수정모드일때 화면 스타일 컴포넌트
+const ImageContainer = styled.div`
+  position: relative;
+  margin-right: 5px;
+  display: flex;
+  justify-content: center;
 `;
 
 const ImgBox = styled.img`
@@ -326,42 +340,37 @@ const ImgBox = styled.img`
 `;
 
 const ContentBox = styled.div`
-  margin: 15px 0 0 40px;
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 26px;
+  margin-bottom: 20px;
+  font-size: 18px;
+  line-height: 30px;
 `;
 
 const TagContainer = styled.div`
+  width: 53vw;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 20px 0 0 0;
-  gap: 10px;
-  width: 58%;
+  margin-top: 20px;
 `;
 
 const TagBox = styled.div`
   padding: 5px 8px;
-
   background-color: ${({ theme }) => theme.light_purple};
   color: ${({ theme }) => theme.dark_purple};
   font-weight: 500;
   font-size: 16px;
   border-radius: 5px;
+  margin-right: 10px;
 `;
 
 const CountContainer = styled.div`
+  width: 53vw;
   display: flex;
-  justify-content: center;
-  gap: 15px;
-  width: 58%;
   margin: 30px 0 10px 0;
 `;
 
 const VoteCount = styled.div`
   display: flex;
   gap: 5px;
+  margin-right: 10px;
   font-size: 15px;
   color: ${({ theme }) => theme.medium_purple};
 `;
@@ -373,8 +382,9 @@ const ChatCount = styled.div`
   font-size: 15px;
 `;
 
-//수정모드일때 화면 스타일 컴포넌트
-const ImageContainer = styled.div`
-  position: relative;
-  margin-right: 5px;
+const CommentContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 `;
