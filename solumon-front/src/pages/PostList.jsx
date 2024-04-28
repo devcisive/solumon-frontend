@@ -100,6 +100,7 @@ const WriteButton = styled.button`
   font-size: 15px;
   font-weight: bold;
   width: 200px;
+  cursor: pointer;
 `;
 
 const StyledHiOutlinePencilSquare = styled(HiOutlinePencilSquare)`
