@@ -91,10 +91,12 @@ const CommentList = ({ postId }) => {
 
   const handleSaveEditButtonClick = async (commentId, replyId) => {
     try {
+      // 수정된 댓글 또는 답글의 내용을 업데이트
       const updatedComments = comments.map((comment) => {
         if (comment.id === commentId) {
           const updatedReplies = comment.replies.map((reply) => {
             if (reply.id === replyId) {
+              // 수정된 내용을 새로운 내용으로 업데이트
               return { ...reply, content: editedCommentContent };
             }
             return reply;
@@ -107,17 +109,21 @@ const CommentList = ({ postId }) => {
         return comment;
       });
 
+      // 데이터베이스에 수정된 내용을 저장
       await updateDoc(doc(db, 'posts-write', postId), {
         commentList: updatedComments,
       });
 
+      // 수정 모드 해제
       setEditingCommentId(null);
       setEditingReplyId(null);
+      // 수정된 내용을 초기화하여 입력 필드 비우기
       setEditedCommentContent('');
     } catch (error) {
       console.error('Error updating: ', error);
     }
   };
+
   const handleReplyButtonClick = (commentId) => {
     setReplyingCommentId(commentId);
     setReplyContent('');
@@ -212,6 +218,7 @@ const CommentList = ({ postId }) => {
                               onClick={() =>
                                 handleEditButtonClick(
                                   comment.id,
+                                  null,
                                   comment.content,
                                 )
                               }
@@ -400,6 +407,7 @@ const EditInput = styled.input`
   margin-bottom: 10px;
   width: 99.5%;
   height: 50px;
+  text-indent: 10px;
 `;
 
 const ButtonBox = styled.div`
@@ -441,6 +449,7 @@ const ReplyInput = styled.input`
   margin-bottom: 10px;
   width: 99.5%;
   height: 50px;
+  text-indent: 10px;
 `;
 
 const Reply = styled.button`
