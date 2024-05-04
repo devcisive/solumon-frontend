@@ -47,7 +47,7 @@ function NavigationBar() {
         </Logo>
         {userInfo ? (
           <User>
-            <UserName>
+            <UserName onClick={handleProfileIconClick}>
               <StyledSpan>{nickname}</StyledSpan>님
             </UserName>
             <ProfileIcon onClick={handleProfileIconClick} />
@@ -130,7 +130,9 @@ const User = styled.p`
   gap: 20px;
 `;
 
-const UserName = styled.p``;
+const UserName = styled.p`
+  cursor: pointer;
+`;
 
 const StyledSpan = styled.span`
   font-weight: 500;
@@ -146,7 +148,7 @@ const ProfileIcon = styled(FaUserCircle)`
 
 const UserMenuWrapper = styled.div`
   position: absolute;
-  top: -35px;
+  top: -26px;
   right: -58px;
   display: flex;
   width: 130px;
