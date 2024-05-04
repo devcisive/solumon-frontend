@@ -77,6 +77,7 @@ function SearchBar() {
         <SearchContainer>
           <CiSearchIcon onClick={SearchClick} />
           <SearchInput
+            autoFocus
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="검색어를 입력하세요"
