@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../firebase-config';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
+
+import Modal from './Modal';
 import Button from './Button';
 import { FaUserCircle } from 'react-icons/fa';
 
@@ -58,9 +60,9 @@ function NavigationBar() {
         {userMenuActive && (
           <UserMenuWrapper>
             <MenuWrapper>
-              {/* <MenuContainer> */}
+              {/* <MenuContainer>
               <Menu to={'/notification'}>알림</Menu>
-              {/* <Badge>N</Badge>
+              <Badge>N</Badge>
               </MenuContainer> */}
 
               <Menu to={'/user'}>회원정보</Menu>
@@ -70,30 +72,16 @@ function NavigationBar() {
             </MenuWrapper>
           </UserMenuWrapper>
         )}
-        {openModal && (
-          <ModalWrapper>
-            <StyledH1>솔루몬을 로그아웃 하시겠습니까?</StyledH1>
-            <ButtonWrapper>
-              <Button
-                type="button"
-                name={'로그아웃'}
-                onClick={handleLogoutConfirmButton}
-                fontSize={'16px'}
-                padding={'10px 22px'}
-                borderRadius={'10px'}
-              />
-              <Button
-                type="button"
-                name={'취소'}
-                onClick={handleCancelButton}
-                fontSize={'16px'}
-                padding={'10px 22px'}
-                borderRadius={'10px'}
-              />
-            </ButtonWrapper>
-          </ModalWrapper>
-        )}
       </Wrapper>
+      {openModal && (
+        <ModalBackground>
+          <Modal
+            message={'솔루몬을 로그아웃 하시겠습니까?'}
+            onConfirm={handleLogoutConfirmButton}
+            onCancel={handleCancelButton}
+          />
+        </ModalBackground>
+      )}
     </ThemeProvider>
   );
 }
@@ -184,6 +172,17 @@ const Menu = styled(Link)`
   text-decoration: none;
 `;
 
+const ModalBackground = styled.div`
+  backdrop-filter: blur(5px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+`;
+
 const MenuContainer = styled.div`
   display: flex;
   align-items: center;
@@ -198,34 +197,4 @@ const Badge = styled.div`
   background-color: red;
   color: white;
   margin-left: 5px;
-`;
-
-const ModalWrapper = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, 20%);
-  z-index: 10;
-  width: 50%;
-  height: 60vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: ${({ theme }) => theme.dark_purple};
-  background-color: ${({ theme }) => theme.light_purple};
-  border-radius: 15px;
-`;
-
-const StyledH1 = styled.h1`
-  color: ${({ theme }) => theme.dark_purple};
-  font-size: 26px;
-  font-weight: 500;
-  margin-top: 20px;
-`;
-
-const ButtonWrapper = styled.div`
-  display: flex;
-  gap: 20px;
-  margin-top: 60px;
 `;
