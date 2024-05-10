@@ -1,5 +1,6 @@
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
+import device from '../media';
 import PropTypes from 'prop-types';
 
 import Button from './Button';
@@ -47,6 +48,7 @@ const Wrapper = styled.div`
   transform: translate(-50%, -70%);
   z-index: 15;
   width: 50%;
+  min-width: 500px;
   height: 60vh;
   display: flex;
   flex-direction: column;
@@ -61,6 +63,10 @@ const StyledP = styled.p`
   color: ${({ theme }) => theme.dark_purple};
   font-size: 26px;
   margin-top: 20px;
+
+  @media ${({ theme }) => device.tablet} {
+    font-size: 24px;
+  }
 `;
 
 const ButtonWrapper = styled.div`
@@ -69,4 +75,8 @@ const ButtonWrapper = styled.div`
   justify-content: center;
   gap: 20px;
   margin-top: 60px;
+
+  @media ${({ theme }) => device.tablet} {
+    gap: 15px;
+  }
 `;
