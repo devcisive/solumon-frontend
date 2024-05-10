@@ -9,31 +9,36 @@ function Pagination({ totalPages, currentPage, onPageChange }) {
 
   const pageNumbers = Array.from(
     { length: endPage - startPage + 1 },
-    (_, index) => startPage + index
+    (_, index) => startPage + index,
   );
 
   return (
     <ThemeProvider theme={theme}>
-      <PaginationWrapper>
-        <PrevPage
-          onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
-          disabled={currentPage === 1}>
-          {'<'}
-        </PrevPage>
-        {pageNumbers.map((pageNumber) => (
-          <PageItem
-            key={pageNumber}
-            active={pageNumber === currentPage}
-            onClick={() => onPageChange(pageNumber)}>
-            {pageNumber}
-          </PageItem>
-        ))}
-        <NextPage
-          onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
-          disabled={currentPage === totalPages}>
-          {'>'}
-        </NextPage>
-      </PaginationWrapper>
+      {totalPages > 0 && (
+        <PaginationWrapper>
+          <PrevPage
+            onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            {'<'}
+          </PrevPage>
+          {pageNumbers.map((pageNumber) => (
+            <PageItem
+              key={pageNumber}
+              active={pageNumber === currentPage}
+              onClick={() => onPageChange(pageNumber)}
+            >
+              {pageNumber}
+            </PageItem>
+          ))}
+          <NextPage
+            onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            {'>'}
+          </NextPage>
+        </PaginationWrapper>
+      )}
     </ThemeProvider>
   );
 }
