@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useNavigate, Link, useParams } from 'react-router-dom';
 import { db } from '../firebase-config';
 import { getDocs, collection, orderBy, query } from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
 import { CiSearch } from 'react-icons/ci';
+import { FaArrowLeft } from 'react-icons/fa6';
 import SortSelector from '../components/SortSelector';
 import PostCard from '../components/PostCard';
 import Pagination from '../components/Pagination';
@@ -15,6 +16,11 @@ function SearchResult() {
   const { keyword } = useParams();
   const [searchData, setSearchData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const navigate = useNavigate();
+
+  const goBackPage = () => {
+    navigate(-1);
+  };
 
   let categoryTitle = '';
 
@@ -104,12 +110,13 @@ function SearchResult() {
       <Wrapper>
         <PostSection>
           <TitleWrapper>
+            <GoBackArrow title="뒤로가기" onClick={goBackPage} />
             <CategoryTitle>{categoryTitle}</CategoryTitle>
             <Link to={'/search'}>
               <SearchIcon />
             </Link>
           </TitleWrapper>
-          <SortWrapper>
+          <SortWrapper searchDataLength={searchData.length}>
             <SortSelector
               sortLabels={[
                 '최신순',
@@ -147,6 +154,7 @@ const Wrapper = styled.div`
 const PostSection = styled.div`
   display: flex;
   flex-direction: column;
+  width: 83vw;
   margin: 40px auto;
 `;
 
@@ -154,6 +162,12 @@ const TitleWrapper = styled.div`
   display: flex;
   justify-content: space-between;
   margin-bottom: 20px;
+`;
+
+const GoBackArrow = styled(FaArrowLeft)`
+  color: ${({ theme }) => theme.medium_purple};
+  font-size: 24px;
+  cursor: pointer;
 `;
 
 const CategoryTitle = styled.h1`
@@ -173,5 +187,6 @@ const SortWrapper = styled.div`
   display: flex;
   align-self: flex-end;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: ${({ searchDataLength }) =>
+    searchDataLength === 0 ? '110px' : '20px'};
 `;
