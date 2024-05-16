@@ -1,5 +1,3 @@
-import styled, { ThemeProvider } from 'styled-components';
-import theme from '../style/theme';
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { BsChatSquareDots } from 'react-icons/bs';
@@ -19,6 +17,10 @@ import {
   getDocs,
   onSnapshot,
 } from 'firebase/firestore';
+import styled, { ThemeProvider } from 'styled-components';
+import theme from '../style/theme';
+import device from '../media';
+import Loading from '../components/Loading';
 import CommentList from '../components/CommentList';
 
 const PostDetail = () => {
@@ -136,7 +138,7 @@ const PostDetail = () => {
   }, []);
 
   if (!postData) {
-    return <div>Loading...</div>; // 데이터가 로드되지 않았을 때
+    return <Loading />; // 데이터가 로드되지 않았을 때
   }
   // 투표시 해당유저 users 컬렉션에 해당 게시물 postId 저장하여 중복투표 방지 및 투표 유무 확인할 수 있는함수
   const updateVoteJoin = async (choiceNum) => {
@@ -224,83 +226,85 @@ const PostDetail = () => {
             ))}
           </ImageContainer>
           <ContentBox>{postData.contents}</ContentBox>
-        </ContentDiv>
+          <VoteContainer>
+            {isLoggedIn && memberId === postData.uid ? (
+              // 내가 작성한 게시물인 경우
+              <VoteResult
+                choices={postData.vote.choices}
+                postData={postData}
+                voteResult={postData.voteResult}
+                endAt={postData.vote.end_at}
+                createdAt={postData.created_at}
+                postId={postId}
+              />
+            ) : // 내가 작성한 게시물이 아닐 때
+            postStatus === 'ONGOING' ? (
+              // 투표 진행 중일 때
+              join ? (
+                // 투표에 참여한 경우
+                <VoteResult
+                  choices={postData.vote.choices}
+                  postData={postData}
+                  voteResult={postData.voteResult}
+                  endAt={postData.vote.end_at}
+                  createdAt={postData.created_at}
+                  postId={postId}
+                />
+              ) : (
+                // 투표에 참여하지 않은 경우
+                <Votes
+                  handleChoiceClick={handleChoiceClick}
+                  createdAt={postData.created_at}
+                  endAt={postData.vote.end_at}
+                  vote={postData.vote}
+                  choices={postData.vote.choices}
+                />
+              )
+            ) : // 투표가 종료됐을 때
+            join ? (
+              // 투표에 참여한 경우
+              <VoteResult
+                choices={postData.vote.choices}
+                postData={postData}
+                endAt={postData.vote.end_at}
+                createdAt={postData.created_at}
+                selectedChoice={selectedChoice}
+                postId={postId}
+              />
+            ) : (
+              // 투표에 참여하지 않은 경우
+              <VoteResult
+                choices={postData.vote.choices}
+                postData={postData}
+                endAt={postData.vote.end_at}
+                createdAt={postData.created_at}
+                selectedChoice={selectedChoice}
+                postId={postId}
+              />
+            )}
+          </VoteContainer>
 
-        {/* 투표진행중 & 투표참여했을때 또는 내가쓴글 */}
-        {isLoggedIn && memberId === postData.uid ? (
-          // 내가 작성한 게시물인 경우
-          <VoteResult
-            choices={postData.vote.choices}
-            postData={postData}
-            voteResult={postData.voteResult}
-            endAt={postData.vote.end_at}
-            createdAt={postData.created_at}
-            postId={postId}
-          />
-        ) : // 다른 경우
-        postStatus === 'ONGOING' ? (
-          // 투표 진행 중인 경우
-          join ? (
-            // 투표진행중 & 투표에 참여한 경우
-            <VoteResult
-              choices={postData.vote.choices}
-              postData={postData}
-              voteResult={postData.voteResult}
-              endAt={postData.vote.end_at}
-              createdAt={postData.created_at}
-              postId={postId}
-            />
-          ) : (
-            // 투표진행중 & 투표에 참여하지 않은 경우
-            <Votes
-              handleChoiceClick={handleChoiceClick}
-              createdAt={postData.created_at}
-              endAt={postData.vote.end_at}
-              vote={postData.vote}
-              choices={postData.vote.choices}
-            />
-          )
-        ) : // 투표 종료인 경우
-        join ? (
-          // 투표에 참여한 경우
-          <VoteResult
-            choices={postData.vote.choices}
-            postData={postData}
-            endAt={postData.vote.end_at}
-            createdAt={postData.created_at}
-            selectedChoice={selectedChoice}
-            postId={postId}
-          />
-        ) : (
-          // 투표에 참여하지 않은 경우
-          <VoteResult
-            choices={postData.vote.choices}
-            postData={postData}
-            endAt={postData.vote.end_at}
-            createdAt={postData.created_at}
-            selectedChoice={selectedChoice}
-            postId={postId}
-          />
-        )}
-        <TagContainer>
-          {postData.tags.hashTag.map((tag, index) => (
-            <TagBox key={index}>#{tag}</TagBox>
-          ))}
-        </TagContainer>
-        <CountContainer>
-          <VoteCount>
-            <BsChatSquareDots title="댓글" />
-            {postData.total_comment_count}명참여
-          </VoteCount>
-          <ChatCount>
-            <PiChartBarHorizontalFill title="투표" />
-            {postData.total_vote_count}명참여
-          </ChatCount>
-        </CountContainer>
-        <CommentContainer>
-          <CommentForm postId={postId} postData={postData} />
-          <CommentList postId={postId} />
-        </CommentContainer>
+          <TagContainer>
+            {postData.tags.hashTag &&
+              postData.tags.hashTag.map((tag, index) => (
+                <TagBox key={index}>#{tag}</TagBox>
+              ))}
+          </TagContainer>
+          <CountContainer>
+            <VoteCount>
+              <BsChatSquareDots title="댓글" />
+              {postData.total_comment_count}명참여
+            </VoteCount>
+            <ChatCount>
+              <PiChartBarHorizontalFill title="투표" />
+              {postData.total_vote_count}명참여
+            </ChatCount>
+          </CountContainer>
+          <CommentContainer>
+            <CommentForm postId={postId} postData={postData} />
+            <CommentList postId={postId} />
+          </CommentContainer>
+        </ContentDiv>
       </Container>
     </ThemeProvider>
   );
@@ -318,6 +322,7 @@ const Container = styled.div`
 
 const ContentDiv = styled.div`
   width: 53vw;
+  min-width: 700px;
   margin: 20px 0;
   display: flex;
   justify-content: center;
@@ -345,10 +350,18 @@ const ContentBox = styled.div`
   line-height: 30px;
 `;
 
+const VoteContainer = styled.div`
+  display: flex;
+  justify-content: center;
+`;
+
 const TagContainer = styled.div`
   width: 53vw;
   display: flex;
   margin-top: 20px;
+
+  @media ${({ theme }) => device.tablet} {
+  }
 `;
 
 const TagBox = styled.div`
@@ -387,4 +400,6 @@ const CommentContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  min-width: 780px;
+  /* width: 53vw; */
 `;
