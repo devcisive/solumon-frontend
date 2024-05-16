@@ -1,12 +1,6 @@
 import { useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { HashTagChoice } from '../recoil/AllAtom';
-import styled, { ThemeProvider } from 'styled-components';
-import theme from '../style/theme';
-import { IoIosRemoveCircle } from 'react-icons/io';
-import { AiFillMinusCircle, AiFillPlusCircle } from 'react-icons/ai';
-import Button from '../components/Button';
-import HashTagList from '../components/HashTagList';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase-config';
 import { addDoc, collection } from 'firebase/firestore';
@@ -16,6 +10,13 @@ import {
   uploadBytesResumable,
   getDownloadURL,
 } from 'firebase/storage';
+import styled, { ThemeProvider } from 'styled-components';
+import theme from '../style/theme';
+import device from '../media';
+import { IoIosRemoveCircle } from 'react-icons/io';
+import { AiFillMinusCircle, AiFillPlusCircle } from 'react-icons/ai';
+import Button from '../components/Button';
+import HashTagList from '../components/HashTagList';
 
 const storage = getStorage();
 
@@ -246,6 +247,16 @@ const Posts = () => {
         <HeadContainer>
           {/* 제목과 등록버튼 */}
           <TitleSpan>게시글 작성</TitleSpan>
+          <Button
+            name="게시글 등록"
+            type="submit"
+            onClick={RegisterSubmit}
+            bgColor={theme.medium_purple}
+            fontSize="16px"
+            fontWeight={500}
+            padding="12px 60px"
+            borderRadius="5px"
+          />
         </HeadContainer>
 
         {/* 게시글 작성 폼 */}
@@ -301,7 +312,7 @@ const Posts = () => {
         </FileContainer>
 
         {/* 투표 작성 부분 */}
-        <Container>
+        <VoteContainer>
           <StyledContainer>
             <VoteLabel htmlFor="end">
               투표 마감일 :
@@ -335,7 +346,7 @@ const Posts = () => {
               </OptionContainer>
             ))}
           </StyledContainer2>
-        </Container>
+        </VoteContainer>
 
         {/* 해시태그 입력 */}
         <ToggleContainer>
@@ -363,18 +374,6 @@ const Posts = () => {
             <HashTagList />
           </HashtagContainer>
         )}
-        <ButtonContainer>
-          <Button
-            name="게시글 등록"
-            type="submit"
-            onClick={RegisterSubmit}
-            bgColor={theme.medium_purple}
-            fontSize="16px"
-            fontWeight={500}
-            padding="12px 70px"
-            borderRadius="5px"
-          />
-        </ButtonContainer>
       </MainContainer>
     </ThemeProvider>
   );
@@ -390,20 +389,29 @@ const MainContainer = styled.form`
   margin: 50px auto;
 `;
 
+const HeadContainer = styled.div`
+  display: flex;
+  width: 50%;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+
+  @media ${({ theme }) => device.tablet} {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-width: 250px;
+  }
+`;
+
 const TitleSpan = styled.span`
   font-size: 30px;
   font-weight: bold;
   color: ${({ theme }) => theme.dark_purple};
-  margin-bottom: 10px;
-  display: inline;
-`;
 
-const HeadContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  width: 49%;
-  justify-content: space-between;
-  margin-bottom: 10px;
+  @media ${({ theme }) => device.tablet} {
+    font-size: 26px;
+  }
 `;
 
 const ContentContainer = styled.div`
@@ -412,6 +420,10 @@ const ContentContainer = styled.div`
   justify-content: center;
   align-items: center;
   width: 70%;
+
+  @media ${({ theme }) => device.tablet} {
+    min-width: 400px;
+  }
 `;
 
 const TitleInput = styled.input`
@@ -442,45 +454,10 @@ const ContentTextArea = styled.textarea`
   }
 `;
 
-const FileContainer = styled.div`
-  width: 72%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
-const FileLabel = styled.label`
-  padding: 11px 30px;
-  background-color: ${({ theme }) => theme.medium_purple};
-  color: ${({ theme }) => theme.linen};
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 12px;
-  text-align: center;
-  display: inline;
-`;
-
-const FileInput = styled.input`
-  margin-top: 10px;
-  display: none;
-`;
-
 const ImagesContainer = styled.div`
   display: flex;
   margin-bottom: 10px;
   width: 50%;
-`;
-
-const Badge = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  background-color: green;
-  color: white; /* 텍스트 색상 */
-  padding: 3px 5px;
-  border-radius: 5px;
-  font-weight: bold;
-  font-size: 10px;
 `;
 
 const ImageContainer = styled.div`
@@ -496,6 +473,18 @@ const StyledFileImg = styled.img`
   border-radius: 5px;
 `;
 
+const Badge = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: green;
+  color: white; /* 텍스트 색상 */
+  padding: 3px 5px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 10px;
+`;
+
 const RemoveCircleIcon = styled(IoIosRemoveCircle)`
   position: absolute;
   right: 0;
@@ -507,42 +496,95 @@ const RemoveCircleIcon = styled(IoIosRemoveCircle)`
   border-radius: 50%;
 `;
 
+const FileContainer = styled.div`
+  width: 70%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+
+  @media ${({ theme }) => device.tablet} {
+    gap: 8px;
+    min-width: 300px;
+  }
+`;
+
+const FileLabel = styled.label`
+  padding: 11px 30px;
+  background-color: ${({ theme }) => theme.medium_purple};
+  color: ${({ theme }) => theme.linen};
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  text-align: center;
+
+  @media ${({ theme }) => device.tablet} {
+    padding: 11px 20px;
+  }
+`;
+
+const FileInput = styled.input`
+  display: none;
+`;
+
 const FileNameInput = styled.input`
   display: inline;
-  width: 57%;
+  width: 58%;
   height: 20px;
   padding: 7px;
   border-radius: 5px;
   border: 1px solid ${({ theme }) => theme.medium_purple};
-  margin: 5px;
 `;
 
-const Container = styled.div`
+const VoteContainer = styled.div`
   border: 1px solid ${({ theme }) => theme.medium_purple};
-  width: 49%;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  width: 49.7%;
+  margin: 10px 0;
   border-radius: 5px;
   display: flex;
   flex-direction: column;
   align-items: center; /* 세로 가운데 정렬 */
   justify-content: center;
+
+  @media ${({ theme }) => device.tablet} {
+    min-width: 290px;
+  }
 `;
 
 const StyledContainer = styled.div`
   display: flex;
   margin-left: 60px;
-  margin-top: 15px;
+  margin-top: 20px;
   width: 90%;
   justify-content: space-between;
+
+  @media ${({ theme }) => device.tablet} {
+    margin-left: 25px;
+  }
+`;
+
+const VoteLabel = styled.label`
+  color: ${({ theme }) => theme.medium_purple};
+  font-size: 12px;
+`;
+
+const VoteEnd = styled.input`
+  color: ${({ theme }) => theme.dark_purple};
+  margin-left: 5px;
 `;
 
 const StyledContainer2 = styled.div`
   display: flex;
   flex-direction: column;
   width: 90%;
-  margin: 20px;
-  margin-bottom: 30px;
+  margin: 20px 0;
+`;
+
+const OptionContainer = styled.div`
+  display: flex;
+  margin: 5px;
+  align-items: center;
+  flex: 1;
 `;
 
 const StyledAiFillMinusCircle = styled(AiFillMinusCircle)`
@@ -555,23 +597,6 @@ const StyledAiFillPlusCircle = styled(AiFillPlusCircle)`
   font-size: 24px;
   color: ${({ theme }) => theme.dark_purple};
   margin-right: 5px;
-`;
-
-const OptionContainer = styled.div`
-  display: flex;
-  margin: 5px;
-  align-items: center;
-  flex: 1;
-`;
-
-const VoteLabel = styled.label`
-  color: ${({ theme }) => theme.medium_purple};
-  font-size: 12px;
-`;
-
-const VoteEnd = styled.input`
-  color: ${({ theme }) => theme.dark_purple};
-  margin-left: 5px;
 `;
 
 const VoteChoice = styled.input`
@@ -588,7 +613,6 @@ const ToggleContainer = styled.div`
 
 const ToggleWrapper = styled.div`
   display: flex;
-
   border: 1px solid ${({ theme }) => theme.light_purple};
   border-radius: 15px;
 `;
@@ -607,10 +631,4 @@ const HashtagContainer = styled.div`
   flex-direction: row;
   width: 50%;
   align-items: center;
-`;
-
-const ButtonContainer = styled.div`
-  margin-top: 40px;
-  display: flex;
-  justify-content: center;
 `;
