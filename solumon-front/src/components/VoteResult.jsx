@@ -12,8 +12,6 @@ function VoteResult({ choices, postData, endAt, createdAt, postId }) {
   const user = auth.currentUser;
   const postStatus = voteEnd > timeNow ? 'ONGOING' : 'COMPLETED';
   const [selectedChoice, setSelectedChoice] = useState(null);
-  let isClosed;
-  console.log(postId);
 
   const checkSelectedChoice = async () => {
     try {
@@ -37,11 +35,6 @@ function VoteResult({ choices, postData, endAt, createdAt, postId }) {
     } catch (error) {
       console.log(`Something Wrong: ${error.message}`);
     }
-    if (postStatus === 'ONGOING') {
-      isClosed = false;
-    } else {
-      isClosed = true;
-    }
   };
 
   useEffect(() => {
@@ -49,12 +42,12 @@ function VoteResult({ choices, postData, endAt, createdAt, postId }) {
   }, []);
 
   return (
-    <ThemeProvider theme={{ theme, fontFamily: 'Noto Sans KR' }}>
-      <VoteResultContainer $isClosed={isClosed}>
+    <ThemeProvider theme={{ theme }}>
+      <VoteResultContainer>
         <VoteHeader>
           <TitleContainer>
             <ResultTitle>투표 결과</ResultTitle>
-            {isClosed && <ClosedBadge>종료</ClosedBadge>}
+            {postStatus === 'COMPLETED' && <ClosedBadge>종료</ClosedBadge>}
           </TitleContainer>
           <TimeSpan>
             {formatDate(createdAt)} ~ {formatDate(endAt)}
@@ -63,7 +56,7 @@ function VoteResult({ choices, postData, endAt, createdAt, postId }) {
         <HorizontalLine />
         <VoteContentContainer>
           <ul>
-            {choices.map((choice, index) => {
+            {choices.map((choice) => {
               const voteResultItem =
                 postData.voteResult && postData.voteResult[choice.choice_num];
               const choiceCount =
@@ -113,35 +106,42 @@ VoteResult.propTypes = {
   selectedChoice: PropTypes.shape({
     selected_number: PropTypes.number,
   }),
-
   endAt: PropTypes.string.isRequired,
   createdAt: PropTypes.string.isRequired,
+  postId: PropTypes.string.isRequired,
 };
 
 export default VoteResult;
+
+const VoteResultContainer = styled.div`
+  border: 1px solid ${({ theme }) => theme.medium_purple};
+  border-radius: 5px;
+  width: 60%;
+  min-width: 530px;
+  margin: 20px 0;
+`;
+
+const VoteHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin: 20px;
+  padding: 5px;
+  font-weight: bold;
+  color: ${({ theme }) => theme.medium_purple};
+`;
 
 const TitleContainer = styled.div`
   display: flex;
   align-items: center;
 `;
 
-const VoteResultContainer = styled.div`
-  border: 1px solid ${({ theme }) => theme.medium_purple};
-  border-radius: 5px;
-  width: 40%;
-  background-color: ${(props) => (props.isClosed ? '#ccc' : 'transparent')};
-  margin: 20px 0;
+const ResultTitle = styled.div`
+  color: ${({ theme }) => theme.medium_purple};
+  font-size: 20px;
 `;
 
-const ClosedBadge = styled.div`
-  background-color: ${({ theme }) => theme.medium_purple};
-  color: #fff;
-  padding: 5px;
-  width: 50px;
-  border-radius: 4px;
-  font-size: 12px;
-  text-align: center;
-  margin-left: 10px;
+const TimeSpan = styled.span`
+  font-size: 15px;
 `;
 
 const HorizontalLine = styled.hr`
@@ -150,31 +150,10 @@ const HorizontalLine = styled.hr`
   margin: 0;
 `;
 
-const ResultBar = styled.div`
-  background-color: ${({ theme }) => theme.light_purple};
-  color: ${({ theme }) => theme.medium_purple};
-  width: ${(props) => props.$choicePercent}%;
-  border-radius: 5px 0 0 5px; // 왼쪽만 둥글게
-  height: 100%;
-  padding: 20px;
-  white-space: nowrap;
-  font-weight: ${(props) => (props.$isSelected ? 'bold' : 'normal')};
-  color: ${(props) => (props.$isSelected ? 'black' : '')};
-`;
-
-const VoteHeader = styled.div`
+const VoteContentContainer = styled.div`
   display: flex;
-  justify-content: space-between;
-  margin: 15px;
-  margin-left: 30px;
-  padding: 5px;
-  font-weight: bold;
-  color: ${({ theme }) => theme.medium_purple};
-`;
-
-const ResultTitle = styled.div`
-  color: ${({ theme }) => theme.medium_purple};
-  font-size: 20px;
+  flex-direction: column;
+  margin: 20px;
 `;
 
 const ResultItem = styled.div`
@@ -190,18 +169,16 @@ const ResultItem = styled.div`
   width: ${(props) => props.$choicePercent};
 `;
 
-const VoteContentContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin: 20px;
-`;
-
-const TimeSpan = styled.span`
+const ResultBar = styled.div`
+  background-color: ${({ theme }) => theme.light_purple};
   color: ${({ theme }) => theme.medium_purple};
-  font-weight: bold;
-  font-size: 15px;
-  margin-right: 20px;
-  font-family: 'Noto Sans KR';
+  width: ${(props) => props.$choicePercent}%;
+  border-radius: 5px 0 0 5px; // 왼쪽만 둥글게
+  height: 100%;
+  padding: 20px;
+  white-space: nowrap;
+  font-weight: ${(props) => (props.$isSelected ? 'bold' : 'normal')};
+  color: ${(props) => (props.$isSelected ? 'black' : '')};
 `;
 
 const ChoicePercent = styled.span`
@@ -212,4 +189,15 @@ const ChoicePercent = styled.span`
   margin-right: 10px;
   font-family: 'Noto Sans KR';
   font-weight: bold;
+`;
+
+const ClosedBadge = styled.div`
+  background-color: ${({ theme }) => theme.medium_purple};
+  color: #fff;
+  padding: 5px;
+  width: 50px;
+  border-radius: 4px;
+  font-size: 12px;
+  text-align: center;
+  margin-left: 10px;
 `;
