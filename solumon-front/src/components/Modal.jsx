@@ -5,29 +5,42 @@ import PropTypes from 'prop-types';
 
 import Button from './Button';
 
-function Modal({ message, onConfirm, onCancel }) {
+function Modal({ message, onConfirm, onCancel, btnCount }) {
   return (
     <ThemeProvider theme={theme}>
       <Wrapper>
         <StyledP>{message}</StyledP>
-        <ButtonWrapper>
-          <Button
-            type="button"
-            name={'로그아웃'}
-            onClick={onConfirm}
-            fontSize={'16px'}
-            padding={'10px 22px'}
-            borderRadius={'10px'}
-          />
-          <Button
-            type="button"
-            name={'취소'}
-            onClick={onCancel}
-            fontSize={'16px'}
-            padding={'10px 22px'}
-            borderRadius={'10px'}
-          />
-        </ButtonWrapper>
+        {btnCount === 1 ? (
+          <ButtonWrapper>
+            <Button
+              type="button"
+              name={'확인'}
+              onClick={onConfirm}
+              fontSize={'16px'}
+              padding={'10px 22px'}
+              borderRadius={'10px'}
+            />
+          </ButtonWrapper>
+        ) : (
+          <ButtonWrapper>
+            <Button
+              type="button"
+              name={'로그아웃'}
+              onClick={onConfirm}
+              fontSize={'16px'}
+              padding={'10px 22px'}
+              borderRadius={'10px'}
+            />
+            <Button
+              type="button"
+              name={'취소'}
+              onClick={onCancel}
+              fontSize={'16px'}
+              padding={'10px 22px'}
+              borderRadius={'10px'}
+            />
+          </ButtonWrapper>
+        )}
       </Wrapper>
     </ThemeProvider>
   );
@@ -36,7 +49,8 @@ function Modal({ message, onConfirm, onCancel }) {
 Modal.propTypes = {
   message: PropTypes.string.isRequired,
   onConfirm: PropTypes.func.isRequired,
-  onCancel: PropTypes.func.isRequired,
+  onCancel: PropTypes.func,
+  btnCount: PropTypes.number,
 };
 
 export default Modal;
