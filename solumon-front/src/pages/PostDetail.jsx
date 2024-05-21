@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { BsChatSquareDots } from 'react-icons/bs';
 import { PiChartBarHorizontalFill } from 'react-icons/pi';
@@ -26,6 +26,7 @@ import CommentList from '../components/CommentList';
 
 const PostDetail = () => {
   const { postId } = useParams();
+  const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
   const [postData, setPostData] = useState(null); // 데이터를 저장할 상태 변수
   const [selectedChoice, setSelectedChoice] = useState(null);
@@ -36,6 +37,10 @@ const PostDetail = () => {
   const [postStatus, setPostStatus] = useState('ONGOING');
   const user = auth.currentUser;
   const [join, setJoin] = useState(false);
+
+  const goBack = () => {
+    navigate(-1);
+  };
 
   const fetchData = async () => {
     try {
@@ -50,6 +55,7 @@ const PostDetail = () => {
           setPostStatus(newPostStatus);
         } else {
           console.error('문서가 존재하지 않습니다.');
+          setModalOpen(true);
         }
       });
     } catch (error) {
@@ -219,6 +225,15 @@ const PostDetail = () => {
 
   return (
     <ThemeProvider theme={theme}>
+      {modalOpen && (
+        <ModalBackground>
+          <Modal
+            message={'해당 게시물은 삭제되었습니다.'}
+            onConfirm={goBack}
+            btnCount={1}
+          />
+        </ModalBackground>
+      )}
       <Container>
         <HeaderContent postData={postData} isLoggedIn={isLoggedIn} />
         <ContentDiv>
