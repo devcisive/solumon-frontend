@@ -21,10 +21,12 @@ import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import device from '../media';
 import Loading from '../components/Loading';
+import Modal from '../components/Modal';
 import CommentList from '../components/CommentList';
 
 const PostDetail = () => {
   const { postId } = useParams();
+  const [modalOpen, setModalOpen] = useState(false);
   const [postData, setPostData] = useState(null); // 데이터를 저장할 상태 변수
   const [selectedChoice, setSelectedChoice] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
@@ -133,9 +135,13 @@ const PostDetail = () => {
   }, [postData, postId]);
 
   useEffect(() => {
-    fetchData();
-    checkVoteJoin();
-  }, []);
+    const initialize = async () => {
+      await fetchData(); // fetchData가 완료된 후
+      await checkVoteJoin(); // checkVoteJoin을 호출
+    };
+
+    initialize();
+  }, [postId, user]);
 
   if (!postData) {
     return <Loading />; // 데이터가 로드되지 않았을 때
@@ -402,4 +408,15 @@ const CommentContainer = styled.div`
   align-items: center;
   min-width: 780px;
   /* width: 53vw; */
+`;
+
+const ModalBackground = styled.div`
+  backdrop-filter: blur(5px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  position: fixed;
 `;
