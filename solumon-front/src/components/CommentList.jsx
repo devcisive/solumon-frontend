@@ -93,7 +93,8 @@ const CommentList = ({ postId }) => {
     try {
       // 수정된 댓글 또는 답글의 내용을 업데이트
       const updatedComments = comments.map((comment) => {
-        if (comment.id === commentId) {
+        if (comment.id === commentId && replyId) {
+          // 본인이 작성한 답글을 수정할 때
           const updatedReplies = comment.replies.map((reply) => {
             if (reply.id === replyId) {
               // 수정된 내용을 새로운 내용으로 업데이트
@@ -105,10 +106,17 @@ const CommentList = ({ postId }) => {
             ...comment,
             replies: updatedReplies,
           };
+        } else if (comment.id === commentId) {
+          // 본인이 작성한 댓글 수정할 때
+          return {
+            ...comment,
+            content: editedCommentContent,
+          };
         }
         return comment;
       });
 
+      console.log(updatedComments);
       // 데이터베이스에 수정된 내용을 저장
       await updateDoc(doc(db, 'posts-write', postId), {
         commentList: updatedComments,
@@ -124,22 +132,23 @@ const CommentList = ({ postId }) => {
     }
   };
 
+  // 답글 작성 버튼 클릭시 동작하는 함수
   const handleReplyButtonClick = (commentId) => {
     setReplyingCommentId(commentId);
     setReplyContent('');
   };
 
-  // 댓글의 답글 업데이트 함수
+  // 댓글의 답글 추가 함수
   const handleAddReply = async () => {
     try {
-      const updatedComments = comments.map((comment) => {
+      const addComments = comments.map((comment) => {
         if (comment.id === replyingCommentId) {
-          const updatedReplies = Array.isArray(comment.replies)
+          const addReplies = Array.isArray(comment.replies)
             ? [...comment.replies]
             : [];
 
-          //해당댓글에 답글 업데이트
-          updatedReplies.push({
+          //해당댓글에 답글 추가
+          addReplies.push({
             id: generateSequentialId(),
             userId: user.displayName,
             content: replyContent,
@@ -147,18 +156,19 @@ const CommentList = ({ postId }) => {
           });
           return {
             ...comment,
-            replies: updatedReplies,
+            replies: addReplies,
           };
         }
         return comment;
       });
 
       await updateDoc(doc(db, 'posts-write', postId), {
-        commentList: updatedComments,
+        commentList: addComments,
       });
 
       setReplyContent('');
-      setComments(updatedComments);
+      setReplyingCommentId(null);
+      setComments(addComments);
     } catch (error) {
       console.error('답글 추가 오류: ', error);
     }
@@ -294,7 +304,7 @@ const CommentList = ({ postId }) => {
                             {editingReplyId === reply.id ? (
                               //댓글의 답글 수정할때 수정모드
                               <>
-                                <EditInput
+                                <ReplyInput
                                   type="text"
                                   value={editedCommentContent}
                                   onChange={(e) =>
