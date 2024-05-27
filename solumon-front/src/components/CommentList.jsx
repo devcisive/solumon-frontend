@@ -174,6 +174,13 @@ const CommentList = ({ postId }) => {
     }
   };
 
+  const handleKeyDown = (e, saveFunction) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // 기본 Enter키 동작 방지
+      saveFunction();
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <StyledContainer>
@@ -197,6 +204,11 @@ const CommentList = ({ postId }) => {
                           value={editedCommentContent}
                           onChange={(e) =>
                             setEditedCommentContent(e.target.value)
+                          }
+                          onKeyDown={(e) =>
+                            handleKeyDown(e, () =>
+                              handleSaveEditButtonClick(comment.id),
+                            )
                           }
                         />
                         <ButtonBox>
@@ -269,6 +281,9 @@ const CommentList = ({ postId }) => {
                       type="text"
                       value={replyContent}
                       onChange={(e) => setReplyContent(e.target.value)}
+                      onKeyDown={(e) =>
+                        handleKeyDown(e, () => handleAddReply(comment.id))
+                      }
                     />
                     <ButtonBox>
                       <ReplyButton onClick={() => handleAddReply(comment.id)}>
@@ -310,9 +325,18 @@ const CommentList = ({ postId }) => {
                                   onChange={(e) =>
                                     setEditedCommentContent(e.target.value)
                                   }
+                                  onKeyDown={(e) =>
+                                    handleKeyDown(e, () =>
+                                      handleSaveEditButtonClick(
+                                        comment.id,
+                                        reply.id,
+                                      ),
+                                    )
+                                  }
                                 />
                                 <ButtonBox>
                                   <EditButton
+                                    type="submit"
                                     onClick={() =>
                                       handleSaveEditButtonClick(
                                         comment.id,
