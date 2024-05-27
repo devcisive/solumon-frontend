@@ -98,6 +98,9 @@ const CommentForm = ({ postId, postData }) => {
 export default CommentForm;
 
 const Form = styled.form`
+  /* width: 53vw;
+  min-width: 803px; */
+  width: 100%;
   display: flex;
   margin: 20px 0 10px 0;
   align-items: center;
@@ -105,7 +108,9 @@ const Form = styled.form`
 `;
 
 const CommentBox = styled.input`
-  width: 46vw;
+  /* width: 46vw; */
+  /* min-width: 611px; */
+  width: 720px;
   height: 45px;
   font-size: 16px;
   padding-left: 15px;
@@ -115,10 +120,12 @@ const CommentBox = styled.input`
 
 const Button = styled.div`
   height: 45px;
+  width: 72px;
   display: flex;
   align-items: center;
+  justify-content: center;
   margin-left: 15px;
-  padding: 1px 20px;
+  text-align: center;
   font-size: 16px;
   color: white;
   background-color: ${({ theme }) => theme.medium_purple};
