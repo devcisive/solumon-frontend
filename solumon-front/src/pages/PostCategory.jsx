@@ -49,36 +49,21 @@ function PostCategory() {
   }
 
   const handleSortChange = (sortValue) => {
-    if (sortValue === '최신순') {
-      setSearchParams({
-        postType: postType,
-        postStatus: postStatus,
-        postOrder: 'LATEST',
-        pageNum: currentPage,
-      });
-    } else if (sortValue === '채팅 참여 순') {
-      setSearchParams({
-        postType: postType,
-        postStatus: postStatus,
-        postOrder: 'MOST_CHAT_PARTICIPANTS',
-        pageNum: currentPage,
-      });
-    } else if (sortValue === '투표 참여 순') {
-      setSearchParams({
-        postType: postType,
-        postStatus: postStatus,
-        postOrder: 'MOST_VOTES',
-        pageNum: currentPage,
-      });
-    } else {
-      setSearchParams({
-        postType: postType,
-        postStatus: postStatus,
-        postOrder: 'IMMINENT_CLOSE',
-        pageNum: currentPage,
-      });
-    }
-    console.log(sortValue);
+    const newOrder =
+      sortValue === '최신순'
+        ? 'LATEST'
+        : sortValue === '채팅 참여 순'
+        ? 'MOST_CHAT_PARTICIPANTS'
+        : sortValue === '투표 참여 순'
+        ? 'MOST_VOTES'
+        : 'IMMINENT_CLOSE';
+
+    setSearchParams({
+      postType: postType,
+      postStatus: postStatus,
+      postOrder: newOrder,
+      pageNum: currentPage,
+    });
   };
 
   const handlePageChange = (newPage) => {
