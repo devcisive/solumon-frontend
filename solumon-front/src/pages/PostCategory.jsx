@@ -1,19 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { auth, db } from '../firebase-config';
 import { getDocs, collection, orderBy, query, where } from 'firebase/firestore';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
 import { CiSearch } from 'react-icons/ci';
+import { FaArrowLeft } from 'react-icons/fa6';
 import SortSelector from '../components/SortSelector';
 import PostCard from '../components/PostCard';
 import Pagination from '../components/Pagination';
 
 function PostCategory() {
   const user = auth.currentUser;
+  const navigate = useNavigate();
   const [postData, setPostData] = useState([]);
-  const [myInterest, setMyInterest] = useState([]);
   const [searchParams, setSearchParams] = useSearchParams();
 
   let postType = searchParams.get('postType');
@@ -101,8 +102,6 @@ function PostCategory() {
 
       if (!userDoc) return;
 
-      setMyInterest(userDoc.data().interests);
-
       const allData = await fetchOrderedData(orderByField, order);
       const userInterests = userDoc.data().interests || [];
 
@@ -167,6 +166,10 @@ function PostCategory() {
     }
   };
 
+  const goBackPage = () => {
+    navigate(-1);
+  };
+
   useEffect(() => {
     fetchData();
   }, [postType, postStatus, postOrder, currentPage]);
@@ -176,9 +179,10 @@ function PostCategory() {
       <Wrapper>
         <PostSection>
           <TitleWrapper>
+            <GoBackArrow title="뒤로가기" onClick={goBackPage} />
             <CategoryTitle>{categoryTitle}</CategoryTitle>
             <Link to={'/search'}>
-              <SearchIcon />
+              <SearchIcon title="검색" />
             </Link>
           </TitleWrapper>
           <SortWrapper>
@@ -219,6 +223,7 @@ const Wrapper = styled.div`
 const PostSection = styled.div`
   display: flex;
   flex-direction: column;
+  width: 83vw;
   margin: 40px auto;
 `;
 
@@ -228,8 +233,14 @@ const TitleWrapper = styled.div`
   margin-bottom: 20px;
 `;
 
+const GoBackArrow = styled(FaArrowLeft)`
+  color: ${({ theme }) => theme.medium_purple};
+  font-size: 24px;
+  cursor: pointer;
+`;
+
 const CategoryTitle = styled.h1`
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 600;
   color: ${({ theme }) => theme.dark_purple};
   margin-bottom: 10px;
