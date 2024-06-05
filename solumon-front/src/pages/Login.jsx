@@ -191,7 +191,9 @@ const StyledSpan = styled.span`
 `;
 
 const StyledHr = styled.hr`
-  width: 1130px;
+  /* width: 1130px; */
+  width: 70%;
+  min-width: 500px;
   color: ${({ theme }) => theme.medium_purple};
   margin-top: 15px;
 `;
