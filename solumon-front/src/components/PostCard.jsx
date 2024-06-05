@@ -1,15 +1,21 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 import PropTypes from 'prop-types';
 
 import Badge from './Badge';
+import NoData from './NoData';
 import { BsChatDots } from 'react-icons/bs';
 import { VscGraph } from 'react-icons/vsc';
 
 function PostCard({ postData, postCount, currentPage }) {
   const startIndex = (currentPage - 1) * postCount;
   const endIndex = startIndex + postCount;
+
+  if (postData.length === 0) {
+    return <NoData />;
+  }
 
   return (
     <ThemeProvider theme={theme}>
