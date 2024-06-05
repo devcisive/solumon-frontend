@@ -494,6 +494,7 @@ const RemoveCircleIcon = styled(IoIosRemoveCircle)`
   width: 15px;
   height: 15px;
   border-radius: 50%;
+  cursor: pointer;
 `;
 
 const FileContainer = styled.div`
@@ -591,12 +592,14 @@ const StyledAiFillMinusCircle = styled(AiFillMinusCircle)`
   font-size: 24px;
   color: ${({ theme }) => theme.dark_purple};
   margin-right: 5px;
+  cursor: pointer;
 `;
 
 const StyledAiFillPlusCircle = styled(AiFillPlusCircle)`
   font-size: 24px;
   color: ${({ theme }) => theme.dark_purple};
   margin-right: 5px;
+  cursor: pointer;
 `;
 
 const VoteChoice = styled.input`
