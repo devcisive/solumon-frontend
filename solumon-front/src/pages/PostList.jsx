@@ -80,7 +80,6 @@ export default PostList;
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
 `;
 
 const WriteContainer = styled.div`
@@ -106,7 +105,7 @@ const WriteButton = styled.button`
   border-radius: 5px;
   font-size: 15px;
   font-weight: bold;
-  width: 200px;
+  width: 180px;
   cursor: pointer;
 `;
 
@@ -137,6 +136,7 @@ const PostSection = styled.div`
   display: flex;
   flex-direction: column;
   margin: 35px auto;
+  width: 83vw;
 `;
 
 const SectionTitle = styled.h1`
