@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { auth, db } from '../firebase-config';
 import { getDocs, collection, orderBy, query, where } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
 
+import { FaArrowLeft } from 'react-icons/fa6';
 import TabsComponent from '../components/TabsComponent';
 import SortSelector from '../components/SortSelector';
 import PostCard from '../components/PostCard';
@@ -15,22 +17,11 @@ function MyHistory() {
   const [type, setType] = useState('uid');
   const [selectedTab, setSelectedTab] = useState('내가 작성한 글');
   const [currentPage, setCurrentPage] = useState(1);
+  const navigate = useNavigate();
 
-  // const handleSortChange = async (sortValue) => {
-  //   if (sortValue === '최신순') {
-  //     const data = await customData('created_at', 'desc', type);
-  //     setPostData(data);
-  //   } else if (sortValue === '채팅 참여 순') {
-  //     const data = await customData('total_comment_count', 'desc', type);
-  //     setPostData(data);
-  //   } else if (sortValue === '투표 참여 순') {
-  //     const data = await customData('total_vote_count', 'desc', type);
-  //     setPostData(data);
-  //   } else {
-  //     const data = await customData('created_at', type);
-  //     setPostData(data);
-  //   }
-  // };
+  const goBackPage = () => {
+    navigate(-1);
+  };
 
   const onTabChange = async (newTab) => {
     if (newTab === '내가 작성한 글') {
@@ -128,6 +119,7 @@ function MyHistory() {
       <Wrapper>
         <PostSection>
           <TitleWrapper>
+            <GoBackArrow title="뒤로가기" onClick={goBackPage} />
             <CategoryTitle>내가 남긴 기록</CategoryTitle>
           </TitleWrapper>
           <SortWrapper>
@@ -140,16 +132,6 @@ function MyHistory() {
               defaultTab={0}
               onClick={onTabChange}
             />
-            {/* <SortSelector
-              sortLabels={[
-                '최신순',
-                '채팅 참여 순',
-                '투표 참여 순',
-                '마감 임박 순',
-              ]}
-              defaultSort={0}
-              onClick={handleSortChange}
-            /> */}
           </SortWrapper>
           <PostCard postData={postData} />
         </PostSection>
@@ -178,15 +160,20 @@ const PostSection = styled.div`
 
 const TitleWrapper = styled.div`
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
+  gap: 20px;
+  margin-bottom: 30px;
+`;
+
+const GoBackArrow = styled(FaArrowLeft)`
+  color: ${({ theme }) => theme.medium_purple};
+  font-size: 24px;
+  cursor: pointer;
 `;
 
 const CategoryTitle = styled.h1`
   font-size: 26px;
   font-weight: 600;
   color: ${({ theme }) => theme.dark_purple};
-  margin-bottom: 10px;
 `;
 
 const SortWrapper = styled.div`
