@@ -91,10 +91,13 @@ const CommentList = ({ postId }) => {
 
   const handleSaveEditButtonClick = async (commentId, replyId) => {
     try {
+      // 수정된 댓글 또는 답글의 내용을 업데이트
       const updatedComments = comments.map((comment) => {
-        if (comment.id === commentId) {
+        if (comment.id === commentId && replyId) {
+          // 본인이 작성한 답글을 수정할 때
           const updatedReplies = comment.replies.map((reply) => {
             if (reply.id === replyId) {
+              // 수정된 내용을 새로운 내용으로 업데이트
               return { ...reply, content: editedCommentContent };
             }
             return reply;
@@ -103,37 +106,49 @@ const CommentList = ({ postId }) => {
             ...comment,
             replies: updatedReplies,
           };
+        } else if (comment.id === commentId) {
+          // 본인이 작성한 댓글 수정할 때
+          return {
+            ...comment,
+            content: editedCommentContent,
+          };
         }
         return comment;
       });
 
+      console.log(updatedComments);
+      // 데이터베이스에 수정된 내용을 저장
       await updateDoc(doc(db, 'posts-write', postId), {
         commentList: updatedComments,
       });
 
+      // 수정 모드 해제
       setEditingCommentId(null);
       setEditingReplyId(null);
+      // 수정된 내용을 초기화하여 입력 필드 비우기
       setEditedCommentContent('');
     } catch (error) {
       console.error('Error updating: ', error);
     }
   };
+
+  // 답글 작성 버튼 클릭시 동작하는 함수
   const handleReplyButtonClick = (commentId) => {
     setReplyingCommentId(commentId);
     setReplyContent('');
   };
 
-  // 댓글의 답글 업데이트 함수
+  // 댓글의 답글 추가 함수
   const handleAddReply = async () => {
     try {
-      const updatedComments = comments.map((comment) => {
+      const addComments = comments.map((comment) => {
         if (comment.id === replyingCommentId) {
-          const updatedReplies = Array.isArray(comment.replies)
+          const addReplies = Array.isArray(comment.replies)
             ? [...comment.replies]
             : [];
 
-          //해당댓글에 답글 업데이트
-          updatedReplies.push({
+          //해당댓글에 답글 추가
+          addReplies.push({
             id: generateSequentialId(),
             userId: user.displayName,
             content: replyContent,
@@ -141,20 +156,28 @@ const CommentList = ({ postId }) => {
           });
           return {
             ...comment,
-            replies: updatedReplies,
+            replies: addReplies,
           };
         }
         return comment;
       });
 
       await updateDoc(doc(db, 'posts-write', postId), {
-        commentList: updatedComments,
+        commentList: addComments,
       });
 
       setReplyContent('');
-      setComments(updatedComments);
+      setReplyingCommentId(null);
+      setComments(addComments);
     } catch (error) {
       console.error('답글 추가 오류: ', error);
+    }
+  };
+
+  const handleKeyDown = (e, saveFunction) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // 기본 Enter키 동작 방지
+      saveFunction();
     }
   };
 
@@ -181,6 +204,11 @@ const CommentList = ({ postId }) => {
                           value={editedCommentContent}
                           onChange={(e) =>
                             setEditedCommentContent(e.target.value)
+                          }
+                          onKeyDown={(e) =>
+                            handleKeyDown(e, () =>
+                              handleSaveEditButtonClick(comment.id),
+                            )
                           }
                         />
                         <ButtonBox>
@@ -212,6 +240,7 @@ const CommentList = ({ postId }) => {
                               onClick={() =>
                                 handleEditButtonClick(
                                   comment.id,
+                                  null,
                                   comment.content,
                                 )
                               }
@@ -252,6 +281,9 @@ const CommentList = ({ postId }) => {
                       type="text"
                       value={replyContent}
                       onChange={(e) => setReplyContent(e.target.value)}
+                      onKeyDown={(e) =>
+                        handleKeyDown(e, () => handleAddReply(comment.id))
+                      }
                     />
                     <ButtonBox>
                       <ReplyButton onClick={() => handleAddReply(comment.id)}>
@@ -287,15 +319,24 @@ const CommentList = ({ postId }) => {
                             {editingReplyId === reply.id ? (
                               //댓글의 답글 수정할때 수정모드
                               <>
-                                <EditInput
+                                <ReplyInput
                                   type="text"
                                   value={editedCommentContent}
                                   onChange={(e) =>
                                     setEditedCommentContent(e.target.value)
                                   }
+                                  onKeyDown={(e) =>
+                                    handleKeyDown(e, () =>
+                                      handleSaveEditButtonClick(
+                                        comment.id,
+                                        reply.id,
+                                      ),
+                                    )
+                                  }
                                 />
                                 <ButtonBox>
                                   <EditButton
+                                    type="submit"
                                     onClick={() =>
                                       handleSaveEditButtonClick(
                                         comment.id,
@@ -400,6 +441,7 @@ const EditInput = styled.input`
   margin-bottom: 10px;
   width: 99.5%;
   height: 50px;
+  text-indent: 10px;
 `;
 
 const ButtonBox = styled.div`
@@ -441,6 +483,7 @@ const ReplyInput = styled.input`
   margin-bottom: 10px;
   width: 99.5%;
   height: 50px;
+  text-indent: 10px;
 `;
 
 const Reply = styled.button`

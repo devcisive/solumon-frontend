@@ -77,6 +77,7 @@ function SearchBar() {
         <SearchContainer>
           <CiSearchIcon onClick={SearchClick} />
           <SearchInput
+            autoFocus
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="검색어를 입력하세요"
@@ -97,17 +98,18 @@ export default SearchBar;
 
 const SearchContainer = styled.div`
   display: flex;
-  align-items: center;
   border: 1px solid ${({ theme }) => theme.medium_purple};
   border-radius: 8px;
-  width: 900px;
+  width: 60vw;
 `;
+
 const CiSearchIcon = styled(CiSearch)`
   padding: 15px;
   width: 20px;
   height: 20px;
   cursor: pointer;
 `;
+
 const SearchInput = styled.input`
   color: ${({ theme }) => theme.medium_purple};
   width: 200px;
@@ -121,6 +123,7 @@ const SearchInput = styled.input`
 `;
 
 const SearchResultSection = styled.div`
+  width: 83vw;
   display: flex;
   flex-direction: column;
   margin: auto;

@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../firebase-config';
 import styled, { ThemeProvider } from 'styled-components';
 import theme from '../style/theme';
+import device from '../media';
 
 import { HiOutlinePencilSquare } from 'react-icons/hi2';
 import { CiSearch } from 'react-icons/ci';
@@ -35,6 +36,7 @@ function PostList() {
 
   return (
     <ThemeProvider theme={theme}>
+      {/* 여기서 device를 theme 객체 내에 포함하지 않고 바로 전달 */}
       <Wrapper>
         <WriteContainer>
           <WriteButton onClick={HandleButtonClick}>
@@ -82,10 +84,14 @@ const Wrapper = styled.div`
 
 const WriteContainer = styled.div`
   display: flex;
-  width: 1280px;
+  width: 83vw;
   justify-content: flex-end;
   margin: 20px auto;
   margin-bottom: 0px;
+
+  @media ${({ theme }) => device.mobile} {
+    justify-content: center;
+  }
 `;
 
 const WriteButton = styled.button`
@@ -99,7 +105,8 @@ const WriteButton = styled.button`
   border-radius: 5px;
   font-size: 15px;
   font-weight: bold;
-  width: 200px;
+  width: 180px;
+  cursor: pointer;
 `;
 
 const StyledHiOutlinePencilSquare = styled(HiOutlinePencilSquare)`
@@ -109,10 +116,14 @@ const StyledHiOutlinePencilSquare = styled(HiOutlinePencilSquare)`
 
 const StyledLink = styled(Link)`
   display: flex;
-  width: 1280px;
+  width: 83vw;
   justify-content: flex-end;
   margin: auto;
   margin-top: 15px;
+
+  @media ${({ theme }) => device.mobile} {
+    justify-content: center;
+  }
 `;
 
 const SearchIcon = styled(CiSearch)`
@@ -125,6 +136,7 @@ const PostSection = styled.div`
   display: flex;
   flex-direction: column;
   margin: 35px auto;
+  width: 83vw;
 `;
 
 const SectionTitle = styled.h1`
@@ -140,4 +152,8 @@ const AllPostsLink = styled(Link)`
   cursor: pointer;
   margin-bottom: 15px;
   align-self: flex-end;
+
+  @media ${({ theme }) => device.tablet} {
+    align-self: flex-start;
+  }
 `;

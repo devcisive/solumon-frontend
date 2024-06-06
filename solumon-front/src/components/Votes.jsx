@@ -30,42 +30,53 @@ const Votes = ({ handleChoiceClick, createdAt, endAt, choices }) => {
     </ThemeProvider>
   );
 };
+
 Votes.propTypes = {
   choices: PropTypes.array.isRequired,
   createdAt: PropTypes.string.isRequired,
   endAt: PropTypes.string.isRequired,
-
   handleChoiceClick: PropTypes.func.isRequired,
 };
 
 export default Votes;
-const StyledSpan = styled.span`
-  font-size: 25px;
-`;
-const TimeSpan = styled.div``;
+
 const VoteContainer = styled.div`
   border: 1px solid ${({ theme }) => theme.medium_purple};
   border-radius: 5px;
-  width: 55%;
+  width: 60%;
+  min-width: 530px;
+  margin: 20px 0;
 `;
+
 const VoteHeader = styled.div`
   display: flex;
   justify-content: space-between;
   margin: 20px;
-  padding: 10px;
+  padding: 5px;
   font-weight: bold;
   color: ${({ theme }) => theme.medium_purple};
 `;
+
+const StyledSpan = styled.span`
+  font-size: 20px;
+`;
+
+const TimeSpan = styled.div`
+  font-size: 15px;
+`;
+
 const HorizontalLine = styled.hr`
   border: none;
   border-top: 1px solid ${({ theme }) => theme.medium_purple};
   margin: 0;
 `;
+
 const VoteContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   margin: 20px;
 `;
+
 const VoteContent = styled.div`
   border: 1px solid ${({ theme }) => theme.medium_purple};
   color: ${({ theme }) => theme.medium_purple};
@@ -73,5 +84,5 @@ const VoteContent = styled.div`
   padding: 20px;
   border-radius: 5px;
   font-size: 17px;
-  font-weight: 400;
+  cursor: pointer;
 `;
