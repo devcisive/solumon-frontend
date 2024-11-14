@@ -18,6 +18,7 @@
 
 ## 프로젝트 소개
 - 사이트: https://solumon-frontend.vercel.app
+- 피그마: https://www.figma.com/design/87Tu6FGR88I7CkBsa828kU/%5Bzerobase%5D%EC%86%94%EB%A3%A8%EB%AA%AC?node-id=0-1&t=p4tLeZQbqyIUO7K6-1
 - 솔루몬은 인생에 영향을 미치는 중요한 결정에 어려움을 느끼거나 '오늘 뭐 먹지?' 처럼 사소한 결정도 쉽게 하지 못하는 분들을 위해 만들어진 커뮤니티 입니다.
 - 사용자는 자신의 고민을 글로 작성하고 투표와 댓글을 통해 다른 사람들의 의견을 참고할 수 있습니다.
 - 제목이나 태그 검색을 통하여 고민중인 사항과 비슷한 글을 찾아볼 수 있습니다.
